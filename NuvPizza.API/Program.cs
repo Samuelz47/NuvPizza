@@ -1,3 +1,6 @@
+using Microsoft.EntityFrameworkCore;
+using NuvPizza.Infrastructure.Persistence;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
@@ -11,6 +14,12 @@ if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
+
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// 2. Configura o AppDbContext para usar SQLite
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseSqlite(connectionString));
 
 app.UseHttpsRedirection();
 
