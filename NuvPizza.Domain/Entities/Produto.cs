@@ -1,0 +1,19 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
+namespace NuvPizza.Domain.Entities
+{
+    public class Produto
+    {
+        public int Id { get; set; }
+        public string Nome { get; set; } = string.Empty;
+        public string Descricao { get; set; } = string.Empty;
+        public decimal Preco { get; set; }
+        public string ImagemUrl { get; set; } = string.Empty;
+        public Categoria Categoria { get; set; }
+        public string Tamanho { get; set; } = string.Empty;
+        public bool Ativo { get; set; } = true;
+    }
+}
