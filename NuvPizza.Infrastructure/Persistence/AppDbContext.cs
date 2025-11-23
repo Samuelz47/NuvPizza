@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using NuvPizza.Domain.Entities;
 
-namespace NuvPizza.Infrastructure
+namespace NuvPizza.Infrastructure.Persistence
 {
     public class AppDbContext : DbContext
     {
