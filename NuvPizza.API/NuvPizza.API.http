@@ -1,0 +1,6 @@
+@NuvPizza.API_HostAddress = http://localhost:5269
+
+GET {{NuvPizza.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

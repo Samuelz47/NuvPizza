@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="NuvPizza.API/NuvPizza.API.csproj" />
+  <Project Path="NuvPizza.Application/NuvPizza.Application.csproj" />
+  <Project Path="NuvPizza.Domain/NuvPizza.Domain.csproj" />
+  <Project Path="NuvPizza.Infrastructure/NuvPizza.Infrastructure.csproj" />
+</Solution>
