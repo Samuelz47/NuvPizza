@@ -12,13 +12,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
 
 builder.Services.AddAutoMapper(typeof(ProdutoMappingProfile).Assembly);
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -28,6 +21,14 @@ builder.Services.AddScoped<IPedidoRepository, PedidoRepository>();
 builder.Services.AddScoped<IProdutoService, ProdutoService>();
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+var app = builder.Build();
+
+// Configure the HTTP request pipeline.
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
 
 // 2. Configura o AppDbContext para usar SQLite
 builder.Services.AddDbContext<AppDbContext>(options =>

@@ -1,4 +1,5 @@
 using AutoMapper;
+using NuvPizza.Application.Common;
 using NuvPizza.Application.DTOs;
 using NuvPizza.Application.Interfaces;
 using NuvPizza.Domain.Entities;
@@ -19,21 +20,21 @@ public class ProdutoService : IProdutoService
         _mapper = mapper;
     }
 
-    public async Task<ProdutoDTO> CreateProdutoAsync(ProdutoForRegistrationDTO produtoForRegister)
+    public async Task<Result<ProdutoDTO>> CreateProdutoAsync(ProdutoForRegistrationDTO produtoForRegister)
     {
         if (produtoForRegister is null)
         {
-            throw new InvalidOperationException("Produto não pode ser nulo");
+            return Result<ProdutoDTO>.Failure("Produto não pode ser nulo");
         }
 
         if (produtoForRegister.Preco < 0)
         {
-            throw new InvalidOperationException("Preço inválido");
+            return Result<ProdutoDTO>.Failure("Preço inválido");
         }
 
         if (produtoForRegister.CategoriaId > 5 || produtoForRegister.CategoriaId < 0)
         {
-            throw new InvalidOperationException("Categoria inválida");
+            return Result<ProdutoDTO>.Failure("Categoria inválida");
         }
 
         var produto = _mapper.Map<Produto>(produtoForRegister);
@@ -41,6 +42,6 @@ public class ProdutoService : IProdutoService
         await _uow.CommitAsync();
         
         var produtoDto = _mapper.Map<ProdutoDTO>(produto);
-        return produtoDto;
+        return Result<ProdutoDTO>.Success(produtoDto);
     }
 }
