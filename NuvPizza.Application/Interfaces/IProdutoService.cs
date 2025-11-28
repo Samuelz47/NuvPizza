@@ -7,4 +7,6 @@ namespace NuvPizza.Application.Interfaces;
 public interface IProdutoService
 {
     Task<Result<ProdutoDTO>> CreateProdutoAsync(ProdutoForRegistrationDTO produtoForRegister);
+    Task<ProdutoDTO?> GetProdutoAsync(int id);
+    Task<IEnumerable<ProdutoDTO>> GetAllProdutosAsync();
 }

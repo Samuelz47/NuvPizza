@@ -27,4 +27,21 @@ public class ProdutosController : ControllerBase
         }
         return Created($"/api/produtos/{produtoCreated.Data.Id}", produtoCreated.Data);
     }
+
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetProdutos(int id)
+    {
+        var produtoDto = await _produtoService.GetProdutoAsync(id);
+        
+        if (produtoDto is null) { return NotFound("Produto não encontrado"); }
+        
+        return Ok(produtoDto);
+    }
+
+    [HttpGet]
+    public async Task<ActionResult> GetAllProdutos()
+    {
+        var produtosDto = await _produtoService.GetAllProdutosAsync();
+        return Ok(produtosDto);
+    }
 }

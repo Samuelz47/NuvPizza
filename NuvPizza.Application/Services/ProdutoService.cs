@@ -31,17 +31,28 @@ public class ProdutoService : IProdutoService
         {
             return Result<ProdutoDTO>.Failure("Preço inválido");
         }
-
-        if (produtoForRegister.CategoriaId > 5 || produtoForRegister.CategoriaId < 0)
-        {
-            return Result<ProdutoDTO>.Failure("Categoria inválida");
-        }
-
+        
         var produto = _mapper.Map<Produto>(produtoForRegister);
         _produtoRepository.Create(produto);
         await _uow.CommitAsync();
         
         var produtoDto = _mapper.Map<ProdutoDTO>(produto);
         return Result<ProdutoDTO>.Success(produtoDto);
+    }
+
+    public async Task<ProdutoDTO?> GetProdutoAsync(int id)
+    {
+        var produto = await _produtoRepository.GetAsync(p => p.Id == id);
+        if (produto is null) { return null; }
+        
+        var produtoDto = _mapper.Map<ProdutoDTO>(produto);
+        return produtoDto;    
+    }
+
+    public async Task<IEnumerable<ProdutoDTO>> GetAllProdutosAsync()
+    {
+        var produtos = await _produtoRepository.GetAllAsync();
+        var produtosDto = _mapper.Map<IEnumerable<ProdutoDTO>>(produtos);
+        return produtosDto;
     }
 }
