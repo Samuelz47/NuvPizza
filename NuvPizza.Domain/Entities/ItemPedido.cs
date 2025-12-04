@@ -13,6 +13,6 @@ namespace NuvPizza.Domain.Entities
         public string Nome { get; set; }
         public decimal PrecoUnitario { get; set; }
         public int Quantidade { get; set; }
-        public decimal PrecoTotal => Quantidade * PrecoUnitario;
+        public decimal Total => Quantidade * PrecoUnitario;
     }
 }
