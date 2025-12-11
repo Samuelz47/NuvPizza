@@ -23,8 +23,12 @@ namespace NuvPizza.Infrastructure.Persistence
             {
                 e.HasKey(p => p.Id);
                 e.Property(p => p.NomeCliente).IsRequired().HasMaxLength(100);
-                e.Property(p => p.EnderecoEntrega).IsRequired().HasMaxLength(200);
+                e.Property(p => p.Cep).IsRequired().HasMaxLength(10);
+                e.Property(p => p.Logradouro).IsRequired().HasMaxLength(150);
+                e.Property(p => p.Numero).IsRequired().HasMaxLength(20);
+                e.Property(p => p.Bairro).IsRequired().HasMaxLength(100);
                 e.Property(p => p.ValorTotal).HasColumnType("decimal(10,2)");
+                e.Property(p => p.Complemento).IsRequired(false).HasMaxLength(100);
                 
                 // Relacionamento: Um Pedido tem muitos Itens
                 e.HasMany(p => p.Itens)

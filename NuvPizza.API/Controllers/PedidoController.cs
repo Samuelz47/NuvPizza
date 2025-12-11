@@ -19,7 +19,7 @@ public class PedidoController : Controller
     [HttpPost]
     public async Task<ActionResult<PedidoDTO>> Create([FromBody] PedidoForRegistrationDTO PedidoDto)
     {
-        var pedidoCreated = await _pedidoService.CreateProdutoAsync(PedidoDto);
+        var pedidoCreated = await _pedidoService.CreatePedidoAsync(PedidoDto);
 
         if (!pedidoCreated.IsSuccess)
         {

@@ -17,7 +17,11 @@ namespace NuvPizza.Domain.Entities
         public Guid Id { get; set; }
         public string NomeCliente { get; set; } = string.Empty;
         public string TelefoneCliente { get; set; } = string.Empty;
-        public string EnderecoEntrega { get; set; } = string.Empty;
+        public string Cep { get; set; } = string.Empty;
+        public int Numero { get; set; }
+        public string Complemento { get; set; } = string.Empty;
+        public string Bairro { get; set; } = string.Empty;
+        public string Logradouro { get; set; } = string.Empty;
         public string FormaPagamento { get; set; } = string.Empty;
         public List<ItemPedido> Itens { get; set; }
         public DateTime DataPedido { get; set; }
