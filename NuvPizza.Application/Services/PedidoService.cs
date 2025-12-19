@@ -18,8 +18,9 @@ public class PedidoService : IPedidoService
     private readonly IUnitOfWork _uow;
     private readonly ViaCepService _viaCepService;
     private readonly IConfiguration _configuration;
+    private readonly IWhatsappService _whatsappService;
     
-    public PedidoService(IPedidoRepository pedidoRepository, IProdutoRepository produtoRepository, IMapper mapper, IUnitOfWork uow, ViaCepService viaCepService, IConfiguration configuration)
+    public PedidoService(IPedidoRepository pedidoRepository, IProdutoRepository produtoRepository, IMapper mapper, IUnitOfWork uow, ViaCepService viaCepService, IConfiguration configuration, IWhatsappService whatsappService)
     {
         _pedidoRepository = pedidoRepository;
         _produtoRepository = produtoRepository;
@@ -27,14 +28,17 @@ public class PedidoService : IPedidoService
         _uow = uow;
         _viaCepService = viaCepService;
         _configuration = configuration;
+        _whatsappService = whatsappService;
     }
 
     public async Task<Result<PedidoDTO>> CreatePedidoAsync(PedidoForRegistrationDTO pedidoRegister)
     {
         var enderecoViaCep = await _viaCepService.CheckAsync(pedidoRegister.Cep);
         if (enderecoViaCep is null) return Result<PedidoDTO>.Failure("CEP Inválido ou não encontrado");
-        
-        var bairrosPermitios = _configuration.GetSection("ConfiguracoesEntrega:BairrosPermitidos").Get<List<string>>();
+
+        var bairrosPermitios =
+            _configuration.GetSection("ConfiguracoesEntrega:BairrosPermitidos").Get<List<string>>() ??
+            new List<string>();
 
         if (!bairrosPermitios.Any(b => b.Equals(enderecoViaCep.Bairro, StringComparison.OrdinalIgnoreCase)))
         {
@@ -72,7 +76,10 @@ public class PedidoService : IPedidoService
         _pedidoRepository.Create(pedido);
         await _uow.CommitAsync();
         
+        var linkWpp = _whatsappService.GerarLinkPedido(pedido);
+        
         var pedidoDto = _mapper.Map<PedidoDTO>(pedido);
+        pedidoDto.LinkWhatsapp = linkWpp;
         return Result<PedidoDTO>.Success(pedidoDto);
     }
 }
