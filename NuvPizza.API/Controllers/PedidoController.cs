@@ -28,4 +28,14 @@ public class PedidoController : Controller
         
         return Created($"/api/pedidos/{pedidoCreated.Data.Id}", pedidoCreated.Data);
     }
+
+    [HttpPatch("{id}/status")]
+    public async Task<ActionResult<PedidoDTO>> UpdateStatus(Guid id, StatusPedidoForUpdateDTO newStatus)
+    {
+        var pedidoUpdated = await _pedidoService.UpdateStatusPedidoAsync(id, newStatus);
+        
+        if (!pedidoUpdated.IsSuccess) return BadRequest(pedidoUpdated.Message);
+            
+        return Ok(pedidoUpdated.Data);
+    }
 }

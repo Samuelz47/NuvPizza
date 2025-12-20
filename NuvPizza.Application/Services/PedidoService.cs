@@ -7,6 +7,7 @@ using NuvPizza.Domain.Entities;
 using NuvPizza.Domain.Repositories;
 using NuvPizza.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
+using NuvPizza.Domain.Enums;
 
 namespace NuvPizza.Application.Services;
 
@@ -80,6 +81,37 @@ public class PedidoService : IPedidoService
         
         var pedidoDto = _mapper.Map<PedidoDTO>(pedido);
         pedidoDto.LinkWhatsapp = linkWpp;
+        return Result<PedidoDTO>.Success(pedidoDto);
+    }
+
+    public async Task<Result<PedidoDTO>> UpdateStatusPedidoAsync(Guid Id, StatusPedidoForUpdateDTO newStatus)
+    {
+        var pedido = await _pedidoRepository.GetAsync(p => p.Id == Id);
+        
+        if (pedido is null) return Result<PedidoDTO>.Failure("Pedido não encontrado");
+        
+        if (newStatus.StatusDoPedido == StatusPedido.Cancelado)
+        {
+            if (pedido.StatusPedido == StatusPedido.Entrega)
+            {
+                return Result<PedidoDTO>.Failure("Não é possível cancelar um pedido que já foi entregue.");
+            }
+        }
+        else
+        {
+            int statusAtualNumerico = (int)pedido.StatusPedido;
+            int statusNovoNumerico = (int)newStatus.StatusDoPedido;
+            int proximoStatusEsperado = statusAtualNumerico + 1;
+
+            if (statusNovoNumerico != proximoStatusEsperado)
+            {
+                return Result<PedidoDTO>.Failure($"Fluxo inválido. O status atual é '{pedido.StatusPedido}', o próximo passo obrigatório é '{(StatusPedido)proximoStatusEsperado}'.");
+            }
+        }
+
+        pedido.StatusPedido = newStatus.StatusDoPedido;
+        await _uow.CommitAsync();
+        var pedidoDto = _mapper.Map<PedidoDTO>(pedido);
         return Result<PedidoDTO>.Success(pedidoDto);
     }
 }

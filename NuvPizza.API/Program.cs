@@ -23,7 +23,10 @@ builder.Services.AddControllers()
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-builder.Services.AddHttpClient<ViaCepService>();
+builder.Services.AddHttpClient<ViaCepService>(client =>
+{
+    client.Timeout = TimeSpan.FromSeconds(5); // Se demorar + que 5s, cancela
+});
 builder.Services.AddAutoMapper(typeof(ProdutoMappingProfile).Assembly);
 builder.Services.AddFluentValidationAutoValidation(); // Ativa a validação automática
 builder.Services.AddFluentValidationClientsideAdapters(); // (Opcional) Ajuda frontends MVC

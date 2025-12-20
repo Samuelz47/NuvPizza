@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using NuvPizza.Domain.Enums;
 
 namespace NuvPizza.Domain.Entities
 {
@@ -9,6 +10,7 @@ namespace NuvPizza.Domain.Entities
     {
         public Pedido() 
         {
+            StatusPedido = StatusPedido.Criado;
             Id = Guid.NewGuid();
             DataPedido = DateTime.UtcNow;
             Itens = new List<ItemPedido>();
@@ -22,6 +24,7 @@ namespace NuvPizza.Domain.Entities
         public string Complemento { get; set; } = string.Empty;
         public string Bairro { get; set; } = string.Empty;
         public string Logradouro { get; set; } = string.Empty;
+        public StatusPedido StatusPedido { get; set; }
         public string FormaPagamento { get; set; } = string.Empty;
         public List<ItemPedido> Itens { get; set; }
         public DateTime DataPedido { get; set; }

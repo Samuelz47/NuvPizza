@@ -1,3 +1,5 @@
+using NuvPizza.Domain.Enums;
+
 namespace NuvPizza.Application.DTOs;
 
 public class PedidoDTO
@@ -10,6 +12,7 @@ public class PedidoDTO
     public string Bairro { get; set; }
     public string Numero { get; set; }
     public string? Complemento { get; set; }
+    public StatusPedido StatusPedido { get; set; }
     public string FormaPagamento { get; set; }
     public List<ItemPedidoDTO> Itens { get; set; }
 }
