@@ -13,6 +13,7 @@ public class PedidoDTO
     public string Numero { get; set; }
     public string? Complemento { get; set; }
     public StatusPedido StatusPedido { get; set; }
+    public DateTime DataPedido { get; set; }
     public string FormaPagamento { get; set; }
     public List<ItemPedidoDTO> Itens { get; set; }
 }

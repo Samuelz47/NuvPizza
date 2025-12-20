@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using NuvPizza.Application.DTOs;
 using NuvPizza.Application.Interfaces;
 using NuvPizza.Application.Services;
+using NuvPizza.Domain.Pagination;
+using System.Text.Json;
 
 namespace NuvPizza.API.Controllers;
 [Route("[controller]")]
@@ -14,6 +16,26 @@ public class PedidoController : Controller
     public PedidoController(IPedidoService pedidoService)
     {
         _pedidoService = pedidoService;
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAllPedidos([FromQuery]PedidoParameters pedidoParameters)
+    {
+        var pagedResult = await _pedidoService.GetAllPedidosAsync(pedidoParameters);
+
+        var paginationMetadata = new
+        {
+            pagedResult.TotalCount,
+            pagedResult.PageSize,
+            pagedResult.TotalPages,
+            pagedResult.PageNumber,
+            pagedResult.Items,
+            pagedResult.HasNextPage,
+            pagedResult.HasPreviousPage,
+        };
+        Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
+        
+        return Ok(paginationMetadata.Items);
     }
 
     [HttpPost]

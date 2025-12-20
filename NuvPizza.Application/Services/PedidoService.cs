@@ -8,6 +8,7 @@ using NuvPizza.Domain.Repositories;
 using NuvPizza.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using NuvPizza.Domain.Enums;
+using NuvPizza.Domain.Pagination;
 
 namespace NuvPizza.Application.Services;
 
@@ -89,7 +90,9 @@ public class PedidoService : IPedidoService
         var pedido = await _pedidoRepository.GetAsync(p => p.Id == Id);
         
         if (pedido is null) return Result<PedidoDTO>.Failure("Pedido não encontrado");
-        
+
+        if (pedido.StatusPedido == StatusPedido.Cancelado)
+            return Result<PedidoDTO>.Failure("Pedido Cancelado, necessário refazer");
         if (newStatus.StatusDoPedido == StatusPedido.Cancelado)
         {
             if (pedido.StatusPedido == StatusPedido.Entrega)
@@ -113,5 +116,19 @@ public class PedidoService : IPedidoService
         await _uow.CommitAsync();
         var pedidoDto = _mapper.Map<PedidoDTO>(pedido);
         return Result<PedidoDTO>.Success(pedidoDto);
+    }
+
+    public async Task<PagedResult<PedidoDTO>> GetAllPedidosAsync(PedidoParameters pedidoParameters)
+    {
+        var pagedResult = await _pedidoRepository.GetAllWithDetailsAsync(pedidoParameters);
+
+        var pedidosDto = _mapper.Map<IEnumerable<PedidoDTO>>(pagedResult.Items);
+
+        return new PagedResult<PedidoDTO>(
+            pedidosDto,
+            pagedResult.PageNumber,
+            pagedResult.PageSize,
+            pagedResult.TotalCount
+        );
     }
 }
