@@ -34,7 +34,7 @@ public class PedidoRepository : Repository<Pedido>, IPedidoRepository
         
 
         query = query.OrderByDescending(p => p.DataPedido);
-        var totalCount = query.Count();
+        var totalCount = await query.CountAsync();
         var items = await query
             .Skip((pedidoParameters.PageNumber - 1) * pedidoParameters.PageSize)
             .Take(pedidoParameters.PageSize)

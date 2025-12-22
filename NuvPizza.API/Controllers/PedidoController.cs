@@ -4,6 +4,7 @@ using NuvPizza.Application.Interfaces;
 using NuvPizza.Application.Services;
 using NuvPizza.Domain.Pagination;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 
 namespace NuvPizza.API.Controllers;
 [Route("[controller]")]
@@ -19,6 +20,7 @@ public class PedidoController : Controller
     }
 
     [HttpGet]
+    [Authorize]
     public async Task<IActionResult> GetAllPedidos([FromQuery]PedidoParameters pedidoParameters)
     {
         var pagedResult = await _pedidoService.GetAllPedidosAsync(pedidoParameters);
