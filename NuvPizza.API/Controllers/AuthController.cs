@@ -21,6 +21,7 @@ namespace NuvPizza.API.Controllers
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
         {
+            throw new Exception("Teste de LOG-------------------------");
             // 1. Busca o usuário pelo email
             var user = await _userManager.FindByEmailAsync(loginModel.Email);
 

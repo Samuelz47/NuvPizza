@@ -17,130 +17,139 @@ using NuvPizza.Domain.Repositories;
 using NuvPizza.Infrastructure.Persistence;
 using NuvPizza.Infrastructure.Repositories;
 using NuvPizza.Infrastructure.Services;
+using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .WriteTo.File("logs/nuvpizza-log.txt", rollingInterval: RollingInterval.Day)
+    .CreateLogger();
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite(connectionString));
-
-builder.Services.AddIdentity<Usuario, IdentityRole>() 
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddDefaultTokenProviders();
-
-var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);
-
-builder.Services.AddAuthentication(x =>
+try
 {
-    x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(x =>
-{
-    x.RequireHttpsMetadata = false;
-    x.SaveToken = true;
-    x.TokenValidationParameters = new TokenValidationParameters
-    {
-        ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = false,
-        ValidateAudience = false
-    };
-});
+    var builder = WebApplication.CreateBuilder(args);
+    
+    builder.Host.UseSerilog();
+    
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseSqlite(connectionString));
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-    });
+    builder.Services.AddIdentity<Usuario, IdentityRole>()
+        .AddEntityFrameworkStores<AppDbContext>()
+        .AddDefaultTokenProviders();
 
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
-{
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "NuvPizza.API", Version = "v1" });
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = SecuritySchemeType.ApiKey,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = ParameterLocation.Header,
-        Description = "Insira o token JWT desta maneira: Bearer {seu token aqui}"
-    });
+    var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);
 
-    c.AddSecurityRequirement(new OpenApiSecurityRequirement
-    {
+    builder.Services.AddAuthentication(x =>
         {
-            new OpenApiSecurityScheme
+            x.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+            x.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+        })
+        .AddJwtBearer(x =>
+        {
+            x.RequireHttpsMetadata = false;
+            x.SaveToken = true;
+            x.TokenValidationParameters = new TokenValidationParameters
             {
-                Reference = new OpenApiReference
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = false,
+                ValidateAudience = false
+            };
+        });
+
+    builder.Services.AddControllers()
+        .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
+
+    builder.Services.AddEndpointsApiExplorer();
+    builder.Services.AddSwaggerGen(c =>
+    {
+        c.SwaggerDoc("v1", new OpenApiInfo { Title = "NuvPizza.API", Version = "v1" });
+        c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+        {
+            Name = "Authorization",
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "Bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = "Insira o token JWT desta maneira: Bearer {seu token aqui}"
+        });
+
+        c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
                 {
-                    Type = ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            new string[] {}
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                new string[] { }
+            }
+        });
+    });
+
+    builder.Services.AddHttpClient<ViaCepService>(client => { client.Timeout = TimeSpan.FromSeconds(5); });
+
+    builder.Services.AddAutoMapper(typeof(ProdutoMappingProfile).Assembly);
+    builder.Services.AddFluentValidationAutoValidation();
+    builder.Services.AddFluentValidationClientsideAdapters();
+    builder.Services.AddValidatorsFromAssemblyContaining<PedidoValidator>();
+
+    builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+    builder.Services.AddScoped<IItemPedidoRepository, ItemPedidoRepository>();
+    builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
+    builder.Services.AddScoped<IPedidoRepository, PedidoRepository>();
+
+    builder.Services.AddScoped<IProdutoService, ProdutoService>();
+    builder.Services.AddScoped<IPedidoService, PedidoService>();
+    builder.Services.AddScoped<IWhatsappService, WhatsappService>();
+    builder.Services.AddScoped<TokenService>();
+
+    var app = builder.Build();
+
+    app.UseMiddleware<ExceptionHandlingMiddleware>();
+
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        try
+        {
+            var userManager = services.GetRequiredService<UserManager<Usuario>>();
+            var configuration = services.GetRequiredService<IConfiguration>();
+
+            DbInitializer.SeedUsers(userManager, configuration).Wait();
         }
-    });
-});
-
-builder.Services.AddHttpClient<ViaCepService>(client =>
-{
-    client.Timeout = TimeSpan.FromSeconds(5);
-});
-
-builder.Services.AddAutoMapper(typeof(ProdutoMappingProfile).Assembly);
-builder.Services.AddFluentValidationAutoValidation();
-builder.Services.AddFluentValidationClientsideAdapters();
-builder.Services.AddValidatorsFromAssemblyContaining<PedidoValidator>();
-
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-builder.Services.AddScoped<IItemPedidoRepository, ItemPedidoRepository>();
-builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
-builder.Services.AddScoped<IPedidoRepository, PedidoRepository>();
-
-builder.Services.AddScoped<IProdutoService, ProdutoService>();
-builder.Services.AddScoped<IPedidoService, PedidoService>();
-builder.Services.AddScoped<IWhatsappService, WhatsappService>();
-builder.Services.AddScoped<TokenService>();
-
-
-var app = builder.Build();
-
-app.UseMiddleware<ExceptionHandlingMiddleware>();
-
-using (var scope = app.Services.CreateScope())
-{
-    var services = scope.ServiceProvider;
-    try
-    {
-        var userManager = services.GetRequiredService<UserManager<Usuario>>();
-        var configuration = services.GetRequiredService<IConfiguration>();
-
-        DbInitializer.SeedUsers(userManager, configuration).Wait();
+        catch (Exception ex)
+        {
+            var logger = services.GetRequiredService<ILogger<Program>>();
+            logger.LogError(ex, "Ocorreu um erro ao criar o utilizador Admin.");
+        }
     }
-    catch (Exception ex)
+
+    if (app.Environment.IsDevelopment())
     {
-        var logger = services.GetRequiredService<ILogger<Program>>();
-        logger.LogError(ex, "Ocorreu um erro ao criar o utilizador Admin.");
+
+        app.UseSwagger();
+        app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "NuvPizza.API v1"); });
     }
-}
 
-if (app.Environment.IsDevelopment())
+    app.UseHttpsRedirection();
+
+    app.UseAuthentication();
+    app.UseAuthorization();
+
+    app.MapControllers();
+
+    app.Run();
+}
+catch (Exception ex)
 {
-
-    app.UseSwagger();
-    app.UseSwaggerUI(c => 
-    {
-        c.SwaggerEndpoint("/swagger/v1/swagger.json", "NuvPizza.API v1");
-    });
+    Log.Fatal(ex, "A aplicação falhou ao iniciar");
 }
-
-app.UseHttpsRedirection();
-
-app.UseAuthentication(); 
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
+finally
+{
+    Log.CloseAndFlush();
+}
