@@ -54,6 +54,7 @@ public class PedidoController : Controller
     }
 
     [HttpPatch("{id}/status")]
+    [Authorize]
     public async Task<ActionResult<PedidoDTO>> UpdateStatus(Guid id, StatusPedidoForUpdateDTO newStatus)
     {
         var pedidoUpdated = await _pedidoService.UpdateStatusPedidoAsync(id, newStatus);

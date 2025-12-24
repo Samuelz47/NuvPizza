@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NuvPizza.Application.DTOs;
 using NuvPizza.Application.Interfaces;
@@ -17,6 +18,7 @@ public class ProdutosController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> Post([FromBody] ProdutoForRegistrationDTO produtoDto)
     {
         var produtoCreated = await _produtoService.CreateProdutoAsync(produtoDto);

@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using NuvPizza.API.Middlewares;
 using NuvPizza.Application.Interfaces;
 using NuvPizza.Application.Mappings;
 using NuvPizza.Application.Services;
@@ -105,6 +106,8 @@ builder.Services.AddScoped<TokenService>();
 
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 using (var scope = app.Services.CreateScope())
 {
