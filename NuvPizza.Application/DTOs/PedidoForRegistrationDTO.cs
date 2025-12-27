@@ -1,3 +1,5 @@
+using Microsoft.AspNetCore.Http; 
+
 namespace NuvPizza.Application.DTOs;
 
 public class PedidoForRegistrationDTO

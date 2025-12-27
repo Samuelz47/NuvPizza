@@ -1,4 +1,5 @@
 using AutoMapper;
+using Microsoft.AspNetCore.Http;
 using NuvPizza.Application.Common;
 using NuvPizza.Application.DTOs;
 using NuvPizza.Application.Interfaces;
@@ -33,6 +34,17 @@ public class ProdutoService : IProdutoService
         }
         
         var produto = _mapper.Map<Produto>(produtoForRegister);
+
+        if (produtoForRegister.Imagem != null)
+        {
+            var caminhoImagem = await SalvarArquivo(produtoForRegister.Imagem);
+            produto.ImagemUrl = caminhoImagem;
+        }
+        else
+        {
+            produto.ImagemUrl = "images/sem_imagem.png";
+        }
+        
         _produtoRepository.Create(produto);
         await _uow.CommitAsync();
         
@@ -54,5 +66,22 @@ public class ProdutoService : IProdutoService
         var produtos = await _produtoRepository.GetAllAsync();
         var produtosDto = _mapper.Map<IEnumerable<ProdutoDTO>>(produtos);
         return produtosDto;
+    }
+    
+    private async Task<string> SalvarArquivo(IFormFile arquivo)
+    {
+        var nomeArquivo = $"{Guid.NewGuid()}{Path.GetExtension(arquivo.FileName)}";
+        var caminhoPasta = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "images");
+    
+        if (!Directory.Exists(caminhoPasta))  Directory.CreateDirectory(caminhoPasta);
+
+        var caminhoCompleto = Path.Combine(caminhoPasta, nomeArquivo);
+
+        using (var stream = new FileStream(caminhoCompleto, FileMode.Create))
+        {
+            await arquivo.CopyToAsync(stream);
+        }
+
+        return $"/imagens/{nomeArquivo}";
     }
 }

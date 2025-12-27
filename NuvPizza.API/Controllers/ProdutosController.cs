@@ -19,7 +19,7 @@ public class ProdutosController : ControllerBase
 
     [HttpPost]
     [Authorize]
-    public async Task<IActionResult> Post([FromBody] ProdutoForRegistrationDTO produtoDto)
+    public async Task<IActionResult> Post([FromForm] ProdutoForRegistrationDTO produtoDto)
     {
         var produtoCreated = await _produtoService.CreateProdutoAsync(produtoDto);
 
