@@ -22,12 +22,14 @@ namespace NuvPizza.Domain.Entities
         public string Cep { get; set; } = string.Empty;
         public int Numero { get; set; }
         public string Complemento { get; set; } = string.Empty;
-        public string Bairro { get; set; } = string.Empty;
+        public string BairroNome { get; set; } = string.Empty;
+        public int BairroId { get; set; }
         public string Logradouro { get; set; } = string.Empty;
         public StatusPedido StatusPedido { get; set; }
         public string FormaPagamento { get; set; } = string.Empty;
         public List<ItemPedido> Itens { get; set; }
         public DateTime DataPedido { get; set; }
+        public decimal ValorFrete { get; set; }
         public decimal ValorTotal { get; set; }
     }
 }

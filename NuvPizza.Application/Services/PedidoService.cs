@@ -16,21 +16,21 @@ public class PedidoService : IPedidoService
 {
     private readonly IPedidoRepository _pedidoRepository;
     private readonly IProdutoRepository _produtoRepository;
+    private readonly IBairroRepository _bairroRepository;
     private readonly IMapper _mapper;
     private readonly IUnitOfWork _uow;
     private readonly ViaCepService _viaCepService;
-    private readonly IConfiguration _configuration;
     private readonly IWhatsappService _whatsappService;
     
-    public PedidoService(IPedidoRepository pedidoRepository, IProdutoRepository produtoRepository, IMapper mapper, IUnitOfWork uow, ViaCepService viaCepService, IConfiguration configuration, IWhatsappService whatsappService)
+    public PedidoService(IPedidoRepository pedidoRepository, IProdutoRepository produtoRepository, IMapper mapper, IUnitOfWork uow, ViaCepService viaCepService, IWhatsappService whatsappService, IBairroRepository bairroRepository)
     {
         _pedidoRepository = pedidoRepository;
         _produtoRepository = produtoRepository;
         _mapper = mapper;
         _uow = uow;
         _viaCepService = viaCepService;
-        _configuration = configuration;
         _whatsappService = whatsappService;
+        _bairroRepository = bairroRepository;
     }
 
     public async Task<Result<PedidoDTO>> CreatePedidoAsync(PedidoForRegistrationDTO pedidoRegister)
@@ -38,19 +38,16 @@ public class PedidoService : IPedidoService
         var enderecoViaCep = await _viaCepService.CheckAsync(pedidoRegister.Cep);
         if (enderecoViaCep is null) return Result<PedidoDTO>.Failure("CEP Inválido ou não encontrado");
 
-        var bairrosPermitios =
-            _configuration.GetSection("ConfiguracoesEntrega:BairrosPermitidos").Get<List<string>>() ??
-            new List<string>();
+        var nomeBairroViaCep = enderecoViaCep.Bairro.Trim().ToLower();
+        var bairro = await _bairroRepository.GetAsync(b => b.Nome.ToLower() == nomeBairroViaCep);
+        if (bairro is null) return Result<PedidoDTO>.Failure("Desculpe não entregamos nesse bairro");
 
-        if (!bairrosPermitios.Any(b => b.Equals(enderecoViaCep.Bairro, StringComparison.OrdinalIgnoreCase)))
-        {
-            return Result<PedidoDTO>.Failure("Desculpe não entregamos nesse bairro");
-        }
-        
         var pedido =  _mapper.Map<Pedido>(pedidoRegister);
-        pedido.DataPedido = DateTime.UtcNow;
+        pedido.DataPedido = DateTime.Now;
         pedido.Itens = new List<ItemPedido>();
-        pedido.Bairro = enderecoViaCep.Bairro;
+        pedido.ValorFrete = bairro.ValorFrete;
+        pedido.BairroId = bairro.Id;
+        pedido.BairroNome = bairro.Nome;
         pedido.Cep = enderecoViaCep.Cep;
         pedido.Logradouro = enderecoViaCep.Logradouro;
         pedido.Complemento = pedidoRegister.Complemento;
@@ -67,14 +64,13 @@ public class PedidoService : IPedidoService
                 ProdutoId = produto.Id,
                 Nome = produto.Nome,
                 Quantidade = itemDto.Quantidade,
-                PrecoUnitario = produto.Preco,
-                PedidoId = pedido.Id
+                PrecoUnitario = produto.Preco
             };
             
             pedido.Itens.Add(item);
         }
         
-        pedido.ValorTotal = pedido.Itens.Sum(i => i.Total);
+        pedido.ValorTotal = pedido.Itens.Sum(i => i.Total) + pedido.ValorFrete;
         _pedidoRepository.Create(pedido);
         await _uow.CommitAsync();
         

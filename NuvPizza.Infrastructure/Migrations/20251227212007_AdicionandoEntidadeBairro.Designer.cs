@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NuvPizza.Infrastructure.Persistence;
 
@@ -10,9 +11,11 @@ using NuvPizza.Infrastructure.Persistence;
 namespace NuvPizza.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251227212007_AdicionandoEntidadeBairro")]
+    partial class AdicionandoEntidadeBairro
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.1");
@@ -165,134 +168,6 @@ namespace NuvPizza.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Bairros");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = 1,
-                            Ativo = true,
-                            Nome = "Guarapes",
-                            ValorFrete = 10.00m
-                        },
-                        new
-                        {
-                            Id = 2,
-                            Ativo = true,
-                            Nome = "Lagoa Nova",
-                            ValorFrete = 12.00m
-                        },
-                        new
-                        {
-                            Id = 3,
-                            Ativo = true,
-                            Nome = "Lagoa Seca",
-                            ValorFrete = 12.00m
-                        },
-                        new
-                        {
-                            Id = 4,
-                            Ativo = true,
-                            Nome = "Nossa Senhora de Nazaré",
-                            ValorFrete = 6.00m
-                        },
-                        new
-                        {
-                            Id = 5,
-                            Ativo = true,
-                            Nome = "Neópolis",
-                            ValorFrete = 15.00m
-                        },
-                        new
-                        {
-                            Id = 6,
-                            Ativo = true,
-                            Nome = "Nordeste",
-                            ValorFrete = 7.00m
-                        },
-                        new
-                        {
-                            Id = 7,
-                            Ativo = true,
-                            Nome = "Nova Descoberta",
-                            ValorFrete = 15.00m
-                        },
-                        new
-                        {
-                            Id = 8,
-                            Ativo = true,
-                            Nome = "Nova Parnamirim",
-                            ValorFrete = 20.00m
-                        },
-                        new
-                        {
-                            Id = 9,
-                            Ativo = true,
-                            Nome = "Pitimbu",
-                            ValorFrete = 15.00m
-                        },
-                        new
-                        {
-                            Id = 10,
-                            Ativo = true,
-                            Nome = "Alecrim",
-                            ValorFrete = 10.00m
-                        },
-                        new
-                        {
-                            Id = 11,
-                            Ativo = true,
-                            Nome = "Barro Vermelho",
-                            ValorFrete = 15.00m
-                        },
-                        new
-                        {
-                            Id = 12,
-                            Ativo = true,
-                            Nome = "Bom Pastor",
-                            ValorFrete = 4.00m
-                        },
-                        new
-                        {
-                            Id = 13,
-                            Ativo = true,
-                            Nome = "Candelária",
-                            ValorFrete = 10.00m
-                        },
-                        new
-                        {
-                            Id = 14,
-                            Ativo = true,
-                            Nome = "Capim Macio",
-                            ValorFrete = 18.00m
-                        },
-                        new
-                        {
-                            Id = 15,
-                            Ativo = true,
-                            Nome = "Cidade Nova",
-                            ValorFrete = 4.00m
-                        },
-                        new
-                        {
-                            Id = 16,
-                            Ativo = true,
-                            Nome = "Dix-Sept Rosado",
-                            ValorFrete = 8.00m
-                        },
-                        new
-                        {
-                            Id = 17,
-                            Ativo = true,
-                            Nome = "Cidade da Esperança",
-                            ValorFrete = 6.00m
-                        },
-                        new
-                        {
-                            Id = 18,
-                            Ativo = true,
-                            Nome = "Felipe Camarão",
-                            ValorFrete = 0.00m
-                        });
                 });
 
             modelBuilder.Entity("NuvPizza.Domain.Entities.ItemPedido", b =>

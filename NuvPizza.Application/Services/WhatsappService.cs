@@ -32,7 +32,7 @@ public class WhatsappService : IWhatsappService
         {
             sb.AppendLine($"   ({pedido.Complemento})");
         }
-        sb.AppendLine($"   {pedido.Bairro}");
+        sb.AppendLine($"   {pedido.BairroNome}");
         sb.AppendLine($"--------------------------------");
         sb.AppendLine($"*RESUMO DO PEDIDO*");
 
