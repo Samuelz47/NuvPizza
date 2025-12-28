@@ -9,9 +9,9 @@ namespace NuvPizza.API.Controllers;
 
 public class BairrosController : ControllerBase
 {
-    private readonly IRepository<Bairro> _bairroRepository;
+    private readonly IBairroRepository _bairroRepository;
 
-    public BairrosController(IRepository<Bairro> bairroRepository)
+    public BairrosController(IBairroRepository bairroRepository)
     {
         _bairroRepository = bairroRepository;
     }
