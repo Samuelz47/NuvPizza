@@ -16,6 +16,7 @@ namespace NuvPizza.Infrastructure.Persistence
         public DbSet<Pedido> Pedidos { get; set; }
         public DbSet<Produto> Produtos { get; set; }
         public DbSet<Bairro> Bairros { get; set; }
+        public DbSet<Configuracao> Configuracoes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -65,6 +66,16 @@ namespace NuvPizza.Infrastructure.Persistence
                 e.Property(b => b.Nome).IsRequired().HasMaxLength(100);
                 e.Property(b => b.ValorFrete).HasColumnType("decimal(10,2)"); 
             });
+            
+            builder.Entity<Configuracao>().HasData(
+                new Configuracao 
+                { 
+                    Id = 1, 
+                    EstaAberta = false, // Nasce fechada (Segurança)
+                    DataHoraFechamentoAtual = null,
+                    HorarioFechamentoPadrao = new TimeSpan(23, 0, 0) // Sugestão: 23h
+                }
+            );
         } 
     }
 }

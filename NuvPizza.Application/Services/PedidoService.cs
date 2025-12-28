@@ -17,12 +17,13 @@ public class PedidoService : IPedidoService
     private readonly IPedidoRepository _pedidoRepository;
     private readonly IProdutoRepository _produtoRepository;
     private readonly IBairroRepository _bairroRepository;
+    private readonly IConfiguracaoRepository _configuracaoRepository;
     private readonly IMapper _mapper;
     private readonly IUnitOfWork _uow;
     private readonly ViaCepService _viaCepService;
     private readonly IWhatsappService _whatsappService;
     
-    public PedidoService(IPedidoRepository pedidoRepository, IProdutoRepository produtoRepository, IMapper mapper, IUnitOfWork uow, ViaCepService viaCepService, IWhatsappService whatsappService, IBairroRepository bairroRepository)
+    public PedidoService(IPedidoRepository pedidoRepository, IProdutoRepository produtoRepository, IMapper mapper, IUnitOfWork uow, ViaCepService viaCepService, IWhatsappService whatsappService, IBairroRepository bairroRepository, IConfiguracaoRepository configuracaoRepository)
     {
         _pedidoRepository = pedidoRepository;
         _produtoRepository = produtoRepository;
@@ -31,10 +32,13 @@ public class PedidoService : IPedidoService
         _viaCepService = viaCepService;
         _whatsappService = whatsappService;
         _bairroRepository = bairroRepository;
+        _configuracaoRepository = configuracaoRepository;
     }
 
     public async Task<Result<PedidoDTO>> CreatePedidoAsync(PedidoForRegistrationDTO pedidoRegister)
     {
+        if (!await LojaEstaAberta()) return Result<PedidoDTO>.Failure("Desculpe, a pizzaria está fechada no momento");
+        
         var enderecoViaCep = await _viaCepService.CheckAsync(pedidoRegister.Cep);
         if (enderecoViaCep is null) return Result<PedidoDTO>.Failure("CEP Inválido ou não encontrado");
 
@@ -126,5 +130,19 @@ public class PedidoService : IPedidoService
             pagedResult.PageSize,
             pagedResult.TotalCount
         );
+    }
+    
+    private async Task<bool> LojaEstaAberta()
+    {
+        var config = await _configuracaoRepository.GetAsync(c => c.Id == 1);
+
+        if (!config.EstaAberta) return false;
+
+        if (config.DataHoraFechamentoAtual.HasValue && DateTime.Now > config.DataHoraFechamentoAtual.Value)
+        {
+            return false;
+        }
+
+        return true;
     }
 }

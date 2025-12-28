@@ -103,6 +103,7 @@ try
     builder.Services.AddScoped<IProdutoRepository, ProdutoRepository>();
     builder.Services.AddScoped<IPedidoRepository, PedidoRepository>();
     builder.Services.AddScoped<IBairroRepository, BairroRepository>();
+    builder.Services.AddScoped<IConfiguracaoRepository, ConfiguracaoRepository>();
 
     builder.Services.AddScoped<IProdutoService, ProdutoService>();
     builder.Services.AddScoped<IPedidoService, PedidoService>();
