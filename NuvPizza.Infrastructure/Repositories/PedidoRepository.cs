@@ -12,7 +12,10 @@ public class PedidoRepository : Repository<Pedido>, IPedidoRepository
 
     public async Task<PagedResult<Pedido>> GetAllWithDetailsAsync(PedidoParameters pedidoParameters)
     {
-        var query = _context.Pedidos.Include(p => p.Itens).AsNoTracking().AsQueryable();
+        var query = _context.Pedidos
+            .Include(p => p.Itens)
+            .AsNoTracking()
+            .AsQueryable();
 
         if (pedidoParameters.Status != null && pedidoParameters.Status.Any())
             query = query.Where(p => pedidoParameters.Status.Contains(p.StatusPedido));
