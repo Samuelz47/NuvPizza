@@ -12,7 +12,7 @@ namespace NuvPizza.Domain.Entities
         {
             StatusPedido = StatusPedido.Criado;
             Id = Guid.NewGuid();
-            DataPedido = DateTime.UtcNow;
+            DataPedido = DateTime.Now;
             Itens = new List<ItemPedido>();
         }
                 
