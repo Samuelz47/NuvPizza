@@ -7,7 +7,10 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using NuvPizza.API.Hubs;
 using NuvPizza.API.Middlewares;
+using NuvPizza.API.Services;
+using NuvPizza.API.Workers;
 using NuvPizza.Application.Interfaces;
 using NuvPizza.Application.Mappings;
 using NuvPizza.Application.Services;
@@ -37,6 +40,9 @@ try
     builder.Services.AddIdentity<Usuario, IdentityRole>()
         .AddEntityFrameworkStores<AppDbContext>()
         .AddDefaultTokenProviders();
+
+    builder.Services.AddSignalR();
+    builder.Services.AddHostedService<LojaWorkers>();
 
     var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);
 
@@ -108,6 +114,8 @@ try
     builder.Services.AddScoped<IProdutoService, ProdutoService>();
     builder.Services.AddScoped<IPedidoService, PedidoService>();
     builder.Services.AddScoped<IWhatsappService, WhatsappService>();
+    builder.Services.AddScoped<IConfiguracaoService, ConfiguracaoService>();
+    builder.Services.AddScoped<INotificacaoService, NotificacaoService>();
     builder.Services.AddScoped<TokenService>();
 
     var app = builder.Build();
@@ -139,12 +147,14 @@ try
     }
 
     app.UseHttpsRedirection();
-
+    
     app.UseStaticFiles();
     
     app.UseAuthentication();
     app.UseAuthorization();
 
+    app.MapHub<NotificacaoHub>("/notificacao");
+    
     app.MapControllers();
 
     app.Run();
