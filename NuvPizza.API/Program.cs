@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Text;
 using System.Text.Json.Serialization;
 using FluentValidation;
@@ -116,6 +117,8 @@ try
     builder.Services.AddScoped<IWhatsappService, WhatsappService>();
     builder.Services.AddScoped<IConfiguracaoService, ConfiguracaoService>();
     builder.Services.AddScoped<INotificacaoService, NotificacaoService>();
+    builder.Services.AddScoped<IPagamentoService, PagamentoDummyService>();
+    builder.Services.AddScoped<IEmailService, EmailDummyService>();
     builder.Services.AddScoped<TokenService>();
 
     var app = builder.Build();
