@@ -20,13 +20,13 @@ public class PedidoService : IPedidoService
     private readonly IConfiguracaoRepository _configuracaoRepository;
     private readonly IMapper _mapper;
     private readonly IUnitOfWork _uow;
-    private readonly ViaCepService _viaCepService;
+    private readonly IViaCepService _viaCepService;
     private readonly IWhatsappService _whatsappService;
     private readonly IEmailService _emailService;
     private readonly IPagamentoService _pagamentoService;
     private readonly INotificacaoService _notificacaoService;
     
-    public PedidoService(IPedidoRepository pedidoRepository, IProdutoRepository produtoRepository, IMapper mapper, IUnitOfWork uow, ViaCepService viaCepService, IWhatsappService whatsappService, IBairroRepository bairroRepository, IConfiguracaoRepository configuracaoRepository, IEmailService emailService, IPagamentoService pagamentoService, INotificacaoService notificacaoService)
+    public PedidoService(IPedidoRepository pedidoRepository, IProdutoRepository produtoRepository, IMapper mapper, IUnitOfWork uow, IViaCepService viaCepService, IWhatsappService whatsappService, IBairroRepository bairroRepository, IConfiguracaoRepository configuracaoRepository, IEmailService emailService, IPagamentoService pagamentoService, INotificacaoService notificacaoService)
     {
         _pedidoRepository = pedidoRepository;
         _produtoRepository = produtoRepository;

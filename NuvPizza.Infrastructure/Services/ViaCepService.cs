@@ -12,7 +12,7 @@ public class ViaCepResponse
     public bool Erro { get; set; }
 }
 
-public class ViaCepService
+public class ViaCepService : IViaCepService
 {
     private readonly HttpClient _httpClient;
     

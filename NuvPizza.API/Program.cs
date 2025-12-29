@@ -119,6 +119,7 @@ try
     builder.Services.AddScoped<INotificacaoService, NotificacaoService>();
     builder.Services.AddScoped<IPagamentoService, PagamentoDummyService>();
     builder.Services.AddScoped<IEmailService, EmailDummyService>();
+    builder.Services.AddScoped<IViaCepService, ViaCepService>();
     builder.Services.AddScoped<TokenService>();
 
     var app = builder.Build();
