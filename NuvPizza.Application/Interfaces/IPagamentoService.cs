@@ -1,8 +1,9 @@
-using NuvPizza.Domain.Entities;
+using NuvPizza.Application.Common;
+using NuvPizza.Application.DTOs;
 
 namespace NuvPizza.Application.Interfaces;
 
 public interface IPagamentoService
 {
-    Task<string> GerarQrCodePix(Pedido pedido);
+    Task<Result<PagamentoResponseDTO>> ProcessarPagamentoAsync(PagamentoRequestDTO pagamentoDto);
 }

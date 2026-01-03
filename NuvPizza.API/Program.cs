@@ -117,7 +117,7 @@ try
     builder.Services.AddScoped<IWhatsappService, WhatsappService>();
     builder.Services.AddScoped<IConfiguracaoService, ConfiguracaoService>();
     builder.Services.AddScoped<INotificacaoService, NotificacaoService>();
-    builder.Services.AddScoped<IPagamentoService, PagamentoDummyService>();
+    builder.Services.AddScoped<IPagamentoService, MercadoPagoService>();
     builder.Services.AddScoped<IEmailService, EmailDummyService>();
     builder.Services.AddScoped<IViaCepService, ViaCepService>();
     builder.Services.AddScoped<TokenService>();
