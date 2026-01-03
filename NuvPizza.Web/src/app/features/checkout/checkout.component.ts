@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, NgZone, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router'; 
 import { loadMercadoPago } from '@mercadopago/sdk-js';
@@ -12,6 +12,7 @@ declare var window: any;
   selector: 'app-checkout',
   standalone: true,
   imports: [CommonModule],
+  encapsulation: ViewEncapsulation.None, 
   template: `
     <div class="checkout-container">
       <h2>Finalizar Pedido</h2>
@@ -24,50 +25,20 @@ declare var window: any;
 
       @if (loading()) {
         <div class="loading">
-          <span class="spinner">↻</span> Processando pagamento...
+          <span class="spinner">↻</span> Processando...
         </div>
       }
-
       @if (errorMessage()) {
-        <div class="error">
-          {{ errorMessage() }}
-        </div>
+        <div class="error">{{ errorMessage() }}</div>
       }
     </div>
   `,
   styles: [`
-    .checkout-container { 
-      max-width: 600px; 
-      margin: 2rem auto; 
-      padding: 1.5rem; 
-      font-family: sans-serif; 
-      background: #fff;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      border-radius: 8px;
-    }
+    .checkout-container { max-width: 600px; margin: 2rem auto; padding: 1.5rem; background: #fff; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); font-family: sans-serif; }
     h2 { text-align: center; color: #333; }
-    .summary { 
-      margin-bottom: 20px; 
-      padding: 15px; 
-      background: #f8f9fa; 
-      border-radius: 6px; 
-      text-align: center;
-      font-size: 1.2rem;
-    }
-    .error { 
-      background-color: #ffe6e6; 
-      color: #d8000c; 
-      padding: 10px; 
-      margin-top: 15px; 
-      border-radius: 4px; 
-      text-align: center;
-    }
-    .loading { 
-      color: #009ee3; 
-      margin-top: 15px; 
-      font-weight: bold; 
-      text-align: center; 
-    }
+    .summary { margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px; text-align: center; font-size: 1.2rem; }
+    .error { background-color: #ffe6e6; color: #d8000c; padding: 10px; margin-top: 15px; border-radius: 4px; text-align: center; }
+    .loading { color: #009ee3; margin-top: 15px; font-weight: bold; text-align: center; }
     .spinner { display: inline-block; animation: spin 1s infinite linear; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
   `]
@@ -75,17 +46,18 @@ declare var window: any;
 export class CheckoutComponent implements OnInit {
   private paymentService = inject(PaymentService);
   private router = inject(Router);
+  private ngZone = inject(NgZone);
   
-  // Signals
   amount = signal<number>(100.00); 
   loading = signal<boolean>(false);
   errorMessage = signal<string>('');
-  
   pedidoIdTeste = 123; 
 
   async ngOnInit() {
     await loadMercadoPago();
-    const mp = new window.MercadoPago(environment.mercadoPagoPublicKey);
+    const mp = new window.MercadoPago(environment.mercadoPagoPublicKey, {
+      locale: 'pt-BR'
+    });
     const bricksBuilder = mp.bricks();
 
     const renderPaymentBrick = async (bricksBuilder: any) => {
@@ -93,95 +65,94 @@ export class CheckoutComponent implements OnInit {
         initialization: {
           amount: this.amount(),
           payer: {
-            email: 'test_user_123@test.com', 
+            email: 'test_user_123@test.com',
+            firstName: 'Cliente',
+            lastName: 'Teste',
+            entityType: 'individual', 
+            // identification: ... (removido para o usuário preencher)
           },
         },
         customization: {
           visual: {
-            style: {
-              theme: "default", 
-            }
+            style: { theme: "default" },
+            hidePaymentButton: false
           },
           paymentMethods: {
-            ticket: "all",
-            bankTransfer: "all",
-            creditCard: "all",
-            debitCard: "all",
-            mercadoPago: "all",
+            // --- CONFIGURAÇÕES FINAIS ---
+            ticket: [],              // Sem Boleto
+            bankTransfer: ['pix'],   // Apenas Pix
+            creditCard: "all",       // Crédito liberado
+            debitCard: [],           // <--- REMOVIDO (Resolve o problema da Caixa)
+            mercadoPago: "all",      // Saldo MP
+            
+            // --- PARCELAMENTO 3x ---
+            maxInstallments: 3,      
+            minInstallments: 1,      
+            
+            // Mantive a lista de exclusão por segurança, mas o debitCard: [] já deve resolver
+            excludedPaymentMethods: ['pec', 'bolbradesco'] 
           },
         },
         callbacks: {
-          onReady: () => {
-            console.log('Brick carregado e pronto.');
-          },
-          onSubmit: async (paymentFormData: any) => {
-            console.log('1. Botão Pagar clicado! Dados do Brick:', paymentFormData);
-            
-            this.loading.set(true);
-            this.errorMessage.set('');
+          onReady: () => console.log('Brick pronto.'),
+          onSubmit: async (brickResponse: any) => {
+            this.ngZone.run(() => { this.loading.set(true); this.errorMessage.set(''); });
 
-            // Mapeia os dados e blinda o telefone
-            const request: PagamentoRequest = {
-              pedidoId: this.pedidoIdTeste, 
-              transactionAmount: paymentFormData.transaction_amount,
-              token: paymentFormData.token,
-              description: "Pedido NuvPizza - Teste",
-              paymentMethodId: paymentFormData.payment_method_id,
-              installments: paymentFormData.installments,
-              issuerId: paymentFormData.issuer_id,
-              payer: {
-                email: paymentFormData.payer.email,
-                firstName: "Cliente Teste", 
-                // Se o brick não mandar telefone, mandamos um fake pra não travar o backend
-                phone: "11999999999", 
-                identification: {
-                  type: paymentFormData.payer.identification.type,
-                  number: paymentFormData.payer.identification.number
-                }
-              }
-            };
-
-            console.log('2. Enviando requisição para API...', request);
-
-            return new Promise((resolve, reject) => {
-              this.paymentService.processarPagamento(request).subscribe({
-                next: (res) => {
-                  console.log('3. SUCESSO! Resposta da API:', res);
-                  this.loading.set(false);
-                  
-                  resolve(true); // Avisa o Brick que deu certo
-                  this.router.navigate(['/sucesso']); // Redireciona
-                },
-                error: (err) => {
-                  console.error('3. ERRO! Falha na requisição:', err);
-                  this.loading.set(false);
-                  
-                  // Mensagem amigável para o usuário
-                  if (err.status === 0) {
-                     this.errorMessage.set('Erro de Conexão: Backend desligado ou bloqueado.');
-                  } else if (err.status === 400) {
-                     this.errorMessage.set('Dados inválidos. Verifique o cartão.');
-                  } else {
-                     this.errorMessage.set(`Erro no sistema: ${err.status}`);
+            try {
+              const dados = brickResponse.formData || brickResponse;
+              
+              const request: PagamentoRequest = {
+                pedidoId: this.pedidoIdTeste, 
+                transactionAmount: dados.transaction_amount,
+                token: dados.token || '',
+                description: "Pedido NuvPizza",
+                paymentMethodId: dados.payment_method_id,
+                installments: dados.installments,
+                issuerId: dados.issuer_id ? String(dados.issuer_id) : '',
+                payer: {
+                  email: dados.payer?.email || 'test_user_123@test.com',
+                  firstName: dados.payer?.first_name || "Cliente", 
+                  phone: "11999999999", 
+                  identification: {
+                    type: dados.payer?.identification?.type || 'CPF',
+                    number: dados.payer?.identification?.number || '00000000000'
                   }
-                  
-                  reject(); // Avisa o Brick que deu erro
                 }
+              };
+
+              return new Promise((resolve, reject) => {
+                this.paymentService.processarPagamento(request).subscribe({
+                  next: (res) => {
+                    this.ngZone.run(() => {
+                        this.loading.set(false);
+                        resolve(true); 
+                        this.router.navigate(['/sucesso'], { state: { dadosPagamento: res } });
+                    });
+                  },
+                  error: (err) => {
+                    this.ngZone.run(() => {
+                        this.loading.set(false);
+                        const msg = err.error?.message || 'Erro ao processar.';
+                        this.errorMessage.set(typeof msg === 'string' ? msg : JSON.stringify(msg));
+                        reject();
+                    });
+                  }
+                });
               });
-            });
+
+            } catch (error) {
+              this.ngZone.run(() => { this.loading.set(false); this.errorMessage.set('Erro interno.'); });
+              return Promise.reject(); 
+            }
           },
           onError: (error: any) => {
-            console.error('Erro interno do Brick:', error);
-            this.errorMessage.set('Ocorreu um erro ao carregar o módulo de pagamento.');
+            console.error('Erro Brick:', error);
+            this.ngZone.run(() => this.errorMessage.set('Erro ao carregar módulo de pagamento.'));
           },
         },
       };
       
-      window.paymentBrickController = await bricksBuilder.create(
-        "payment",
-        "paymentBrick_container",
-        settings
-      );
+      window.paymentBrickController = await bricksBuilder.create("payment", "paymentBrick_container", settings);
     };
 
     renderPaymentBrick(bricksBuilder);

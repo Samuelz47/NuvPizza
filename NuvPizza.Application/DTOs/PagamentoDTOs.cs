@@ -4,7 +4,7 @@ public class PagamentoRequestDTO
 {
     public int PedidoId { get; set; }
     public decimal TransactionAmount { get; set; }
-    public string Token { get; set; } // Token do cartão (vem do Brick)
+    public string? Token { get; set; } // Token do cartão (vem do Brick)
     public string Description { get; set; }
     public string PaymentMethodId { get; set; } // "pix", "visa", "master"...
     public int Installments { get; set; }
