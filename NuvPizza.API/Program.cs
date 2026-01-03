@@ -68,6 +68,16 @@ try
     builder.Services.AddControllers()
         .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("DevelopmentCors", policy =>
+        {
+            policy.AllowAnyOrigin() // Porta padrão do Angular
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+    });
+    
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(c =>
     {
@@ -145,12 +155,12 @@ try
 
     if (app.Environment.IsDevelopment())
     {
-
         app.UseSwagger();
         app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "NuvPizza.API v1"); });
+        app.UseCors("DevelopmentCors");
     }
 
-    app.UseHttpsRedirection();
+    //app.UseHttpsRedirection();
     
     app.UseStaticFiles();
     
@@ -160,7 +170,7 @@ try
     app.MapHub<NotificacaoHub>("/notificacao");
     
     app.MapControllers();
-
+    app.MapFallbackToFile("index.html");
     app.Run();
 }
 catch (Exception ex)
