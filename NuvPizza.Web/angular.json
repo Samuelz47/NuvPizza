@@ -54,6 +54,9 @@
         },
         "serve": {
           "builder": "@angular/build:dev-server",
+          "options": {
+            "allowedHosts": ["coralliferous-gloatingly-song.ngrok-free.dev"]
+          },
           "configurations": {
             "production": {
               "buildTarget": "NuvPizza.Web:build:production"

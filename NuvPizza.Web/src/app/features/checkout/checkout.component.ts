@@ -65,11 +65,10 @@ export class CheckoutComponent implements OnInit {
         initialization: {
           amount: this.amount(),
           payer: {
-            email: 'test_user_123@test.com',
-            firstName: 'Cliente',
-            lastName: 'Teste',
+            // --- CORREÇÃO AQUI ---
+            // Removemos o email fixo "test_user..." para não travar a Carteira.
+            // O entityType continua sendo obrigatório.
             entityType: 'individual', 
-            // identification: ... (removido para o usuário preencher)
           },
         },
         customization: {
@@ -78,18 +77,21 @@ export class CheckoutComponent implements OnInit {
             hidePaymentButton: false
           },
           paymentMethods: {
-            // --- CONFIGURAÇÕES FINAIS ---
-            ticket: [],              // Sem Boleto
-            bankTransfer: ['pix'],   // Apenas Pix
-            creditCard: "all",       // Crédito liberado
-            debitCard: [],           // <--- REMOVIDO (Resolve o problema da Caixa)
-            mercadoPago: "all",      // Saldo MP
+            ticket: [],              
+            bankTransfer: ['pix'],   
             
-            // --- PARCELAMENTO 3x ---
+            // Habilita Cartão + Google/Apple Pay (se disponível no dispositivo)
+            creditCard: "all",       
+            
+            debitCard: [],           
+            
+            // Habilita Carteira / Login Mercado Pago
+            // (Agora vai funcionar pois não estamos forçando um usuário fantasma)
+            mercadoPago: "all",      
+            
             maxInstallments: 3,      
             minInstallments: 1,      
             
-            // Mantive a lista de exclusão por segurança, mas o debitCard: [] já deve resolver
             excludedPaymentMethods: ['pec', 'bolbradesco'] 
           },
         },
@@ -110,7 +112,7 @@ export class CheckoutComponent implements OnInit {
                 installments: dados.installments,
                 issuerId: dados.issuer_id ? String(dados.issuer_id) : '',
                 payer: {
-                  email: dados.payer?.email || 'test_user_123@test.com',
+                  email: dados.payer?.email || 'email_nao_informado@nuvpizza.com',
                   firstName: dados.payer?.first_name || "Cliente", 
                   phone: "11999999999", 
                   identification: {
@@ -133,11 +135,9 @@ export class CheckoutComponent implements OnInit {
                     this.ngZone.run(() => {
                         this.loading.set(false);
                         let msg = err.error?.message || err.error || 'Erro ao processar pagamento.';
-                        
                         if (typeof msg !== 'string') {
                             msg = JSON.stringify(msg);
                         }
-
                         this.errorMessage.set(msg);
                         reject();
                     });
