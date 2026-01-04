@@ -1,0 +1,27 @@
+{
+  "/Pagamento": {
+    "target": "http://localhost:5269",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/Pedido": {
+    "target": "http://localhost:5269",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/Produtos": {
+    "target": "http://localhost:5269",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/Bairros": {
+    "target": "http://localhost:5269",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/Loja": {
+    "target": "http://localhost:5269",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

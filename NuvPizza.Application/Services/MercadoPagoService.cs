@@ -23,18 +23,19 @@ public class MercadoPagoService : IPagamentoService
     {
        try
         {
+            // 1. Tratamento de email (mantido do seu código)
             string emailDoPagador = dto.Payer.Email;
-
             if (string.IsNullOrEmpty(emailDoPagador))
             {
                 var telefoneLimpo = new string(dto.Payer.Phone.Where(char.IsDigit).ToArray());
                 emailDoPagador = $"{telefoneLimpo}@cliente.nuvpizza.com.br";
             }
 
+            // 2. Criação do Request (Serve para Cartão, GPay e Apple Pay)
             var request = new PaymentCreateRequest
             {
                 TransactionAmount = dto.TransactionAmount,
-                Token = dto.Token,
+                Token = dto.Token, // O Token vem do Front (seja digitado ou via GPay)
                 Description = dto.Description,
                 Installments = dto.Installments,
                 PaymentMethodId = dto.PaymentMethodId,
@@ -51,7 +52,10 @@ public class MercadoPagoService : IPagamentoService
                 Metadata = new Dictionary<string, object>
                 {
                     { "pedido_id", dto.PedidoId }
-                }
+                },
+                // Essa opção força o MP a dar uma resposta final (Aprovado ou Recusado)
+                // Evita o status "Pending" que é ruim para pizzaria
+                BinaryMode = true 
             };
 
             if (!string.IsNullOrEmpty(dto.IssuerId))
@@ -69,30 +73,41 @@ public class MercadoPagoService : IPagamentoService
                 StatusDetail = payment.StatusDetail
             };
 
+            // Lógica para Pix
             if (dto.PaymentMethodId.ToLower() == "pix" && payment.PointOfInteraction != null)
             {
                 responseDto.QrCodeBase64 = payment.PointOfInteraction.TransactionData.QrCodeBase64;
                 responseDto.QrCodeCopiaCola = payment.PointOfInteraction.TransactionData.QrCode;
             }
 
+            // 3. Verificação de Sucesso
+            // Com BinaryMode=true, dificilmente cairá em Pending/InProcess, mas mantemos por segurança
             if (payment.Status == PaymentStatus.Approved || 
-                payment.Status == PaymentStatus.Pending || 
-                payment.Status == PaymentStatus.InProcess)
+                payment.Status == PaymentStatus.InProcess) 
             {
                 return Result<PagamentoResponseDTO>.Success(responseDto);
             }
 
+            // Se recusou, traduz o erro
             string mensagemAmigavel = TraduzirDetalheStatus(payment.StatusDetail);
-            
             return Result<PagamentoResponseDTO>.Failure(mensagemAmigavel);
         }
         catch (MercadoPago.Error.MercadoPagoApiException mpEx)
         {
-            return Result<PagamentoResponseDTO>.Failure($"Erro nos dados do cartão: {mpEx.Message}");
+            // Captura erros da API (ex: cartão recusado, token inválido)
+            var msg = mpEx.ApiError?.Message ?? mpEx.Message;
+            Console.WriteLine($"Erro MP: {msg}");
+            
+            // Tenta traduzir o erro se possível, senão manda genérico
+            if(mpEx.ApiError?.Cause != null && mpEx.ApiError.Cause.Count > 0)
+                return Result<PagamentoResponseDTO>.Failure($"Erro: {mpEx.ApiError.Cause[0].Description}");
+
+            return Result<PagamentoResponseDTO>.Failure("Não foi possível processar o pagamento. Verifique os dados.");
         }
         catch (Exception ex)
         {
-            return Result<PagamentoResponseDTO>.Failure($"Erro interno ao processar: {ex.Message}");
+            Console.WriteLine($"Erro Interno: {ex.Message}");
+            return Result<PagamentoResponseDTO>.Failure($"Erro interno no servidor.");
         }
     }
 
@@ -100,24 +115,16 @@ public class MercadoPagoService : IPagamentoService
     {
         return statusDetail switch
         {
-            // Qualquer erro de preenchimento retorna a mesma mensagem genérica
             "cc_rejected_bad_filled_card_number" or 
             "cc_rejected_bad_filled_date" or 
             "cc_rejected_bad_filled_other" or 
             "cc_rejected_bad_filled_security_code" => "Revise os dados do cartão.",
-
-            // Erros específicos que não comprometem segurança
-            "cc_rejected_insufficient_amount" => "O cartão possui saldo insuficiente.",
-            "cc_rejected_call_for_authorize" => "Você precisa autorizar o pagamento com seu banco.",
-            "cc_rejected_card_disabled" => "Ligue para o seu banco para ativar seu cartão.",
-            "cc_rejected_invalid_installments" => "O cartão não processa pagamentos neste número de parcelas.",
-            "cc_rejected_duplicated_payment" => "Pagamento duplicado. Aguarde alguns minutos.",
-            "cc_rejected_max_attempts" => "Limite de tentativas atingido. Use outro cartão.",
-            "cc_rejected_high_risk" => "Pagamento recusado por segurança. Escolha outra forma de pagamento.",
-            "cc_rejected_blacklist" => "Não pudemos processar seu pagamento.",
-            
-            // Padrão
-            _ => "Pagamento recusado. Tente outro meio de pagamento."
+            "cc_rejected_insufficient_amount" => "Saldo insuficiente.",
+            "cc_rejected_call_for_authorize" => "Autorize o pagamento junto ao seu banco.",
+            "cc_rejected_card_disabled" => "Cartão bloqueado ou desabilitado.",
+            "cc_rejected_invalid_installments" => "Número de parcelas não aceito.",
+            "cc_rejected_high_risk" => "Pagamento recusado por segurança.",
+            _ => "Pagamento recusado. Tente outro cartão."
         };
     }
 }
