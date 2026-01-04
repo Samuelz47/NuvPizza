@@ -132,8 +132,13 @@ export class CheckoutComponent implements OnInit {
                   error: (err) => {
                     this.ngZone.run(() => {
                         this.loading.set(false);
-                        const msg = err.error?.message || 'Erro ao processar.';
-                        this.errorMessage.set(typeof msg === 'string' ? msg : JSON.stringify(msg));
+                        let msg = err.error?.message || err.error || 'Erro ao processar pagamento.';
+                        
+                        if (typeof msg !== 'string') {
+                            msg = JSON.stringify(msg);
+                        }
+
+                        this.errorMessage.set(msg);
                         reject();
                     });
                   }

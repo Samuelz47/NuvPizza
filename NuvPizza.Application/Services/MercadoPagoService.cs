@@ -23,22 +23,18 @@ public class MercadoPagoService : IPagamentoService
     {
        try
         {
-            // Se o front não mandou e-mail, geramos um fictício com o telefone para o MP aceitar.
             string emailDoPagador = dto.Payer.Email;
 
             if (string.IsNullOrEmpty(emailDoPagador))
             {
-                // Remove tudo que não for número do telefone (para evitar erros com ( ) - )
                 var telefoneLimpo = new string(dto.Payer.Phone.Where(char.IsDigit).ToArray());
-                
-                // Cria: 11999999999@cliente.nuvpizza.com.br
                 emailDoPagador = $"{telefoneLimpo}@cliente.nuvpizza.com.br";
             }
 
             var request = new PaymentCreateRequest
             {
                 TransactionAmount = dto.TransactionAmount,
-                Token = dto.Token, // Se for Pix, o SDK ignora isso automaticamente
+                Token = dto.Token,
                 Description = dto.Description,
                 Installments = dto.Installments,
                 PaymentMethodId = dto.PaymentMethodId,
@@ -73,14 +69,12 @@ public class MercadoPagoService : IPagamentoService
                 StatusDetail = payment.StatusDetail
             };
 
-            // Se for PIX, extraímos os dados do QR Code
             if (dto.PaymentMethodId.ToLower() == "pix" && payment.PointOfInteraction != null)
             {
-                responseDto.QrCodeBase64 = payment.PointOfInteraction.TransactionData.QrCodeBase64; // Imagem
-                responseDto.QrCodeCopiaCola = payment.PointOfInteraction.TransactionData.QrCode;    // Texto
+                responseDto.QrCodeBase64 = payment.PointOfInteraction.TransactionData.QrCodeBase64;
+                responseDto.QrCodeCopiaCola = payment.PointOfInteraction.TransactionData.QrCode;
             }
 
-            // Consideramos sucesso se foi Aprovado (Cartão) ou Pendente/Em Processo (Pix/Cartão em análise)
             if (payment.Status == PaymentStatus.Approved || 
                 payment.Status == PaymentStatus.Pending || 
                 payment.Status == PaymentStatus.InProcess)
@@ -88,11 +82,42 @@ public class MercadoPagoService : IPagamentoService
                 return Result<PagamentoResponseDTO>.Success(responseDto);
             }
 
-            return Result<PagamentoResponseDTO>.Failure($"Pagamento rejeitado: {payment.StatusDetail}");
+            string mensagemAmigavel = TraduzirDetalheStatus(payment.StatusDetail);
+            
+            return Result<PagamentoResponseDTO>.Failure(mensagemAmigavel);
+        }
+        catch (MercadoPago.Error.MercadoPagoApiException mpEx)
+        {
+            return Result<PagamentoResponseDTO>.Failure($"Erro nos dados do cartão: {mpEx.Message}");
         }
         catch (Exception ex)
         {
-            return Result<PagamentoResponseDTO>.Failure($"Erro ao processar pagamento: {ex.Message}");
+            return Result<PagamentoResponseDTO>.Failure($"Erro interno ao processar: {ex.Message}");
         }
+    }
+
+    private string TraduzirDetalheStatus(string statusDetail)
+    {
+        return statusDetail switch
+        {
+            // Qualquer erro de preenchimento retorna a mesma mensagem genérica
+            "cc_rejected_bad_filled_card_number" or 
+            "cc_rejected_bad_filled_date" or 
+            "cc_rejected_bad_filled_other" or 
+            "cc_rejected_bad_filled_security_code" => "Revise os dados do cartão.",
+
+            // Erros específicos que não comprometem segurança
+            "cc_rejected_insufficient_amount" => "O cartão possui saldo insuficiente.",
+            "cc_rejected_call_for_authorize" => "Você precisa autorizar o pagamento com seu banco.",
+            "cc_rejected_card_disabled" => "Ligue para o seu banco para ativar seu cartão.",
+            "cc_rejected_invalid_installments" => "O cartão não processa pagamentos neste número de parcelas.",
+            "cc_rejected_duplicated_payment" => "Pagamento duplicado. Aguarde alguns minutos.",
+            "cc_rejected_max_attempts" => "Limite de tentativas atingido. Use outro cartão.",
+            "cc_rejected_high_risk" => "Pagamento recusado por segurança. Escolha outra forma de pagamento.",
+            "cc_rejected_blacklist" => "Não pudemos processar seu pagamento.",
+            
+            // Padrão
+            _ => "Pagamento recusado. Tente outro meio de pagamento."
+        };
     }
 }
