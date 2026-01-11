@@ -24,9 +24,12 @@ public class MercadoPagoService : IPagamentoService
         {
             var client = new PreferenceClient();
 
-            // 1. Definição das URLs
-            string baseUrl = "http://localhost:4200"; 
-            
+            // ---------------------------------------------------------
+            // CORREÇÃO: Use a URL HTTPS do Ngrok (copie do seu terminal)
+            // O Mercado Pago BLOQUEIA http://localhost no AutoReturn
+            // ---------------------------------------------------------
+            string baseUrl = "https://coralliferous-gloatingly-song.ngrok-free.dev"; 
+        
             var backUrls = new PreferenceBackUrlsRequest
             {
                 Success = $"{baseUrl}/sucesso",
@@ -86,7 +89,7 @@ public class MercadoPagoService : IPagamentoService
 
             Preference preference = await client.CreateAsync(request);
 
-            return Result<string>.Success(preference.InitPoint);
+            return Result<string>.Success(preference.SandboxInitPoint);
         }
         catch (Exception ex)
         {
