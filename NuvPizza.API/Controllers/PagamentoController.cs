@@ -1,4 +1,3 @@
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NuvPizza.Application.DTOs;
 using NuvPizza.Application.Interfaces;
@@ -16,16 +15,16 @@ public class PagamentoController : ControllerBase
         _pagamentoService = pagamentoService;
     }
 
-    [HttpPost]
-    public async Task<IActionResult> ProcessarPagamento([FromBody] PagamentoRequestDTO dto)
+    [HttpPost("criar-link")]
+    public async Task<IActionResult> CriarLinkPagamento([FromBody] CriarPreferenceDTO dto)
     {
         if (!ModelState.IsValid) return BadRequest(ModelState);
 
-        var result = await _pagamentoService.ProcessarPagamentoAsync(dto);
+        var result = await _pagamentoService.CriarPreferenciaAsync(dto);
 
         if (result.IsSuccess)
         {
-            return Ok(result.Data);
+            return Ok(new { url = result.Data });
         }
 
         return BadRequest(result.Message);

@@ -5,5 +5,5 @@ namespace NuvPizza.Application.Interfaces;
 
 public interface IPagamentoService
 {
-    Task<Result<PagamentoResponseDTO>> ProcessarPagamentoAsync(PagamentoRequestDTO pagamentoDto);
+    Task<Result<string>> CriarPreferenciaAsync(CriarPreferenceDTO dto);
 }

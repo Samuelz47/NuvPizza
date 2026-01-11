@@ -1,7 +1,6 @@
-using MercadoPago.Client.Common;
-using MercadoPago.Client.Payment;
+using MercadoPago.Client.Preference;
 using MercadoPago.Config;
-using MercadoPago.Resource.Payment;
+using MercadoPago.Resource.Preference;
 using Microsoft.Extensions.Configuration;
 using NuvPizza.Application.Common;
 using NuvPizza.Application.DTOs;
@@ -19,112 +18,80 @@ public class MercadoPagoService : IPagamentoService
         MercadoPagoConfig.AccessToken = _configuration["MercadoPago:AccessToken"];
     }
 
-    public async Task<Result<PagamentoResponseDTO>> ProcessarPagamentoAsync(PagamentoRequestDTO dto)
+    public async Task<Result<string>> CriarPreferenciaAsync(CriarPreferenceDTO dto)
     {
-       try
+        try
         {
-            // 1. Tratamento de email (mantido do seu código)
-            string emailDoPagador = dto.Payer.Email;
-            if (string.IsNullOrEmpty(emailDoPagador))
-            {
-                var telefoneLimpo = new string(dto.Payer.Phone.Where(char.IsDigit).ToArray());
-                emailDoPagador = $"{telefoneLimpo}@cliente.nuvpizza.com.br";
-            }
+            var client = new PreferenceClient();
 
-            // 2. Criação do Request (Serve para Cartão, GPay e Apple Pay)
-            var request = new PaymentCreateRequest
+            // 1. Definição das URLs
+            string baseUrl = "http://localhost:4200"; 
+            
+            var backUrls = new PreferenceBackUrlsRequest
             {
-                TransactionAmount = dto.TransactionAmount,
-                Token = dto.Token, // O Token vem do Front (seja digitado ou via GPay)
-                Description = dto.Description,
-                Installments = dto.Installments,
-                PaymentMethodId = dto.PaymentMethodId,
-                Payer = new PaymentPayerRequest
+                Success = $"{baseUrl}/sucesso",
+                Failure = $"{baseUrl}/checkout",
+                Pending = $"{baseUrl}/checkout"
+            };
+
+            // --- DEBUG: Vamos ver se as URLs foram criadas ---
+            Console.WriteLine($"[DEBUG] BackUrl Success definida como: {backUrls.Success}");
+            // ------------------------------------------------
+
+            var request = new PreferenceRequest
+            {
+                Items = new List<PreferenceItemRequest>
                 {
-                    Email = emailDoPagador, 
-                    FirstName = dto.Payer.FirstName,
-                    Identification = new IdentificationRequest
+                    new PreferenceItemRequest
                     {
-                        Type = dto.Payer.Identification.Type,
-                        Number = dto.Payer.Identification.Number
+                        Title = dto.Titulo,
+                        Quantity = dto.Quantidade,
+                        CurrencyId = "BRL",
+                        UnitPrice = dto.PrecoUnitario,
                     }
                 },
-                Metadata = new Dictionary<string, object>
+                Payer = new PreferencePayerRequest
                 {
-                    { "pedido_id", dto.PedidoId }
+                    Email = !string.IsNullOrEmpty(dto.EmailPagador) ? dto.EmailPagador : "cliente@nuvpizza.com"
                 },
-                // Essa opção força o MP a dar uma resposta final (Aprovado ou Recusado)
-                // Evita o status "Pending" que é ruim para pizzaria
-                BinaryMode = true 
+                
+                // 2. AQUI É O PONTO CRÍTICO. 
+                // Se essa linha não existir ou estiver comentada, dá o erro 400.
+                BackUrls = backUrls, 
+                
+                AutoReturn = "approved",
+                ExternalReference = Guid.NewGuid().ToString(),
+                StatementDescriptor = "NUVPIZZA",
+                Expires = false,
+                PaymentMethods = new PreferencePaymentMethodsRequest
+                {
+                    ExcludedPaymentTypes = new List<PreferencePaymentTypeRequest>
+                    {
+                        new PreferencePaymentTypeRequest { Id = "ticket" }
+                    },
+                    Installments = 3
+                }
             };
 
-            if (!string.IsNullOrEmpty(dto.IssuerId))
+            // --- DEBUG FINAL ANTES DE ENVIAR ---
+            if (request.BackUrls == null)
             {
-                request.IssuerId = dto.IssuerId;
+                 Console.WriteLine("[ERRO CRITICO] O objeto request.BackUrls ESTÁ NULO! O erro vai acontecer agora.");
             }
-
-            var client = new PaymentClient();
-            Payment payment = await client.CreateAsync(request);
-
-            var responseDto = new PagamentoResponseDTO
+            else
             {
-                PaymentId = payment.Id.GetValueOrDefault(),
-                Status = payment.Status,
-                StatusDetail = payment.StatusDetail
-            };
-
-            // Lógica para Pix
-            if (dto.PaymentMethodId.ToLower() == "pix" && payment.PointOfInteraction != null)
-            {
-                responseDto.QrCodeBase64 = payment.PointOfInteraction.TransactionData.QrCodeBase64;
-                responseDto.QrCodeCopiaCola = payment.PointOfInteraction.TransactionData.QrCode;
+                 Console.WriteLine("[SUCESSO] request.BackUrls foi preenchido corretamente.");
             }
+            // -----------------------------------
 
-            // 3. Verificação de Sucesso
-            // Com BinaryMode=true, dificilmente cairá em Pending/InProcess, mas mantemos por segurança
-            if (payment.Status == PaymentStatus.Approved || 
-                payment.Status == PaymentStatus.InProcess) 
-            {
-                return Result<PagamentoResponseDTO>.Success(responseDto);
-            }
+            Preference preference = await client.CreateAsync(request);
 
-            // Se recusou, traduz o erro
-            string mensagemAmigavel = TraduzirDetalheStatus(payment.StatusDetail);
-            return Result<PagamentoResponseDTO>.Failure(mensagemAmigavel);
-        }
-        catch (MercadoPago.Error.MercadoPagoApiException mpEx)
-        {
-            // Captura erros da API (ex: cartão recusado, token inválido)
-            var msg = mpEx.ApiError?.Message ?? mpEx.Message;
-            Console.WriteLine($"Erro MP: {msg}");
-            
-            // Tenta traduzir o erro se possível, senão manda genérico
-            if(mpEx.ApiError?.Cause != null && mpEx.ApiError.Cause.Count > 0)
-                return Result<PagamentoResponseDTO>.Failure($"Erro: {mpEx.ApiError.Cause[0].Description}");
-
-            return Result<PagamentoResponseDTO>.Failure("Não foi possível processar o pagamento. Verifique os dados.");
+            return Result<string>.Success(preference.InitPoint);
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Erro Interno: {ex.Message}");
-            return Result<PagamentoResponseDTO>.Failure($"Erro interno no servidor.");
+            Console.WriteLine($"ERRO MP DETALHADO: {ex.Message}");
+            return Result<string>.Failure($"Erro Mercado Pago: {ex.Message}");
         }
-    }
-
-    private string TraduzirDetalheStatus(string statusDetail)
-    {
-        return statusDetail switch
-        {
-            "cc_rejected_bad_filled_card_number" or 
-            "cc_rejected_bad_filled_date" or 
-            "cc_rejected_bad_filled_other" or 
-            "cc_rejected_bad_filled_security_code" => "Revise os dados do cartão.",
-            "cc_rejected_insufficient_amount" => "Saldo insuficiente.",
-            "cc_rejected_call_for_authorize" => "Autorize o pagamento junto ao seu banco.",
-            "cc_rejected_card_disabled" => "Cartão bloqueado ou desabilitado.",
-            "cc_rejected_invalid_installments" => "Número de parcelas não aceito.",
-            "cc_rejected_high_risk" => "Pagamento recusado por segurança.",
-            _ => "Pagamento recusado. Tente outro cartão."
-        };
     }
 }

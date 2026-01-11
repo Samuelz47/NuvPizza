@@ -1,7 +1,6 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { environment } from '../../environments/environment';
-import { PagamentoRequest, PagamentoResponse } from '../models/payment.model';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -9,9 +8,11 @@ import { Observable } from 'rxjs';
 })
 export class PaymentService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/Pagamento`;
+  // Se usar Proxy, apiUrl pode ser vazia ou '/'
+  private apiUrl = environment.apiUrl; 
 
-  processarPagamento(dados: PagamentoRequest): Observable<PagamentoResponse> {
-    return this.http.post<PagamentoResponse>(this.apiUrl, dados);
+  criarPreferencia(dados: any): Observable<any> {
+    // Atenção à rota: /Pagamento/criar-link
+    return this.http.post<any>(`${this.apiUrl}/Pagamento/criar-link`, dados);
   }
 }
