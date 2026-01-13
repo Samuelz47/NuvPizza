@@ -72,7 +72,7 @@ public class MercadoPagoService : IPagamentoService
                     {
                         new PreferencePaymentTypeRequest { Id = "ticket" }
                     },
-                    Installments = 3
+                    Installments = 1
                 }
             };
 

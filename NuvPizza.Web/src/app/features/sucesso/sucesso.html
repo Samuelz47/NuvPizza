@@ -1,41 +1,32 @@
 <div class="sucesso-container">
-  
+
   @if (dados?.status === 'approved') {
     <div class="card">
       <div style="font-size: 60px;">🎉</div>
       <h1>Pagamento Aprovado!</h1>
-      <p>Seu pedido #{{ dados.paymentId }} foi confirmado.</p>
+      <p>Seu pedido #{{ dados.externalReference }} foi confirmado.</p>
       <p>A cozinha já está preparando sua pizza!</p>
+      <p><small>ID do Pagamento: {{ dados.paymentId }}</small></p>
     </div>
-  }
-
-  @else if (dados?.status === 'pending' || dados?.status === 'in_process') {
+  } @else if (dados?.status === 'pending' || dados?.status === 'in_process') {
     <div class="card">
       <div style="font-size: 60px;">🕒</div>
-      <h1 class="pendente">Aguardando Pagamento</h1>
-      
-      @if (qrCodeSeguro) { <p>Escaneie o QR Code abaixo para pagar:</p>
-        
-        <div class="qr-area">
-          <img [src]="qrCodeSeguro" class="qr-img" alt="QR Code Pix" />
-          
-          <p>Ou copie e cole o código:</p>
-          <textarea readonly (click)="copiarCodigo()">{{ dados.qrCodeCopiaCola }}</textarea>
-          <button (click)="copiarCodigo()" class="btn-voltar" style="background: #28a745; margin-top:5px">Copiar Código</button>
-        </div>
-        
-        <p><small>Assim que pagar, seu pedido será liberado automaticamente.</small></p>
-      } @else {
-        <p>Seu pagamento está em análise. Aguarde a confirmação.</p>
-      }
+      <h1 class="pendente">Pagamento Pendente</h1>
+      <p>Estamos aguardando a confirmação do banco.</p>
+      <p>Assim que compensar, seu pedido será liberado.</p>
     </div>
-  }
-
-  @else {
+  } @else if (dados?.status === 'rejected') {
+    <div class="card">
+      <div style="font-size: 60px;">❌</div>
+      <h1 style="color: red">Pagamento Recusado</h1>
+      <p>Ocorreu um problema com o seu pagamento.</p>
+      <p>Por favor, tente novamente.</p>
+    </div>
+  } @else {
     <div class="card">
       <h1>Ops!</h1>
-      <p>Não encontramos os dados do pagamento.</p>
-      <p><small>Tente verificar seus pedidos recentes.</small></p>
+      <p>Não encontramos os dados do retorno.</p>
+      <p><small>Verifique se o pagamento foi concluído no Mercado Pago.</small></p>
     </div>
   }
 

@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, RouterLink } from '@angular/router'; // Adicionei ActivatedRoute
+import { ActivatedRoute, RouterLink } from '@angular/router';
 
 @Component({
   selector: 'app-sucesso',
@@ -13,27 +13,27 @@ import { ActivatedRoute, RouterLink } from '@angular/router'; // Adicionei Activ
     h1 { color: #28a745; margin-bottom: 10px; }
     h1.pendente { color: #ffc107; }
     .btn-voltar { display: inline-block; margin-top: 20px; padding: 10px 20px; background: #009ee3; color: white; text-decoration: none; border-radius: 5px; cursor: pointer; border: none; }
+    .btn-voltar:hover { background-color: #007eb5; }
   `]
 })
 export class SucessoComponent implements OnInit {
-  private route = inject(ActivatedRoute); // Para ler a URL
+  private route = inject(ActivatedRoute);
   
   dados: any = null;
 
   ngOnInit() {
-    // O Mercado Pago manda os dados via Query Params na URL
-    // Ex: /sucesso?collection_status=approved&payment_id=123456...
+    // Lê os parâmetros da URL vindos do Mercado Pago (?collection_status=approved...)
     this.route.queryParams.subscribe(params => {
       if (params && params['collection_status']) {
-        console.log('Dados do MP via URL:', params);
+        console.log('Retorno MP:', params);
 
         this.dados = {
-          status: params['collection_status'], // approved, pending, rejected
+          status: params['collection_status'], 
           paymentId: params['payment_id'] || params['collection_id'],
           externalReference: params['external_reference']
         };
       } 
-      // Fallback: Se não vier da URL, tenta ver se veio do state (navegação interna)
+      // Fallback: Se você navegar internamente pelo site
       else if (history.state.dadosPagamento) {
          this.dados = history.state.dadosPagamento;
       }
