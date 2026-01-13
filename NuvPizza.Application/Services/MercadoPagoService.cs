@@ -24,11 +24,10 @@ public class MercadoPagoService : IPagamentoService
         {
             var client = new PreferenceClient();
 
-            // ---------------------------------------------------------
-            // CORREÇÃO: Use a URL HTTPS do Ngrok (copie do seu terminal)
-            // O Mercado Pago BLOQUEIA http://localhost no AutoReturn
-            // ---------------------------------------------------------
+            // Mantenha a URL do Ngrok se estiver usando, ou localhost se for só teste local
+            // Se estiver usando Ngrok, substitua a linha abaixo
             string baseUrl = "https://coralliferous-gloatingly-song.ngrok-free.dev"; 
+            // string baseUrl = "http://localhost:4200"; 
         
             var backUrls = new PreferenceBackUrlsRequest
             {
@@ -36,10 +35,6 @@ public class MercadoPagoService : IPagamentoService
                 Failure = $"{baseUrl}/checkout",
                 Pending = $"{baseUrl}/checkout"
             };
-
-            // --- DEBUG: Vamos ver se as URLs foram criadas ---
-            Console.WriteLine($"[DEBUG] BackUrl Success definida como: {backUrls.Success}");
-            // ------------------------------------------------
 
             var request = new PreferenceRequest
             {
@@ -55,15 +50,22 @@ public class MercadoPagoService : IPagamentoService
                 },
                 Payer = new PreferencePayerRequest
                 {
-                    Email = !string.IsNullOrEmpty(dto.EmailPagador) ? dto.EmailPagador : "cliente@nuvpizza.com"
+                    // Mantivemos o email aleatório para o Sandbox não bloquear por "vendedor comprando de si mesmo"
+                    Email = $"teste_{Guid.NewGuid().ToString().Substring(0, 8)}@nuvpizza.com"
                 },
                 
-                // 2. AQUI É O PONTO CRÍTICO. 
-                // Se essa linha não existir ou estiver comentada, dá o erro 400.
-                BackUrls = backUrls, 
-                
+                NotificationUrl = $"{baseUrl}/api/pagamento/webhook",
+                BackUrls = backUrls,
                 AutoReturn = "approved",
-                ExternalReference = Guid.NewGuid().ToString(),
+                
+                // -------------------------------------------------------------
+                // AQUI ESTÁ A CORREÇÃO QUE VOCÊ QUER:
+                // Usa o ID do Pedido que veio do DTO.
+                // -------------------------------------------------------------
+                ExternalReference = !string.IsNullOrEmpty(dto.ExternalReference) 
+                                    ? dto.ExternalReference 
+                                    : Guid.NewGuid().ToString(), // Fallback só se vier vazio
+                
                 StatementDescriptor = "NUVPIZZA",
                 Expires = false,
                 PaymentMethods = new PreferencePaymentMethodsRequest
@@ -76,19 +78,9 @@ public class MercadoPagoService : IPagamentoService
                 }
             };
 
-            // --- DEBUG FINAL ANTES DE ENVIAR ---
-            if (request.BackUrls == null)
-            {
-                 Console.WriteLine("[ERRO CRITICO] O objeto request.BackUrls ESTÁ NULO! O erro vai acontecer agora.");
-            }
-            else
-            {
-                 Console.WriteLine("[SUCESSO] request.BackUrls foi preenchido corretamente.");
-            }
-            // -----------------------------------
-
             Preference preference = await client.CreateAsync(request);
 
+            // Retorna o link de SANDBOX
             return Result<string>.Success(preference.SandboxInitPoint);
         }
         catch (Exception ex)

@@ -57,7 +57,7 @@ export class CheckoutComponent {
   private paymentService = inject(PaymentService);
   // private pedidoService = inject(PedidoService); // Descomente se já tiver o serviço
 
-  amount = signal<number>(100.00); 
+  amount = signal<number>(0.50); 
   loading = signal<boolean>(false);
   errorMessage = signal<string>('');
 

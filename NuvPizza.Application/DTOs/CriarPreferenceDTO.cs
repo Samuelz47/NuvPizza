@@ -6,4 +6,5 @@ public class CriarPreferenceDTO
     public int Quantidade { get; set; }
     public decimal PrecoUnitario { get; set; }
     public string? EmailPagador { get; set; }
+    public string? ExternalReference { get; set; }
 }
