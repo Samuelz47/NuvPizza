@@ -34,3 +34,9 @@ public class PagamentoResponseDTO
     public string? QrCodeBase64 { get; set; } // Só preenchido se for Pix
     public string? QrCodeCopiaCola { get; set; } // Só preenchido se for Pix
 }
+
+public class StatusPagamentoDTO
+{
+    public string Status { get; set; }
+    public string PedidoIdExterno { get; set; }
+}

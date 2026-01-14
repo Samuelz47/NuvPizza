@@ -21,21 +21,16 @@ export class SucessoComponent implements OnInit {
   
   dados: any = null;
 
-  ngOnInit() {
-    // Lê os parâmetros da URL vindos do Mercado Pago (?collection_status=approved...)
+ngOnInit() {
     this.route.queryParams.subscribe(params => {
+      // Apenas lê o status para mostrar na tela "Sucesso" ou "Falha"
+      // Não faz nenhuma chamada de escrita (POST/PUT) para o backend
       if (params && params['collection_status']) {
-        console.log('Retorno MP:', params);
-
         this.dados = {
-          status: params['collection_status'], 
-          paymentId: params['payment_id'] || params['collection_id'],
+          status: params['collection_status'],
+          paymentId: params['payment_id'],
           externalReference: params['external_reference']
         };
-      } 
-      // Fallback: Se você navegar internamente pelo site
-      else if (history.state.dadosPagamento) {
-         this.dados = history.state.dadosPagamento;
       }
     });
   }

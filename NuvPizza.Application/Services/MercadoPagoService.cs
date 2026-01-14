@@ -1,5 +1,7 @@
+using MercadoPago.Client.Payment;
 using MercadoPago.Client.Preference;
 using MercadoPago.Config;
+using MercadoPago.Resource.Payment;
 using MercadoPago.Resource.Preference;
 using Microsoft.Extensions.Configuration;
 using NuvPizza.Application.Common;
@@ -87,6 +89,29 @@ public class MercadoPagoService : IPagamentoService
         {
             Console.WriteLine($"ERRO MP DETALHADO: {ex.Message}");
             return Result<string>.Failure($"Erro Mercado Pago: {ex.Message}");
+        }
+    }
+
+    public async Task<Result<StatusPagamentoDTO>> ConsultarStatusPagamentoAsync(string pagamentoId)
+    {
+        try
+        {
+            if (!long.TryParse(pagamentoId, out long idLong)) return Result<StatusPagamentoDTO>.Failure("ID de pagamento inválido");
+
+            var client = new PaymentClient();
+            Payment payment = await client.GetAsync(idLong);
+            
+            if (payment is null) return Result<StatusPagamentoDTO>.Failure("Pagamento não encontrado");
+
+            return Result<StatusPagamentoDTO>.Success(new StatusPagamentoDTO
+            {
+                Status = payment.Status,
+                PedidoIdExterno = payment.ExternalReference,
+            });
+        }
+        catch (Exception ex)
+        {
+            return Result<StatusPagamentoDTO>.Failure($"Erro ao consultar MP: {ex.Message}");
         }
     }
 }
