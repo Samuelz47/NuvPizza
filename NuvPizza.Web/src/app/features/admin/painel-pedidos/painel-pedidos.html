@@ -1,0 +1,48 @@
+<div class="painel-container">
+  <div class="header">
+    <h2>Painel de Pedidos (Cozinha)</h2>
+    <button (click)="carregarPedidos()" class="btn btn-avancar" style="max-width: 150px;">
+      ↻ Atualizar
+    </button>
+  </div>
+
+  @if (loading() && pedidos().length === 0) {
+    <p>Carregando pedidos...</p>
+  }
+
+  <div class="grid-pedidos">
+    @for (pedido of pedidos(); track pedido.id) {
+      <div class="card" [ngClass]="'status-' + pedido.statusPedido">
+        
+        <div class="card-header">
+          <span>#{{ pedido.id.substring(0, 8) }}</span> <span>{{ getNomeStatus(pedido.statusPedido) }}</span>
+        </div>
+
+        <div class="card-body">
+          <p><strong>Data:</strong> {{ pedido.dataPedido | date:'HH:mm' }}</p>
+          <p><strong>Total:</strong> {{ pedido.valorTotal | currency:'BRL' }}</p>
+          
+          <div class="itens-lista">
+            @for (item of pedido.itens; track $index) {
+              <div class="item-row">
+                <span>{{ item.quantidade }}x {{ item.nome }}</span>
+              </div>
+            }
+          </div>
+        </div>
+
+        @if (pedido.statusPedido < 3) {
+          <div class="actions">
+            <button (click)="avancarStatus(pedido)" class="btn btn-avancar">
+              @if (pedido.statusPedido === 0) { Aceitar & Preparar }
+              @else if (pedido.statusPedido === 1) { Despachar Entrega }
+              @else if (pedido.statusPedido === 2) { Confirmar Entrega }
+            </button>
+          </div>
+        }
+      </div>
+    } @empty {
+      <p>Nenhum pedido encontrado hoje.</p>
+    }
+  </div>
+</div>
