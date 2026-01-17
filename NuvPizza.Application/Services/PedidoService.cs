@@ -88,6 +88,7 @@ public class PedidoService : IPedidoService
         
         var pedidoDto = _mapper.Map<PedidoDTO>(pedido);
         pedidoDto.LinkWhatsapp = linkWpp;
+        await _notificacaoService.NotificarNovoPedido(pedidoDto);
         return Result<PedidoDTO>.Success(pedidoDto);
     }
 

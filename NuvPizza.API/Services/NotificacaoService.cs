@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.SignalR;
 using NuvPizza.API.Hubs;
+using NuvPizza.Application.DTOs;
 using NuvPizza.Application.Interfaces;
 
 namespace NuvPizza.API.Services;
@@ -21,5 +22,15 @@ public class NotificacaoService : INotificacaoService
     public async Task NotificarFechamento(int minutosRestantes)
     {
         await _hubContext.Clients.All.SendAsync("AlertaFechamento", minutosRestantes);
+    }
+
+    public async Task NotificarNovoPedido(PedidoDTO pedido)
+    {
+        await _hubContext.Clients.All.SendAsync("NovoPedidoRecebido", pedido);
+    }
+
+    public async Task NotificarAtualizacaoStatus(Guid pedidoId, int novoStatus)
+    {
+        await _hubContext.Clients.All.SendAsync("StatusPedidoAtualizado", pedidoId, novoStatus);
     }
 }

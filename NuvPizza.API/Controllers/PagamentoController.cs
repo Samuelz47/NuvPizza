@@ -12,12 +12,14 @@ public class PagamentoController : ControllerBase
     private readonly IPagamentoService _pagamentoService;
     private readonly IPedidoService _pedidoService;
     private readonly ILogger<PagamentoController> _logger;
+    private readonly INotificacaoService _notificacaoService;
 
-    public PagamentoController(IPagamentoService pagamentoService, ILogger<PagamentoController> logger, IPedidoService pedidoService)
+    public PagamentoController(IPagamentoService pagamentoService, ILogger<PagamentoController> logger, IPedidoService pedidoService, INotificacaoService notificacaoService)
     {
         _pagamentoService = pagamentoService;
         _logger = logger;
         _pedidoService = pedidoService;
+        _notificacaoService = notificacaoService;
     }
 
     [HttpPost("criar-link")]
@@ -73,6 +75,7 @@ public class PagamentoController : ControllerBase
                 {
                     var updateDto = new StatusPedidoForUpdateDTO { StatusDoPedido = StatusPedido.EmPreparo };
                     await _pedidoService.UpdateStatusPedidoAsync(pedidoId, updateDto);
+                    await _notificacaoService.NotificarAtualizacaoStatus(pedidoId, (int)StatusPedido.EmPreparo);
                     _logger.LogInformation($"Pedido atualizado com sucesso!");
                 }
             }

@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms'; // Importante para usar [(ngModel)]
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 
@@ -38,10 +38,12 @@ import { AuthService } from '../../../core/services/auth.service';
     .login-container { height: 100vh; display: flex; align-items: center; justify-content: center; background: #f0f2f5; }
     .card { background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%; max-width: 400px; text-align: center; }
     .form-group { margin-bottom: 15px; text-align: left; }
-    input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; } /* box-sizing vital para input não estourar */
-    .btn-login { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; }
-    .btn-login:disabled { background: #ccc; }
-    .error { color: red; margin-top: 10px; }
+    label { display: block; margin-bottom: 5px; font-weight: bold; }
+    input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+    .btn-login { width: 100%; padding: 12px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 1rem; transition: background 0.2s; }
+    .btn-login:hover { background: #0056b3; }
+    .btn-login:disabled { background: #ccc; cursor: not-allowed; }
+    .error { color: #dc3545; margin-top: 15px; padding: 10px; background: #ffe6e6; border-radius: 4px; font-size: 0.9rem; }
   `]
 })
 export class LoginComponent {
@@ -54,18 +56,30 @@ export class LoginComponent {
   erro = signal('');
 
   fazerLogin(event: Event) {
-    event.preventDefault(); // Evita recarregar a página
+    event.preventDefault();
     this.loading.set(true);
-    this.erro.set('');
+    this.erro.set(''); // Limpa erro anterior
 
     this.authService.login(this.email, this.password).subscribe({
       next: () => {
+        this.loading.set(false);
+        // Sucesso! Vai para o painel
         this.router.navigate(['/admin/pedidos']);
       },
-      error: (err) => {
+      error: (err: any) => { // <--- Importante: tipagem 'any'
         this.loading.set(false);
-        this.erro.set('Email ou senha inválidos.');
-        console.error(err);
+        console.error("ERRO NO LOGIN:", err); // Ajuda no debug
+
+        // Lógica para descobrir qual foi o erro
+        if (err.status === 0) {
+          this.erro.set('Não foi possível conectar ao servidor. Verifique se a API está rodando.');
+        } else if (err.status === 401) {
+          this.erro.set('Email ou senha incorretos.');
+        } else if (err.status === 404) {
+          this.erro.set('Erro de configuração: Endereço da API não encontrado (404).');
+        } else {
+          this.erro.set('Ocorreu um erro inesperado. Tente novamente.');
+        }
       }
     });
   }

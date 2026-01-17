@@ -72,9 +72,10 @@ try
     {
         options.AddPolicy("DevelopmentCors", policy =>
         {
-            policy.AllowAnyOrigin() // Porta padrão do Angular
+            policy.WithOrigins("http://localhost:4200",  "https://localhost:4200")
+                .AllowAnyMethod()
                 .AllowAnyHeader()
-                .AllowAnyMethod();
+                .AllowCredentials();
         });
     });
     

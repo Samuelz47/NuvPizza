@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using NuvPizza.API.Hubs;
+using NuvPizza.Application.Interfaces;
 using NuvPizza.Infrastructure.Persistence;
 
 namespace NuvPizza.API.Workers;
@@ -26,18 +27,38 @@ public class LojaWorkers : BackgroundService
         {
             try
             {
-                await VerificarStatusLojar();
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    var configuracaoService = scope.ServiceProvider.GetRequiredService<IConfiguracaoService>();
+                    var notificacaoService = scope.ServiceProvider.GetRequiredService<INotificacaoService>();
+
+                    await VerificarStatusLoja();
+                }
+
+                // Aguarda 1 minuto antes da próxima verificação
+                // O stoppingToken aqui faz o Delay ser cancelado imediatamente se o servidor desligar
+                await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+            }
+            catch (TaskCanceledException)
+            {
+                break;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Erro no Robô da loja");
+
+                try
+                {
+                    await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
+                }
+                catch (TaskCanceledException) { break; }
             }
 
             await Task.Delay(TimeSpan.FromMinutes(1), stoppingToken);
         }
     }
 
-    private async Task VerificarStatusLojar()
+    private async Task VerificarStatusLoja()
     {
         using (var scope = _serviceProvider.CreateScope())
         {

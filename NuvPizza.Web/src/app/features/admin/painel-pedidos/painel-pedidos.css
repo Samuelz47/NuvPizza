@@ -1,0 +1,113 @@
+/* Container Principal */
+.painel-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* Cabeçalho */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.header h2 {
+  margin: 0;
+  color: #333;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Grid de Cards */
+.grid-pedidos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 25px;
+}
+
+/* Estilo do Card */
+.card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-left: 6px solid #ccc; /* Cor padrão */
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+/* Cores por Status */
+.status-0 { border-left-color: #ffc107; background: #fffdf5; } /* Pendente (Amarelo) */
+.status-1 { border-left-color: #fd7e14; background: #fff5eb; } /* Preparo (Laranja) */
+.status-2 { border-left-color: #0dcaf0; background: #f0fcff; } /* Saiu (Azul) */
+.status-3 { border-left-color: #198754; background: #f0fff4; opacity: 0.8; } /* Entregue (Verde) */
+.status-4 { border-left-color: #dc3545; background: #fff5f5; opacity: 0.7; } /* Cancelado (Vermelho) */
+
+/* Conteúdo do Card */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 15px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  color: #444;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.card-body p {
+  margin: 8px 0;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.itens-lista {
+  margin-top: 15px;
+  background: #fafafa;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+  border-bottom: 1px dashed #eee;
+  padding-bottom: 2px;
+}
+
+/* Botões */
+.actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+.btn {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  color: white;
+}
+
+.btn:hover { opacity: 0.9; }
+.btn-avancar { background-color: #0d6efd; flex: 1; }
+.btn-cancelar { background-color: #dc3545; }
