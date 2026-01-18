@@ -3,14 +3,16 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Observable } from 'rxjs';
 
-// Garanta que você tem essa interface (ou similar) no seu arquivo de models
+// --- AQUI ESTAVA O PROBLEMA ---
+// Atualizamos a interface para incluir 'numero' e 'nomeCliente'
 export interface Pedido {
   id: string;
+  numero: number;        // <--- Adicionado (Corrige erro do HTML)
+  nomeCliente: string;   // <--- Adicionado (Corrige erro do HTML)
   dataPedido: Date;
   valorTotal: number;
-  statusPedido: number; // 0=Pendente, 1=Preparo, 2=Saiu, 3=Entregue, 4=Cancelado
+  statusPedido: number;  // 1=Criado, 2=Confirmado, 3=Preparo, 4=Saiu, 5=Entregue, 0=Cancelado
   itens: any[];
-  // Adicione outros campos que vêm no DTO
 }
 
 @Injectable({
@@ -18,19 +20,25 @@ export interface Pedido {
 })
 export class PedidoService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/Pedido`;
+  
+  // Confirma se a tua API é /Pedido ou /pedidos
+  private apiUrl = `${environment.apiUrl}/Pedido`; 
 
-  // --- NOVO MÉTODO: Listar Pedidos ---
+  // 1. Listar Pedidos (Usado no Painel Admin)
   getPedidos(pageNumber: number = 1, pageSize: number = 50): Observable<Pedido[]> {
     let params = new HttpParams()
       .set('PageNumber', pageNumber)
       .set('PageSize', pageSize);
-      // Se quiser filtrar por status no futuro, adicione aqui
     
     return this.http.get<Pedido[]>(this.apiUrl, { params });
   }
 
-  // Método para avançar o status (usaremos nos botões do card)
+  // 2. Criar Pedido (Usado no Checkout)
+  createPedido(pedidoDto: any): Observable<any> {
+    return this.http.post<any>(this.apiUrl, pedidoDto);
+  }
+
+  // 3. Atualizar Status (Usado no Botão do Painel)
   atualizarStatus(id: string, novoStatus: number): Observable<any> {
     return this.http.patch(`${this.apiUrl}/${id}/status`, { statusDoPedido: novoStatus });
   }

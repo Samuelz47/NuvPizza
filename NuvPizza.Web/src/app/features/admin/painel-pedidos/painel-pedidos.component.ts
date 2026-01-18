@@ -1,8 +1,7 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnInit, inject, signal, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PedidoService, Pedido } from '../../../core/services/pedido.service';
-import { AuthService } from '../../../core/services/auth.service';
-import { NotificacaoService } from '../../../core/services/notificacao.service'; // <--- Importe
+import { NotificacaoService } from '../../../core/services/notificacao.service';
 
 @Component({
   selector: 'app-painel-pedidos',
@@ -11,67 +10,97 @@ import { NotificacaoService } from '../../../core/services/notificacao.service';
   templateUrl: './painel-pedidos.html',
   styleUrls: ['./painel-pedidos.css']
 })
-export class PainelPedidosComponent implements OnInit, OnDestroy {
+export class PainelPedidosComponent implements OnInit {
   private pedidoService = inject(PedidoService);
-  private authService = inject(AuthService);
-  private notificacaoService = inject(NotificacaoService); // <--- Injete
+  private notificacaoService = inject(NotificacaoService);
 
   pedidos = signal<Pedido[]>([]);
-  loading = signal<boolean>(false);
-  
-  // Não precisamos mais do 'atualizacaoAutomatica' (setInterval)
+  loading = signal<boolean>(true); // Adicionei loading
 
   ngOnInit() {
     this.carregarPedidos();
-    
-    // Inicia a conexão com o WebSocket
-    this.notificacaoService.iniciarConexao();
-
-    // 1. Escuta Novos Pedidos
-    this.notificacaoService.receberNovoPedido.subscribe((novoPedido) => {
-      // Adiciona no topo da lista
-      this.pedidos.update(listaAtual => [novoPedido, ...listaAtual]);
-    });
-
-    // 2. Escuta Atualizações de Status (ex: Pagamento Aprovado)
-    this.notificacaoService.receberAtualizacaoStatus.subscribe(({ id, status }) => {
-      this.pedidos.update(listaAtual => {
-        return listaAtual.map(p => {
-          if (p.id === id) {
-            return { ...p, statusPedido: status }; // Atualiza o status
-          }
-          return p;
-        });
-      });
-    });
-  }
-
-  ngOnDestroy() {
-    // Se quiser desligar a conexão ao sair da tela, pode chamar um método de stop aqui
-    // Mas geralmente deixamos aberto se for single page application
+    this.iniciarListenersRealTime();
   }
 
   carregarPedidos() {
     this.loading.set(true);
-    this.pedidoService.getPedidos(1, 50).subscribe({
-      next: (dados) => {
-        // Ordenação mantida
-        const ordenados = dados.sort((a, b) => {
-           if (a.statusPedido !== b.statusPedido) return a.statusPedido - b.statusPedido;
-           return new Date(b.dataPedido).getTime() - new Date(a.dataPedido).getTime();
-        });
+    this.pedidoService.getPedidos().subscribe({
+      next: (lista) => {
+        // Ordena: Mais recentes primeiro
+        const ordenados = lista.sort((a, b) => new Date(b.dataPedido).getTime() - new Date(a.dataPedido).getTime());
         this.pedidos.set(ordenados);
         this.loading.set(false);
       },
       error: (err) => {
-        console.error(err);
+        console.error('Erro ao carregar pedidos', err);
         this.loading.set(false);
       }
     });
   }
-  
-  // ... Resto dos métodos (avancarStatus, getNomeStatus, sair) iguais ...
-  avancarStatus(pedido: Pedido) { /* ... */ }
-  getNomeStatus(status: number): string { /* ... */ return ''; }
-  sair() { this.authService.logout(); }
+
+  iniciarListenersRealTime() {
+    // 1. Ouve novos pedidos
+    this.notificacaoService.ouvirNovoPedido().subscribe((novoPedido: any) => {
+      console.log("Novo pedido recebido no painel:", novoPedido);
+      this.pedidos.update(listaAtual => [novoPedido, ...listaAtual]);
+    });
+
+    // 2. Ouve mudança de status
+    this.notificacaoService.ouvirAtualizacaoStatus().subscribe((dados: { pedidoId: string, novoStatus: number }) => {
+      console.log("Status atualizado no painel:", dados);
+      this.pedidos.update(listaAtual => 
+        listaAtual.map(p => {
+          if (p.id === dados.pedidoId) {
+            return { ...p, statusPedido: dados.novoStatus };
+          }
+          return p;
+        })
+      );
+    });
+  }
+
+  avancarStatus(pedido: Pedido) {
+    // Lógica alinhada com o C# (StatusPedido.cs)
+    // 1 (Criado) -> 3 (Em Preparo) [Pula o 2 se for manual]
+    // 3 (Em Preparo) -> 4 (Saiu para Entrega)
+    // 4 (Saiu para Entrega) -> 5 (Entrega/Concluído)
+    
+    let proximoStatus = pedido.statusPedido + 1;
+
+    // Se estiver "Criado" (1), o próximo lógico para a cozinha é "Em Preparo" (3), 
+    // a menos que você use o "Confirmado" (2) manualmente. 
+    // Vamos assumir sequencial simples por enquanto:
+    
+    if (pedido.statusPedido >= 5) return; 
+
+    this.pedidoService.atualizarStatus(pedido.id, proximoStatus).subscribe({
+      next: () => console.log(`Status atualizado para ${proximoStatus}`),
+      error: (err) => alert('Erro ao atualizar status: ' + (err.error?.message || err.message))
+    });
+  }
+
+  // --- MAPEAMENTO CORRETO COM O C# ---
+  getNomeStatus(status: number): string {
+    switch (status) {
+      case 1: return 'Pendente (Criado)';
+      case 2: return 'Pagamento Confirmado';
+      case 3: return 'Em Preparo';
+      case 4: return 'Saiu p/ Entrega';
+      case 5: return 'Entregue';
+      case 0: return 'Cancelado';
+      default: return `Desconhecido (${status})`;
+    }
+  }
+
+  getStatusClass(status: number): string {
+    switch (status) {
+      case 1: return 'status-pendente';   // Amarelo
+      case 2: return 'status-confirmado'; // Azul
+      case 3: return 'status-preparo';    // Laranja
+      case 4: return 'status-entrega';    // Roxo
+      case 5: return 'status-concluido';  // Verde
+      case 0: return 'status-cancelado';  // Vermelho
+      default: return '';
+    }
+  }
 }

@@ -1,8 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PaymentService } from '../../core/services/payment.service';
 import { PedidoService } from '../../core/services/pedido.service'; 
-// Certifique-se de que o PedidoService existe. Se não tiver criado ainda, remova esta linha e a injeção abaixo.
+// Removemos o PaymentService pois o PedidoService vai tratar de tudo agora
 
 @Component({
   selector: 'app-checkout',
@@ -13,23 +12,17 @@ import { PedidoService } from '../../core/services/pedido.service';
       <h2>Finalizar Pedido</h2>
       
       <div class="summary">
-        <p>Total a pagar: <strong>{{ amount() | currency:'BRL' }}</strong></p>
+        <p>Total a pagar: <strong>{{ 45.90 | currency:'BRL' }}</strong></p>
         
         <div class="info-box">
-           <p>Para sua segurança, o pagamento será realizado na página oficial do Mercado Pago.</p>
-           <p class="methods-label">Aceitamos:</p>
-           <div class="methods">
-              <span class="badge">💳 Cartão</span>
-              <span class="badge">💠 Pix</span>
-              <span class="badge">🍎 Apple Pay</span>
-              <span class="badge">🤖 Google Pay</span>
-           </div>
+           <p>⚠️ <strong>Modo de Teste:</strong></p>
+           <p style="font-size: 0.9rem">Ao clicar em pagar, será criado um pedido fixo (1 Pizza) para o CEP 59150-000.</p>
         </div>
       </div>
       
-      <button (click)="irParaPagamento()" [disabled]="loading()" class="btn-pagar">
+      <button (click)="finalizarPedido()" [disabled]="loading()" class="btn-pagar">
         @if (loading()) {
-          <span>Processando...</span>
+          <span>A criar pedido...</span>
         } @else {
           Pagar Agora ➔
         }
@@ -43,48 +36,60 @@ import { PedidoService } from '../../core/services/pedido.service';
   styles: [`
     .checkout-container { max-width: 500px; margin: 2rem auto; padding: 2rem; background: #fff; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); text-align: center; font-family: sans-serif; }
     .summary { margin-bottom: 2rem; }
-    .info-box { background: #f8f9fa; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #e9ecef; }
-    .methods-label { font-size: 0.85rem; color: #666; margin-bottom: 5px; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
-    .methods { display: flex; justify-content: center; gap: 8px; flex-wrap: wrap; }
-    .badge { background: #fff; border: 1px solid #ddd; padding: 4px 10px; border-radius: 15px; font-size: 0.85rem; color: #555; }
+    .info-box { background: #fff3cd; color: #856404; padding: 15px; border-radius: 8px; margin-top: 15px; border: 1px solid #ffeeba; }
     .btn-pagar { background: #009ee3; color: white; border: none; padding: 16px 30px; font-size: 1.1rem; border-radius: 50px; cursor: pointer; width: 100%; font-weight: bold; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0,158,227,0.3); }
     .btn-pagar:hover { background: #0081b8; transform: translateY(-1px); box-shadow: 0 6px 8px rgba(0,158,227,0.4); }
-    .btn-pagar:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
+    .btn-pagar:disabled { background: #ccc; cursor: not-allowed; }
     .error { color: #d8000c; background: #ffd2d2; padding: 10px; margin-top: 15px; border-radius: 6px; font-size: 0.9rem; }
   `]
 })
 export class CheckoutComponent {
-  private paymentService = inject(PaymentService);
-  // private pedidoService = inject(PedidoService); // Descomente se já tiver o serviço
+  private pedidoService = inject(PedidoService);
 
-  amount = signal<number>(0.50); 
   loading = signal<boolean>(false);
   errorMessage = signal<string>('');
 
-  irParaPagamento() {
+  finalizarPedido() {
     this.loading.set(true);
     this.errorMessage.set('');
 
-    const dadosCompra = {
-      titulo: "Pedido NuvPizza",
-      quantidade: 1,
-      precoUnitario: this.amount(),
-      emailPagador: "cliente_app@nuvpizza.com" 
+    // DADOS MOCKADOS (SIMULAÇÃO DO CARRINHO)
+    // Quando tivermos o carrinho real, estes dados virão de lá.
+    const pedidoDto = {
+      nomeCliente: "Cliente Teste Angular",
+      emailCliente: "cliente.teste@nuvpizza.com", // Obrigatório p/ Mercado Pago
+      telefoneCliente: "11999998888",
+      cep: "59070120", // CEP Válido para o ViaCep não falhar
+      numero: "123",
+      complemento: "Casa Verde",
+      formaPagamento: "Pix",
+      itens: [
+        {
+          produtoId: 1, // <--- IMPORTANTE: Garanta que existe um Produto com ID 1 no seu banco
+          quantidade: 1
+        }
+      ]
     };
 
-    this.paymentService.criarPreferencia(dadosCompra).subscribe({
+    this.pedidoService.createPedido(pedidoDto).subscribe({
       next: (resp: any) => {
-        if (resp && resp.url) {
-            window.location.href = resp.url;
+        console.log("Resposta do Backend:", resp);
+
+        // O backend retorna: { pedido: {...}, paymentLink: "https://..." }
+        if (resp && resp.paymentLink) {
+            // Redireciona o utilizador para o Mercado Pago
+            window.location.href = resp.paymentLink;
         } else {
             this.loading.set(false);
-            this.errorMessage.set('Não foi possível gerar o link de pagamento.');
+            this.errorMessage.set('Pedido criado, mas nenhum link de pagamento foi retornado.');
         }
       },
       error: (err) => {
-        console.error("Erro API:", err);
+        console.error("Erro ao criar pedido:", err);
         this.loading.set(false);
-        this.errorMessage.set('Erro de comunicação com o servidor.');
+        // Tenta mostrar a mensagem de erro que vem do backend (ex: "Produto não encontrado")
+        const msg = err.error?.error || err.error?.message || 'Erro de comunicação com o servidor.';
+        this.errorMessage.set(msg);
       }
     });
   }

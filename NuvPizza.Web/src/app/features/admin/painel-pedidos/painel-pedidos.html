@@ -1,48 +1,65 @@
 <div class="painel-container">
   <div class="header">
     <h2>Painel de Pedidos (Cozinha)</h2>
-    <button (click)="carregarPedidos()" class="btn btn-avancar" style="max-width: 150px;">
+    <button (click)="carregarPedidos()" class="btn btn-atualizar">
       ↻ Atualizar
     </button>
   </div>
 
-  @if (loading() && pedidos().length === 0) {
-    <p>Carregando pedidos...</p>
+  @if (loading()) {
+    <p class="loading">Carregando pedidos...</p>
   }
 
   <div class="grid-pedidos">
     @for (pedido of pedidos(); track pedido.id) {
-      <div class="card" [ngClass]="'status-' + pedido.statusPedido">
+      <div class="card" [ngClass]="getStatusClass(pedido.statusPedido)">
         
         <div class="card-header">
-          <span>#{{ pedido.id.substring(0, 8) }}</span> <span>{{ getNomeStatus(pedido.statusPedido) }}</span>
+          <span class="pedido-id">#{{ pedido.numero || pedido.id.substring(0, 4) }}</span> 
+          <span class="badge-status">{{ getNomeStatus(pedido.statusPedido) }}</span>
         </div>
 
         <div class="card-body">
-          <p><strong>Data:</strong> {{ pedido.dataPedido | date:'HH:mm' }}</p>
+          <p><strong>Cliente:</strong> {{ pedido.nomeCliente || 'Cliente' }}</p>
           <p><strong>Total:</strong> {{ pedido.valorTotal | currency:'BRL' }}</p>
+          <p class="data">{{ pedido.dataPedido | date:'HH:mm - dd/MM' }}</p>
           
           <div class="itens-lista">
             @for (item of pedido.itens; track $index) {
               <div class="item-row">
-                <span>{{ item.quantidade }}x {{ item.nome }}</span>
+                <span class="qtd">{{ item.quantidade }}x</span> 
+                <span class="prod">{{ item.nome }}</span>
               </div>
             }
           </div>
         </div>
 
-        @if (pedido.statusPedido < 3) {
-          <div class="actions">
-            <button (click)="avancarStatus(pedido)" class="btn btn-avancar">
-              @if (pedido.statusPedido === 0) { Aceitar & Preparar }
-              @else if (pedido.statusPedido === 1) { Despachar Entrega }
-              @else if (pedido.statusPedido === 2) { Confirmar Entrega }
-            </button>
-          </div>
-        }
+        <div class="actions">
+           @if (pedido.statusPedido === 1 || pedido.statusPedido === 2) {
+             <button (click)="avancarStatus(pedido)" class="btn btn-preparo">
+               🔥 Iniciar Preparo
+             </button>
+           }
+           
+           @if (pedido.statusPedido === 3) {
+             <button (click)="avancarStatus(pedido)" class="btn btn-moto">
+               🛵 Despachar Entrega
+             </button>
+           }
+
+           @if (pedido.statusPedido === 4) {
+             <button (click)="avancarStatus(pedido)" class="btn btn-check">
+               ✅ Confirmar Entrega
+             </button>
+           }
+        </div>
       </div>
     } @empty {
-      <p>Nenhum pedido encontrado hoje.</p>
+      @if (!loading()) {
+        <div class="empty-state">
+          <p>Nenhum pedido na fila.</p>
+        </div>
+      }
     }
   </div>
 </div>

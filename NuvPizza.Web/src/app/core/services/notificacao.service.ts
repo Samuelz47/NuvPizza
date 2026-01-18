@@ -1,57 +1,75 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HubConnection, HubConnectionBuilder } from '@microsoft/signalr';
 import { environment } from '../../environments/environment';
-import { Subject } from 'rxjs';
-// Importe a interface Pedido do seu service de pedidos
-import { Pedido } from './pedido.service'; 
+import { Subject, Observable } from 'rxjs';
 
 @Injectable({
   providedIn: 'root'
 })
 export class NotificacaoService {
   private hubConnection!: HubConnection;
-  
-  // A URL deve bater com o "app.MapHub" do Program.cs
-  // Se sua API for http://localhost:5269, vira http://localhost:5269/notificacao
-  private url = `${environment.apiUrl}/notificacao`; 
 
-  // Canais para os componentes se inscreverem
-  receberNovoPedido = new Subject<Pedido>();
-  receberAtualizacaoStatus = new Subject<{id: string, status: number}>();
+  // --- 1. AJUSTE DE URL ---
+  // O Hub fica na raiz (ex: localhost:5269/notificacao), e não dentro de /api.
+  // Removemos o "/api" do environment se ele estiver lá.
+  private hubUrl = environment.apiUrl.replace('/api', '') + '/notificacao';
 
-  iniciarConexao() {
+  // Subjects privados (quem emite os dados)
+  private novoPedidoSource = new Subject<any>();
+  private statusAtualizadoSource = new Subject<any>();
+
+  constructor() {
+    this.iniciarConexao();
+  }
+
+  private iniciarConexao() {
     this.hubConnection = new HubConnectionBuilder()
-      .withUrl(this.url)
-      .withAutomaticReconnect() // Tenta reconectar se a internet cair
+      .withUrl(this.hubUrl)
+      .withAutomaticReconnect()
       .build();
 
     this.hubConnection
       .start()
-      .then(() => console.log('🔌 SignalR Conectado!'))
-      .catch(err => console.error('Erro ao conectar SignalR:', err));
+      .then(() => console.log('🔌 SignalR Conectado em:', this.hubUrl))
+      .catch(err => console.error('❌ Erro ao conectar SignalR:', err));
 
-    // --- OUVINTES (Devem ser iguais aos nomes no "SendAsync" do Backend) ---
-    
-    // 1. Quando chega pedido novo
-    this.hubConnection.on('NovoPedidoRecebido', (pedido: Pedido) => {
-      console.log('🔔 Novo Pedido via SignalR:', pedido);
-      this.receberNovoPedido.next(pedido);
+    // --- 2. OUVINTES (Alinhados com o C#) ---
+
+    // O Backend manda: "NovoPedidoRecebido", payload: PedidoDTO
+    this.hubConnection.on('NovoPedidoRecebido', (pedido) => {
+      console.log('🔔 Novo Pedido recebido:', pedido);
       this.tocarSom();
+      this.novoPedidoSource.next(pedido);
     });
 
-    // 2. Quando o status muda (ex: Pagamento Aprovado)
+    // O Backend manda: "StatusPedidoAtualizado", payload: guid, int
     this.hubConnection.on('StatusPedidoAtualizado', (pedidoId: string, novoStatus: number) => {
-      console.log('🔄 Status Atualizado via SignalR:', pedidoId, novoStatus);
-      this.receberAtualizacaoStatus.next({ id: pedidoId, status: novoStatus });
-      this.tocarSom();
+      console.log(`🔄 Status mudou! ID: ${pedidoId} -> Status: ${novoStatus}`);
+      
+      // Emitimos um objeto único para facilitar pro componente ler
+      this.statusAtualizadoSource.next({ pedidoId, novoStatus });
+      
+      // Só toca som se for status de "Pago" (1) ou "Pronto" (3), por exemplo
+      if(novoStatus === 1 || novoStatus === 3) {
+          this.tocarSom();
+      }
     });
   }
 
-  // "Cereja do Bolo": Tocar um sininho 🔔
+  // --- 3. MÉTODOS PÚBLICOS (Para os Componentes) ---
+
+  // O Painel Admin chama este:
+  ouvirNovoPedido(): Observable<any> {
+    return this.novoPedidoSource.asObservable();
+  }
+
+  // A Tela de Sucesso chama este:
+  ouvirAtualizacaoStatus(): Observable<any> {
+    return this.statusAtualizadoSource.asObservable();
+  }
+
   private tocarSom() {
-    // Você pode baixar um mp3 curto e colocar em src/assets/alert.mp3
-    // Ou usar um link externo para testar:
     const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
-    audio.play().catch(err => console.warn('Navegador bloqueou o som automático (clique na tela primeiro).'));
+    audio.play().catch(err => console.warn('Som bloqueado pelo navegador (interaja com a página primeiro).'));
   }
 }
