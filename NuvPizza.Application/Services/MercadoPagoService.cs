@@ -29,7 +29,7 @@ public class MercadoPagoService : IPagamentoService
             // Mantenha a URL do Ngrok se estiver usando, ou localhost se for só teste local
             // Se estiver usando Ngrok, substitua a linha abaixo
             string baseUrl = "https://coralliferous-gloatingly-song.ngrok-free.dev"; 
-            // string baseUrl = "http://localhost:4200"; 
+            //string baseUrl = "http://localhost:4200"; 
         
             var backUrls = new PreferenceBackUrlsRequest
             {
@@ -44,7 +44,8 @@ public class MercadoPagoService : IPagamentoService
                 {
                     new PreferenceItemRequest
                     {
-                        Title = dto.Titulo,
+                        // Adicione DateTime.Now no título para obrigar gerar um link novo
+                        Title = $"{dto.Titulo} ({DateTime.Now:HH:mm:ss})",
                         Quantity = dto.Quantidade,
                         CurrencyId = "BRL",
                         UnitPrice = dto.PrecoUnitario,
@@ -56,7 +57,7 @@ public class MercadoPagoService : IPagamentoService
                     Email = $"teste_{Guid.NewGuid().ToString().Substring(0, 8)}@nuvpizza.com"
                 },
                 
-                NotificationUrl = $"{baseUrl}/api/pagamento/webhook",
+                NotificationUrl = $"{baseUrl}/Pagamento/webhook",
                 BackUrls = backUrls,
                 AutoReturn = "approved",
                 
@@ -79,6 +80,11 @@ public class MercadoPagoService : IPagamentoService
                     Installments = 1
                 }
             };
+            
+            Console.WriteLine("---------------------------------------------------");
+            Console.WriteLine($"[DEBUG] Base URL usada: {baseUrl}");
+            Console.WriteLine($"[DEBUG] NotificationURL enviada: {request.NotificationUrl}");
+            Console.WriteLine("---------------------------------------------------");
 
             Preference preference = await client.CreateAsync(request);
 

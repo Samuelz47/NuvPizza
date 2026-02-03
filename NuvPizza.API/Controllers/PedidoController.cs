@@ -13,10 +13,12 @@ namespace NuvPizza.API.Controllers;
 public class PedidoController : Controller
 {
     private readonly IPedidoService _pedidoService;
+    private readonly IPagamentoService _pagamentoService;
 
-    public PedidoController(IPedidoService pedidoService)
+    public PedidoController(IPedidoService pedidoService, IPagamentoService pagamentoService)
     {
         _pedidoService = pedidoService;
+        _pagamentoService = pagamentoService;
     }
 
     [HttpGet]
@@ -43,14 +45,40 @@ public class PedidoController : Controller
     [HttpPost]
     public async Task<ActionResult<PedidoDTO>> Create([FromBody] PedidoForRegistrationDTO PedidoDto)
     {
-        var pedidoCreated = await _pedidoService.CreatePedidoAsync(PedidoDto);
+        var pedidoResult = await _pedidoService.CreatePedidoAsync(PedidoDto);
 
-        if (!pedidoCreated.IsSuccess)
+        if (!pedidoResult.IsSuccess)
         {
-            return BadRequest(new { error = pedidoCreated.Message });
+            return BadRequest(new { error = pedidoResult.Message });
         }
         
-        return Created($"/api/pedidos/{pedidoCreated.Data.Id}", pedidoCreated.Data);
+        var pedidoCriado = pedidoResult.Data;
+        var preferenceDto = new CriarPreferenceDTO
+        {
+            Titulo = $"Pedido NuvPizza #{pedidoCriado.Numero}", // Ou use pedidoCriado.Id se não tiver Numero
+            Quantidade = 1,
+            PrecoUnitario = pedidoCriado.ValorTotal,
+            ExternalReference = pedidoCriado.Id.ToString(),
+            EmailPagador = PedidoDto.EmailCliente
+        };
+        
+        var linkResult = await _pagamentoService.CriarPreferenciaAsync(preferenceDto);
+
+        if (!linkResult.IsSuccess)
+        {
+            return Created($"/pedidos/{pedidoCriado.Id}", new
+            {
+                pedido = pedidoCriado,
+                warning = "Pedido Salvo, mas houve erro ao gerar link",
+                error = linkResult.Message
+            });
+        }
+
+        return Created($"/pedidos/{pedidoCriado.Id}", new
+        {
+            pedido = pedidoCriado,
+            paymentLink = linkResult.Data
+        });
     }
 
     [HttpPatch("{id}/status")]

@@ -1,70 +1,55 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NotificacaoService } from '../../core/services/notificacao.service';
+import { PedidoService } from '../../core/services/pedido.service';
+import { NotificacaoService } from '../../core/services/notificacao.service'; // Importe o Notification
 
 @Component({
   selector: 'app-sucesso',
-  standalone: true,
-  imports: [CommonModule],
-  template: `
-    <div class="sucesso-container">
-      <div class="icon-circle">✅</div>
-      <h2>Pedido Recebido!</h2>
-      
-      <div class="status-box">
-        <p>Status atual:</p>
-        <h3 [class.pago]="status() === 'Em Preparo'">
-            {{ statusDescricao() }}
-        </h3>
-      </div>
-
-      <p class="msg">
-        @if(status() === 'Pendente') {
-          Aguardando confirmação do pagamento...
-        } @else {
-          Tudo certo! A cozinha já vai começar o preparo.
-        }
-      </p>
-
-      <button (click)="irParaHome()">Voltar ao Cardápio</button>
-    </div>
-  `,
-  styles: [`
-    .sucesso-container { text-align: center; padding: 40px; max-width: 500px; margin: 0 auto; }
-    .icon-circle { font-size: 4rem; margin-bottom: 20px; }
-    .status-box { background: #f8f9fa; padding: 20px; border-radius: 10px; margin: 20px 0; border: 1px solid #dee2e6; }
-    .pago { color: #28a745; font-weight: bold; }
-    button { background: #ff4500; color: white; border: none; padding: 12px 25px; border-radius: 25px; cursor: pointer; font-size: 1rem; }
-  `]
+  templateUrl: './sucesso.html',
+  styleUrls: ['./sucesso.css']
 })
 export class SucessoComponent implements OnInit {
-  private route = inject(ActivatedRoute);
-  private router = inject(Router);
-  private notificacaoService = inject(NotificacaoService);
-
-  status = signal<string>('Pendente');
   pedidoId: string = '';
+  // Usando Signal para reatividade na tela
+  statusTexto = signal('Aguardando confirmação...'); 
+  statusCor = signal('text-warning'); // Amarelo
+  isConfirmado = signal(false);
 
-  ngOnInit() {
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private pedidoService: PedidoService,
+    private notificacaoService: NotificacaoService
+  ) {}
+
+  ngOnInit(): void {
+    // 1. Pega os parâmetros da URL
+    this.route.queryParams.subscribe(params => {
+      // O MP manda o ID externo como 'external_reference' ou você pode ter passado na rota
+      const mpStatus = params['collection_status'] || params['status'];
+      
+      // TRUQUE VISUAL: Se o MP disse que aprovou na URL, já mostramos verde!
+      if (mpStatus === 'approved') {
+        this.atualizarParaConfirmado();
+      }
+    });
+
+    // 2. Escuta o SignalR (Caso o usuário fique na tela esperando)
     this.notificacaoService.ouvirAtualizacaoStatus().subscribe((dados: any) => {
-        console.log("Notificação na tela de sucesso:", dados);
-        
-        // CORREÇÃO: Verifica se o status é 3 (Em Preparo) ou 2 (Confirmado)
-        // O seu PagamentoController define como 3.
-        if (dados.novoStatus === 3 || dados.novoStatus === 2) {
-             this.status.set('Em Preparo');
-             // O som já toca no notificacao.service.ts, não precisa tocar aqui de novo
-             // para não dar eco, ou pode forçar um feedback visual.
-        }
+      console.log('Update recebido na tela de sucesso:', dados);
+      if (dados.novoStatus === 2 || dados.novoStatus === 3) {
+        this.atualizarParaConfirmado();
+      }
     });
   }
 
-  statusDescricao() {
-    return this.status();
+  atualizarParaConfirmado() {
+    this.statusTexto.set('Pagamento Confirmado!');
+    this.statusCor.set('text-success'); // Verde (classe do Bootstrap)
+    this.isConfirmado.set(true);
   }
 
-  irParaHome() {
+  voltarCardapio() {
     this.router.navigate(['/']);
   }
 }

@@ -11,6 +11,10 @@ public class PedidoValidator : AbstractValidator<PedidoForRegistrationDTO>
             .NotEmpty().WithMessage("O Nome do cliente é Obrigatório")
             .MinimumLength(3).WithMessage("O nome deve ter pelo menos 3 caracteres.");
         
+        RuleFor(x => x.EmailCliente)
+            .NotEmpty().WithMessage("O email é obrigatório.")
+            .EmailAddress().WithMessage("O formato do email é inválido.");
+        
         RuleFor(x => x.TelefoneCliente)
             .NotEmpty().WithMessage("O telefone é obrigatório.")
             .Matches(@"^[1-9]{2}9?[0-9]{8}$")

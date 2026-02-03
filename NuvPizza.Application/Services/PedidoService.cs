@@ -100,27 +100,36 @@ public class PedidoService : IPedidoService
 
         if (pedido.StatusPedido == StatusPedido.Cancelado)
             return Result<PedidoDTO>.Failure("Pedido Cancelado, necessário refazer");
-        if (newStatus.StatusDoPedido == StatusPedido.Cancelado)
-        {
-            if (pedido.StatusPedido == StatusPedido.Entrega)
-            {
-                return Result<PedidoDTO>.Failure("Não é possível cancelar um pedido que já foi entregue.");
-            }
-        }
-        else
+
+        // --- INÍCIO DA CORREÇÃO ---
+        if (newStatus.StatusDoPedido != StatusPedido.Cancelado)
         {
             int statusAtualNumerico = (int)pedido.StatusPedido;
             int statusNovoNumerico = (int)newStatus.StatusDoPedido;
-            int proximoStatusEsperado = statusAtualNumerico + 1;
+            
+            // Lógica Flexível: Permite sequência normal (1->2) OU pular pagamento (1->3)
+            bool fluxoValido = false;
 
-            if (statusNovoNumerico != proximoStatusEsperado)
+            // Regra 1: Sequência normal (ex: 3->4)
+            if (statusNovoNumerico == statusAtualNumerico + 1) fluxoValido = true;
+
+            // Regra 2: Pagamento Aprovado (Pula de 'Criado' direto para 'Em Preparo')
+            if (pedido.StatusPedido == StatusPedido.Criado && newStatus.StatusDoPedido == StatusPedido.EmPreparo) 
+                fluxoValido = true;
+
+            if (!fluxoValido)
             {
-                return Result<PedidoDTO>.Failure($"Fluxo inválido. O status atual é '{pedido.StatusPedido}', o próximo passo obrigatório é '{(StatusPedido)proximoStatusEsperado}'.");
+                return Result<PedidoDTO>.Failure($"Fluxo inválido. Não é permitido ir de '{pedido.StatusPedido}' para '{newStatus.StatusDoPedido}'.");
             }
         }
+        // --- FIM DA CORREÇÃO ---
 
         pedido.StatusPedido = newStatus.StatusDoPedido;
         await _uow.CommitAsync();
+        
+        // Agora sim o SignalR vai disparar!
+        await _notificacaoService.NotificarAtualizacaoStatus(pedido.Id, (int)pedido.StatusPedido);
+        
         var pedidoDto = _mapper.Map<PedidoDTO>(pedido);
         return Result<PedidoDTO>.Success(pedidoDto);
     }

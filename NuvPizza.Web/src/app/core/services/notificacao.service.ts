@@ -50,7 +50,7 @@ export class NotificacaoService {
       this.statusAtualizadoSource.next({ pedidoId, novoStatus });
       
       // Só toca som se for status de "Pago" (1) ou "Pronto" (3), por exemplo
-      if(novoStatus === 1 || novoStatus === 3) {
+      if(novoStatus === 1 || novoStatus === 2 || novoStatus === 3) {
           this.tocarSom();
       }
     });

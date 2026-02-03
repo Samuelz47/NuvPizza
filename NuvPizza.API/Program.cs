@@ -72,7 +72,7 @@ try
     {
         options.AddPolicy("DevelopmentCors", policy =>
         {
-            policy.WithOrigins("http://localhost:4200",  "https://localhost:4200")
+            policy.SetIsOriginAllowed(origin => true)
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials();

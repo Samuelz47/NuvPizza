@@ -6,6 +6,7 @@ public class PedidoForRegistrationDTO
 {
     public string NomeCliente { get; set; }
     public string TelefoneCliente { get; set; }
+    public string EmailCliente { get; set; }
     public string Cep { get; set; } = string.Empty;
     public int Numero { get; set; }
     public string? Complemento { get; set; }
