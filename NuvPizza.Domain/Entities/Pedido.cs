@@ -26,10 +26,11 @@ namespace NuvPizza.Domain.Entities
         public int BairroId { get; set; }
         public string Logradouro { get; set; } = string.Empty;
         public StatusPedido StatusPedido { get; set; }
-        public string FormaPagamento { get; set; } = string.Empty;
+        public FormaPagamento FormaPagamento { get; set; }
         public List<ItemPedido> Itens { get; set; }
         public DateTime DataPedido { get; set; }
         public decimal ValorFrete { get; set; }
         public decimal ValorTotal { get; set; }
+        public string? Observacao { get; set; }
     }
 }

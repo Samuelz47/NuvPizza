@@ -1,6 +1,6 @@
-import { Component, OnInit, inject, signal, effect } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PedidoService, Pedido } from '../../../core/services/pedido.service';
+import { PedidoService } from '../../../core/services/pedido.service';
 import { NotificacaoService } from '../../../core/services/notificacao.service';
 
 @Component({
@@ -14,93 +14,176 @@ export class PainelPedidosComponent implements OnInit {
   private pedidoService = inject(PedidoService);
   private notificacaoService = inject(NotificacaoService);
 
-  pedidos = signal<Pedido[]>([]);
-  loading = signal<boolean>(true); // Adicionei loading
+  // Sinais e Variáveis
+  pedidos = signal<any[]>([]);
+  
+  // Controle do Modal Manual
+  pedidoSelecionado: any = null;
+  mostrarModal: boolean = false;
+  
+  toast = signal<{ mensagem: string, tipo: 'sucesso' | 'erro' | 'info', visivel: boolean }>({
+    mensagem: '', tipo: 'info', visivel: false
+  });
 
   ngOnInit() {
     this.carregarPedidos();
-    this.iniciarListenersRealTime();
+    this.ouvirNovosPedidos();
   }
 
   carregarPedidos() {
-    this.loading.set(true);
-    this.pedidoService.getPedidos().subscribe({
-      next: (lista) => {
-        // Ordena: Mais recentes primeiro
-        const ordenados = lista.sort((a, b) => new Date(b.dataPedido).getTime() - new Date(a.dataPedido).getTime());
-        this.pedidos.set(ordenados);
-        this.loading.set(false);
+    this.pedidoService.getPedidos().subscribe({ 
+      next: (dados: any) => {
+        const lista = dados.items || dados;
+        // Normaliza o status para número caso venha texto
+        const listaTratada = lista.map((p: any) => ({
+          ...p,
+          statusPedido: this.converterStatusParaNumero(p.statusPedido)
+        }));
+        this.ordenarLista(listaTratada);
       },
-      error: (err) => {
-        console.error('Erro ao carregar pedidos', err);
-        this.loading.set(false);
-      }
+      error: (err) => console.error(err)
     });
   }
 
-  iniciarListenersRealTime() {
-    // 1. Ouve novos pedidos
-    this.notificacaoService.ouvirNovoPedido().subscribe((novoPedido: any) => {
-      console.log("Novo pedido recebido no painel:", novoPedido);
-      this.pedidos.update(listaAtual => [novoPedido, ...listaAtual]);
-    });
-
-    // 2. Ouve mudança de status
-    this.notificacaoService.ouvirAtualizacaoStatus().subscribe((dados: { pedidoId: string, novoStatus: number }) => {
-      console.log("Status atualizado no painel:", dados);
-      this.pedidos.update(listaAtual => 
-        listaAtual.map(p => {
-          if (p.id === dados.pedidoId) {
-            return { ...p, statusPedido: dados.novoStatus };
-          }
-          return p;
-        })
-      );
-    });
+  // --- NOVA LÓGICA DE MODAL (Simples e Direta) ---
+  verDetalhes(pedido: any) {
+    this.pedidoSelecionado = pedido;
+    this.mostrarModal = true; // O *ngIf no HTML vai fazer o resto
   }
 
-  avancarStatus(pedido: Pedido) {
-    // Lógica alinhada com o C# (StatusPedido.cs)
-    // 1 (Criado) -> 3 (Em Preparo) [Pula o 2 se for manual]
-    // 3 (Em Preparo) -> 4 (Saiu para Entrega)
-    // 4 (Saiu para Entrega) -> 5 (Entrega/Concluído)
+  fecharModal() {
+    this.mostrarModal = false;
+    this.pedidoSelecionado = null;
+  }
+
+  avancarStatus(pedido: any) {
+    if (pedido.statusPedido >= 5) return;
+    const novoStatus = pedido.statusPedido + 1;
     
-    let proximoStatus = pedido.statusPedido + 1;
-
-    // Se estiver "Criado" (1), o próximo lógico para a cozinha é "Em Preparo" (3), 
-    // a menos que você use o "Confirmado" (2) manualmente. 
-    // Vamos assumir sequencial simples por enquanto:
-    
-    if (pedido.statusPedido >= 5) return; 
-
-    this.pedidoService.atualizarStatus(pedido.id, proximoStatus).subscribe({
-      next: () => console.log(`Status atualizado para ${proximoStatus}`),
-      error: (err) => alert('Erro ao atualizar status: ' + (err.error?.message || err.message))
+    this.pedidoService.atualizarStatus(pedido.id, novoStatus).subscribe({
+      next: () => {
+        if (novoStatus === 5) this.mostrarToast(`Pedido #${pedido.numero} Concluído! 🎉`, 'sucesso');
+        else if (novoStatus === 4) this.mostrarToast(`Pedido #${pedido.numero} saiu para entrega! 🛵`, 'info');
+        else this.mostrarToast(`Status atualizado!`, 'info');
+        
+        // Atualiza a lista localmente para não precisar recarregar tudo
+        this.pedidos.update(lista => 
+            lista.map(p => p.id === pedido.id ? { ...p, statusPedido: novoStatus } : p)
+        );
+        this.ordenarLista(this.pedidos());
+        
+        // Se o modal estiver aberto com este pedido, atualiza ele também
+        if (this.pedidoSelecionado && this.pedidoSelecionado.id === pedido.id) {
+            this.pedidoSelecionado.statusPedido = novoStatus;
+        }
+      },
+      error: () => this.mostrarToast('Erro ao atualizar status.', 'erro')
     });
   }
 
-  // --- MAPEAMENTO CORRETO COM O C# ---
-  getNomeStatus(status: number): string {
-    switch (status) {
-      case 1: return 'Pendente (Criado)';
-      case 2: return 'Pagamento Confirmado';
-      case 3: return 'Em Preparo';
-      case 4: return 'Saiu p/ Entrega';
-      case 5: return 'Entregue';
-      case 0: return 'Cancelado';
-      default: return `Desconhecido (${status})`;
-    }
+  cancelarPedido(pedido: any) {
+    if (!confirm(`Cancelar pedido #${pedido.numero}?`)) return;
+    this.pedidoService.atualizarStatus(pedido.id, 0).subscribe({
+      next: () => {
+        this.mostrarToast(`Pedido #${pedido.numero} Cancelado.`, 'erro');
+        this.carregarPedidos();
+        this.fecharModal(); // Fecha o modal se estiver aberto
+      },
+      error: () => this.mostrarToast('Erro ao cancelar.', 'erro')
+    });
   }
 
-  getStatusClass(status: number): string {
-    switch (status) {
-      case 1: return 'status-pendente';   // Amarelo
-      case 2: return 'status-confirmado'; // Azul
-      case 3: return 'status-preparo';    // Laranja
-      case 4: return 'status-entrega';    // Roxo
-      case 5: return 'status-concluido';  // Verde
-      case 0: return 'status-cancelado';  // Vermelho
-      default: return '';
-    }
+  // --- IMPRESSÃO ---
+  imprimirComanda(pedido: any) {
+    const dataHora = new Date(pedido.dataPedido).toLocaleString('pt-BR');
+    const telefone = pedido.telefone || pedido.linkWhatsapp || 'Não informado';
+
+    const totalItens = pedido.itens.reduce((acc: number, item: any) => acc + item.total, 0);
+    const frete = (pedido.valorFrete || 0);
+    const totalGeral = (pedido.valorTotal || 0);
+
+    const conteudo = `
+      <html>
+        <head>
+          <title>Comanda #${pedido.numero}</title>
+          <style>
+            @media print { body { margin: 0; padding: 0; } }
+            body { font-family: 'Courier New', monospace; width: 80mm; font-size: 13px; margin: 0 auto; padding: 10px; }
+            .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 10px; }
+            .bold { font-weight: bold; }
+            .section { border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px; }
+            .row { display: flex; justify-content: space-between; }
+            .total-big { font-size: 18px; font-weight: bold; margin-top: 5px; border-top: 1px solid #000; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="bold">NUVPIZZA DELIVERY</div>
+            <div>Pedido: #${pedido.numero || pedido.id.substring(0,4)}</div>
+            <div style="font-size:11px">${dataHora}</div>
+          </div>
+          <div class="section">
+            <div><span class="bold">CLIENTE:</span> ${pedido.nomeCliente}</div>
+            ${telefone !== 'Não informado' ? `<div>TEL: ${telefone}</div>` : ''}
+          </div>
+          <div class="section">
+            <div class="bold">ENTREGA:</div>
+            <div>${pedido.logradouro}, ${pedido.numero}</div>
+            <div>${pedido.bairroNome}</div>
+            ${pedido.complemento ? `<div>Comp: ${pedido.complemento}</div>` : ''}
+          </div>
+          <div class="section">
+            <div class="bold mb-1">ITENS:</div>
+            ${pedido.itens.map((item: any) => `
+               <div class="row">
+                  <span style="width:10%">${item.quantidade}x</span>
+                  <span style="width:60%">${item.nomeProduto}</span>
+                  <span style="width:30%; text-align:right">
+                    ${(item.total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </span>
+               </div>
+            `).join('')}
+          </div>
+          ${pedido.observacao ? `<div class="section"><span class="bold">OBS:</span> ${pedido.observacao}</div>` : ''}
+          <div class="section" style="text-align:right">
+            <div>Subtotal: ${totalItens.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+            <div>Entrega: ${frete.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+            <div class="total-big">TOTAL: ${totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+          </div>
+          <div style="text-align:center; margin-top:10px">
+            <div>PAGAMENTO:</div>
+            <div class="bold" style="font-size:16px">${pedido.formaPagamento}</div>
+          </div>
+          <script>window.onload = function() { window.print(); }</script>
+        </body>
+      </html>
+    `;
+    const popup = window.open('', '_blank', 'width=380,height=600');
+    if(popup) { popup.document.write(conteudo); popup.document.close(); }
   }
+
+  // Auxiliares
+  mostrarToast(msg: string, tipo: any) {
+    this.toast.set({ mensagem: msg, tipo: tipo, visivel: true });
+    setTimeout(() => this.toast.update(t => ({ ...t, visivel: false })), 3000);
+  }
+
+  ordenarLista(lista: any[]) { 
+      lista.sort((a, b) => (a.statusPedido === 5 || a.statusPedido === 0) ? 1 : -1);
+      this.pedidos.set(lista);
+  }
+
+  ouvirNovosPedidos() { 
+      this.notificacaoService.ouvirAtualizacaoStatus().subscribe(() => this.carregarPedidos()); 
+  }
+
+  converterStatusParaNumero(status: any) {
+    if (typeof status === 'number') return status;
+    const s = status ? status.toString().toLowerCase().trim() : '';
+    const mapa: any = { 'criado': 1, 'aguardando': 1, 'confirmado': 2, 'pago': 2, 'empreparo': 3, 'saiuparaentrega': 4, 'entrega': 5, 'finalizado': 5, 'cancelado': 0 };
+    return mapa[s] !== undefined ? mapa[s] : (parseInt(s) || 1);
+  }
+
+  getNomeStatus(status: number) { return ['Cancelado', 'Criado', 'Confirmado', 'Em Preparo', 'Saiu p/ Entrega', 'Entregue'][status] || '...'; }
+  getStatusClass(status: number) { return ['status-cancelado', 'status-criado', 'status-confirmado', 'status-preparo', 'status-entrega', 'status-finalizado'][status] || ''; }
 }

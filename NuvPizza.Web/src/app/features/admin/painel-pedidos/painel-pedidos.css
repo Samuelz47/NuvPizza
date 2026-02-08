@@ -1,85 +1,126 @@
-/* Container Principal */
+/* =========================================
+   CONTAINER E LAYOUT GERAL
+   ========================================= */
 .painel-container {
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
   background-color: #f8f9fa;
   min-height: 100vh;
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Cabeçalho */
+/* Cabeçalho do Painel */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 30px;
   background: white;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  padding: 20px 30px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.03);
 }
 
 .header h2 {
   margin: 0;
-  color: #333;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  color: #2c3e50;
+  font-weight: 700;
 }
 
-/* Grid de Cards */
+.btn-atualizar {
+  background-color: #009ee3;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-atualizar:hover { background-color: #007bb0; transform: translateY(-2px); }
+
+/* =========================================
+   GRID DE PEDIDOS
+   ========================================= */
 .grid-pedidos {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
   gap: 25px;
 }
 
-/* Estilo do Card */
+/* =========================================
+   CARD DO PEDIDO (BASE)
+   ========================================= */
 .card {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 20px;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.04);
   transition: transform 0.2s, box-shadow 0.2s;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  border-left: 6px solid #ccc; /* Cor padrão */
+  border-left: 6px solid #ccc; /* Cor padrão fallback */
+  position: relative;
+  overflow: hidden;
 }
 
 .card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+  box-shadow: 0 12px 24px rgba(0,0,0,0.08);
 }
 
-/* Cores por Status */
-.status-0 { border-left-color: #ffc107; background: #fffdf5; } /* Pendente (Amarelo) */
-.status-1 { border-left-color: #fd7e14; background: #fff5eb; } /* Preparo (Laranja) */
-.status-2 { border-left-color: #0dcaf0; background: #f0fcff; } /* Saiu (Azul) */
-.status-3 { border-left-color: #198754; background: #f0fff4; opacity: 0.8; } /* Entregue (Verde) */
-.status-4 { border-left-color: #dc3545; background: #fff5f5; opacity: 0.7; } /* Cancelado (Vermelho) */
+/* =========================================
+   CORES POR STATUS (USADO NOS CARDS)
+   ========================================= */
+.status-criado { border-left-color: #0dcaf0; background: #f0fcff; }
+.status-confirmado { border-left-color: #0d6efd; background: #f0f7ff; }
+.status-preparo { border-left-color: #fd7e14; background: #fff5eb; }
+.status-entrega { border-left-color: #6610f2; background: #f3f0ff; }
+.status-finalizado { border-left-color: #198754; background: #f0fff4; opacity: 0.85; }
+.status-cancelado { border-left-color: #dc3545; background: #fff5f5; opacity: 0.85; }
 
-/* Conteúdo do Card */
+/* =========================================
+   CONTEÚDO DO CARD
+   ========================================= */
 .card-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 15px;
-  font-weight: bold;
-  font-size: 1.1rem;
-  color: #444;
-  border-bottom: 1px solid #eee;
   padding-bottom: 10px;
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+}
+
+.pedido-id {
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.badge-status {
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #555;
+  background: rgba(255,255,255,0.6);
+  padding: 4px 8px;
+  border-radius: 4px;
 }
 
 .card-body p {
-  margin: 8px 0;
-  color: #666;
+  margin: 6px 0;
+  color: #555;
   font-size: 0.95rem;
 }
 
 .itens-lista {
   margin-top: 15px;
-  background: #fafafa;
+  background: rgba(255,255,255,0.6);
+  border: 1px solid rgba(0,0,0,0.05);
   padding: 10px;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .item-row {
@@ -87,27 +128,276 @@
   justify-content: space-between;
   font-size: 0.9rem;
   margin-bottom: 5px;
-  border-bottom: 1px dashed #eee;
-  padding-bottom: 2px;
+  border-bottom: 1px dashed #ddd;
+  padding-bottom: 4px;
+}
+.item-row:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+.qtd { font-weight: bold; color: #333; margin-right: 5px; }
+.prod { color: #555; }
+
+.alert-obs-mini {
+    background-color: #fff3cd;
+    color: #856404;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-top: 10px;
+    border: 1px solid #ffeeba;
 }
 
-/* Botões */
-.actions {
-  margin-top: 20px;
-  display: flex;
-  gap: 10px;
+/* =========================================
+   BOTÕES E AÇÕES (RODAPÉ)
+   ========================================= */
+.card-footer-actions {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(0,0,0,0.08);
+    display: flex;
+    flex-direction: column; /* Pilha Vertical */
+    gap: 10px;
 }
 
-.btn {
-  padding: 10px 15px;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: opacity 0.2s;
-  color: white;
+.w-100 { width: 100%; }
+
+/* Botões de Ação Principal */
+.btn-preparo { 
+    background-color: #ff9800; 
+    color: white; 
+    border: none; border-radius: 8px; padding: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; 
+}
+.btn-preparo:hover { background-color: #f57c00; }
+
+.btn-moto { 
+    background-color: #6610f2; 
+    color: white; 
+    border: none; border-radius: 8px; padding: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; 
+}
+.btn-moto:hover { background-color: #520dc2; }
+
+.btn-check { 
+    background-color: #198754; 
+    color: white; 
+    border: none; border-radius: 8px; padding: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; 
+}
+.btn-check:hover { background-color: #157347; }
+
+/* Botão Detalhes */
+.btn-detalhes {
+    background-color: #f1f3f5;
+    color: #495057;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.btn-detalhes:hover { background-color: #e9ecef; color: #212529; }
+
+/* Botão Cancelar (Bloco no final) */
+.btn-cancelar-block {
+    background-color: white;
+    color: #dc3545;
+    border: 1px solid #f8d7da;
+    border-radius: 8px;
+    padding: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-top: 5px; /* Respiro extra */
+}
+.btn-cancelar-block:hover {
+    background-color: #dc3545;
+    color: white;
+    border-color: #dc3545;
 }
 
-.btn:hover { opacity: 0.9; }
-.btn-avancar { background-color: #0d6efd; flex: 1; }
-.btn-cancelar { background-color: #dc3545; }
+/* Mensagens de Status Final (Estático) */
+.status-msg {
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 0.95rem;
+}
+.status-msg.success { background-color: rgba(25, 135, 84, 0.1); color: #198754; }
+.status-msg.danger { background-color: rgba(220, 53, 69, 0.1); color: #dc3545; }
+
+
+/* =========================================
+   TOAST NOTIFICATION
+   ========================================= */
+.toast-container {
+    position: fixed;
+    top: 20px; right: 20px;
+    padding: 15px 25px;
+    border-radius: 50px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    display: flex; align-items: center; gap: 12px;
+    font-weight: 600; font-size: 1rem;
+    z-index: 9999; color: white;
+    transform: translateX(120%);
+    transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+    opacity: 0;
+}
+.toast-container.show { transform: translateX(0); opacity: 1; }
+.toast-container.sucesso { background-color: #198754; }
+.toast-container.erro { background-color: #dc3545; }
+.toast-container.info { background-color: #0dcaf0; color: #212529; }
+.toast-container i { font-size: 1.4rem; }
+
+/* =========================================
+   NOVO: MODAL MANUAL / OVERLAY
+   (Isso substitui o modal do Bootstrap)
+   ========================================= */
+
+/* Fundo Preto Transparente */
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.6); /* Escurece o fundo */
+    z-index: 2000; /* Garante que fica na frente de tudo */
+    display: flex;
+    justify-content: center; /* Centraliza horizontalmente */
+    align-items: center; /* Centraliza verticalmente */
+    backdrop-filter: blur(4px); /* Desfoque bonito no fundo */
+    animation: fadeIn 0.2s ease-out;
+}
+
+/* A Janela Branca em si */
+.modal-content-custom {
+    background: white;
+    width: 90%;
+    max-width: 800px; /* Largura máxima confortável */
+    max-height: 90vh; /* Se for muito alto, ativa scroll */
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden; /* Garante que o cabeçalho não saia das bordas arredondadas */
+    animation: slideUp 0.3s ease-out;
+}
+
+/* Cabeçalho do Modal */
+.modal-custom-header {
+    padding: 15px 25px;
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #343a40; /* Cor padrão */
+}
+
+/* Cores Específicas para o Cabeçalho do Modal */
+.modal-custom-header.status-criado { background: #0dcaf0; color: #000; }
+.modal-custom-header.status-confirmado { background: #0d6efd; }
+.modal-custom-header.status-preparo { background: #fd7e14; }
+.modal-custom-header.status-entrega { background: #6610f2; }
+.modal-custom-header.status-finalizado { background: #198754; }
+.modal-custom-header.status-cancelado { background: #dc3545; }
+
+.badge-modal {
+    background: rgba(255,255,255,0.2);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    margin-left: 10px;
+}
+
+.btn-close-custom {
+    background: none; border: none; color: inherit; font-size: 1.5rem; cursor: pointer; opacity: 0.8;
+}
+.btn-close-custom:hover { opacity: 1; }
+
+/* Corpo do Modal (Dividido em colunas) */
+.modal-custom-body {
+    display: flex;
+    flex-direction: row; /* Lado a lado em PC */
+    overflow-y: auto; /* Scroll se precisar */
+}
+
+/* Responsividade: Celular fica um embaixo do outro */
+@media (max-width: 768px) {
+    .modal-custom-body { flex-direction: column; }
+    .col-itens, .col-info { width: 100% !important; border-right: none !important; }
+}
+
+/* Coluna da Esquerda (Lista de Itens) */
+.col-itens {
+    flex: 1.5;
+    padding: 25px;
+    background-color: #f9f9f9;
+    border-right: 1px solid #e0e0e0;
+}
+
+/* Coluna da Direita (Endereço e Ações) */
+.col-info {
+    flex: 1;
+    padding: 25px;
+    background-color: white;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Estilo da Lista de Produtos no Modal */
+.titulo-secao {
+    font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; color: #888; font-weight: 700; margin-bottom: 15px; border-bottom: 2px solid #ddd; padding-bottom: 5px;
+}
+
+.lista-itens-detalhe { list-style: none; padding: 0; margin: 0; }
+.lista-itens-detalhe li {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid #eee;
+}
+
+.badge-qtd { background: #e9ecef; color: #333; padding: 2px 8px; border-radius: 6px; font-weight: bold; margin-right: 10px; font-size: 0.9rem; }
+.nome-prod { font-weight: 600; color: #333; font-size: 1rem; }
+.preco-prod { color: #555; font-weight: 600; }
+
+.box-observacao {
+    margin-top: 15px; padding: 10px; background: #fff3cd; color: #856404; border-radius: 6px; font-size: 0.9rem; border: 1px solid #ffeeba;
+}
+
+.total-area {
+    margin-top: 25px; display: flex; justify-content: space-between; align-items: center;
+    font-size: 1.3rem; font-weight: 800; border-top: 2px dashed #ccc; padding-top: 15px;
+}
+.valor-total { color: #198754; }
+
+/* Detalhes do Cliente na Coluna Direita */
+.nome-cliente { font-size: 1.2rem; font-weight: bold; margin: 0; color: #333; }
+.tel-cliente { color: #666; margin-bottom: 20px; font-size: 0.95rem; }
+
+.endereco-box {
+    background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #e9ecef; margin-bottom: 20px;
+}
+.endereco-box p { margin: 2px 0; font-size: 0.9rem; color: #555; }
+
+.pagamento-box { margin-bottom: auto; /* Empurra os botões para baixo */ }
+.pagamento-box label { font-size: 0.8rem; font-weight: bold; color: #aaa; }
+.pagamento-box div { font-size: 1.1rem; font-weight: bold; color: #333; }
+
+/* Botões do Modal */
+.btn-imprimir {
+    width: 100%; padding: 14px; margin-top: 20px;
+    background: #212529; color: white;
+    border: none; border-radius: 8px;
+    font-weight: bold; font-size: 1rem;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: 0.2s;
+}
+.btn-imprimir:hover { background: #000; }
+
+.btn-fechar-texto {
+    width: 100%; padding: 10px; margin-top: 10px;
+    background: transparent; color: #666;
+    border: none; text-decoration: underline; cursor: pointer;
+}
+.btn-fechar-texto:hover { color: #333; }
+
+/* Animações */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }

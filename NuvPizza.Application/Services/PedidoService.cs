@@ -52,6 +52,16 @@ public class PedidoService : IPedidoService
         var bairro = await _bairroRepository.GetAsync(b => b.Nome.ToLower() == nomeBairroViaCep);
         if (bairro is null) return Result<PedidoDTO>.Failure("Desculpe não entregamos nesse bairro");
 
+        if (!Enum.TryParse<FormaPagamento>(pedidoRegister.FormaPagamento, true, out var formaPagamentoEnum))
+        {
+            // Se não conseguir converter (ex: veio "Bananas"), define um padrão ou retorna erro
+            // Aqui vou mapear manualmente o texto "Pagar na Entrega" para "CartaoEntrega" ou "Dinheiro"
+            if (pedidoRegister.FormaPagamento == "Pagar na Entrega") 
+                formaPagamentoEnum = FormaPagamento.CartaoEntrega;
+            else 
+                return Result<PedidoDTO>.Failure("Forma de pagamento inválida");
+        }
+        
         var pedido =  _mapper.Map<Pedido>(pedidoRegister);
         pedido.DataPedido = DateTime.Now;
         pedido.Itens = new List<ItemPedido>();
@@ -62,6 +72,7 @@ public class PedidoService : IPedidoService
         pedido.Logradouro = enderecoViaCep.Logradouro;
         pedido.Complemento = pedidoRegister.Complemento;
         pedido.Numero = pedidoRegister.Numero;
+        pedido.FormaPagamento = formaPagamentoEnum;
 
         foreach (var itemDto in pedidoRegister.Itens)
         {

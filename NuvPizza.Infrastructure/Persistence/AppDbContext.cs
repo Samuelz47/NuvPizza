@@ -52,7 +52,9 @@ namespace NuvPizza.Infrastructure.Persistence
                 e.Property(p => p.ValorTotal).HasColumnType("decimal(10,2)");
                 e.Property(p => p.ValorFrete).HasColumnType("decimal(10,2)");
                 e.Property(p => p.Complemento).IsRequired(false).HasMaxLength(100);
-        
+
+                e.Property(p => p.FormaPagamento).HasConversion<string>();
+                
                 e.HasOne<Bairro>() 
                     .WithMany()
                     .HasForeignKey(p => p.BairroId)

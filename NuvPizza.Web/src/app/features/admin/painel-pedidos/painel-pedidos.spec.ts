@@ -1,18 +1,17 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { PainelPedidos } from './painel-pedidos';
+import { PainelPedidosComponent } from './painel-pedidos.component';
 
-describe('PainelPedidos', () => {
-  let component: PainelPedidos;
-  let fixture: ComponentFixture<PainelPedidos>;
-
+describe('PainelPedidosComponent', () => {
+  let component: PainelPedidosComponent;
+  let fixture: ComponentFixture<PainelPedidosComponent>;  
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [PainelPedidos]
+      imports: [PainelPedidosComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(PainelPedidos);
+    fixture = TestBed.createComponent(PainelPedidosComponent);
     component = fixture.componentInstance;
     await fixture.whenStable();
   });

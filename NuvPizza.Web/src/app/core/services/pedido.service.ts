@@ -13,6 +13,8 @@ export interface Pedido {
   valorTotal: number;
   statusPedido: number;  // 1=Criado, 2=Confirmado, 3=Preparo, 4=Saiu, 5=Entregue, 0=Cancelado
   itens: any[];
+  observacao?: string;
+  formaPagamento: string;
 }
 
 @Injectable({

@@ -1,65 +1,131 @@
-<div class="painel-container">
-  <div class="header">
-    <h2>Painel de Pedidos (Cozinha)</h2>
-    <button (click)="carregarPedidos()" class="btn btn-atualizar">
-      ↻ Atualizar
-    </button>
-  </div>
-
-  @if (loading()) {
-    <p class="loading">Carregando pedidos...</p>
+<div class="painel-bg">
+  @if (toast().visivel) {
+    <div class="toast-container show" [ngClass]="toast().tipo">
+       <i class="bi" [class.bi-check-circle-fill]="toast().tipo === 'sucesso'" [class.bi-info-circle-fill]="toast().tipo === 'info'" [class.bi-x-circle-fill]="toast().tipo === 'erro'"></i>
+       <span>{{ toast().mensagem }}</span>
+    </div>
   }
 
-  <div class="grid-pedidos">
-    @for (pedido of pedidos(); track pedido.id) {
-      <div class="card" [ngClass]="getStatusClass(pedido.statusPedido)">
-        
-        <div class="card-header">
-          <span class="pedido-id">#{{ pedido.numero || pedido.id.substring(0, 4) }}</span> 
-          <span class="badge-status">{{ getNomeStatus(pedido.statusPedido) }}</span>
-        </div>
+  <div class="painel-container">
+    <div class="header">
+      <h2>Painel de Pedidos (Cozinha)</h2>
+      <button (click)="carregarPedidos()" class="btn btn-atualizar">↻ Atualizar</button>
+    </div>
+  
+    <div class="grid-pedidos">
+      @for (pedido of pedidos(); track pedido.id) {
+        <div class="card" [ngClass]="getStatusClass(pedido.statusPedido)">
+          <div class="card-header">
+            <span class="pedido-id">#{{ pedido.numero || pedido.id.substring(0,4) }}</span> 
+            <span class="badge-status">{{ getNomeStatus(pedido.statusPedido) }}</span>
+          </div>
+          <div class="card-body">
+            <p><strong>Cliente:</strong> {{ pedido.nomeCliente }}</p>
+            <p class="mb-2"><i class="bi bi-wallet2"></i> {{ pedido.formaPagamento || 'Não informado' }}</p>
+            
+            <div class="itens-lista">
+              @for (item of pedido.itens; track $index) {
+                <div class="item-row">
+                  <span class="qtd">{{ item.quantidade }}x</span> 
+                  <span class="prod">{{ item.nomeProduto }}</span>
+                </div>
+              }
+            </div>
 
-        <div class="card-body">
-          <p><strong>Cliente:</strong> {{ pedido.nomeCliente || 'Cliente' }}</p>
-          <p><strong>Total:</strong> {{ pedido.valorTotal | currency:'BRL' }}</p>
-          <p class="data">{{ pedido.dataPedido | date:'HH:mm - dd/MM' }}</p>
+            @if (pedido.observacao) { <div class="alert-obs-mini">⚠️ {{ pedido.observacao }}</div> }
+          </div>
           
-          <div class="itens-lista">
-            @for (item of pedido.itens; track $index) {
-              <div class="item-row">
-                <span class="qtd">{{ item.quantidade }}x</span> 
-                <span class="prod">{{ item.nome }}</span>
-              </div>
-            }
+          <div class="card-footer-actions">
+             @if (pedido.statusPedido !== 5 && pedido.statusPedido !== 0) {
+                @if (pedido.statusPedido <= 2) {
+                    <button (click)="avancarStatus(pedido)" class="btn btn-preparo w-100">🔥 Iniciar Preparo</button>
+                } @else if (pedido.statusPedido === 3) {
+                    <button (click)="avancarStatus(pedido)" class="btn btn-moto w-100">🛵 Despachar</button>
+                } @else if (pedido.statusPedido === 4) {
+                    <button (click)="avancarStatus(pedido)" class="btn btn-check w-100">✅ Confirmar Entrega</button>
+                }
+             }
+
+             @if (pedido.statusPedido === 5) { <div class="status-msg success">Pedido Concluído 🎉</div> }
+             @if (pedido.statusPedido === 0) { <div class="status-msg danger">Pedido Cancelado 🚫</div> }
+
+             <button class="btn btn-detalhes w-100" (click)="verDetalhes(pedido)">
+               👁️ Ver Detalhes
+             </button>
+
+             @if (pedido.statusPedido !== 5 && pedido.statusPedido !== 0) {
+                <button (click)="cancelarPedido(pedido)" class="btn btn-cancelar-block w-100">Cancelar Pedido</button>
+             }
           </div>
         </div>
-
-        <div class="actions">
-           @if (pedido.statusPedido === 1 || pedido.statusPedido === 2) {
-             <button (click)="avancarStatus(pedido)" class="btn btn-preparo">
-               🔥 Iniciar Preparo
-             </button>
-           }
-           
-           @if (pedido.statusPedido === 3) {
-             <button (click)="avancarStatus(pedido)" class="btn btn-moto">
-               🛵 Despachar Entrega
-             </button>
-           }
-
-           @if (pedido.statusPedido === 4) {
-             <button (click)="avancarStatus(pedido)" class="btn btn-check">
-               ✅ Confirmar Entrega
-             </button>
-           }
-        </div>
-      </div>
-    } @empty {
-      @if (!loading()) {
-        <div class="empty-state">
-          <p>Nenhum pedido na fila.</p>
-        </div>
       }
-    }
+    </div>
   </div>
 </div>
+
+@if (mostrarModal && pedidoSelecionado) {
+  <div class="modal-overlay" (click)="fecharModal()">
+    <div class="modal-content-custom" (click)="$event.stopPropagation()">
+      
+      <div class="modal-custom-header" [ngClass]="getStatusClass(pedidoSelecionado.statusPedido)">
+        <div>
+           <h5>Pedido #{{ pedidoSelecionado.numero || pedidoSelecionado.id.substring(0,4) }}</h5>
+           <span class="badge-modal">{{ getNomeStatus(pedidoSelecionado.statusPedido) }}</span>
+        </div>
+        <button class="btn-close-custom" (click)="fecharModal()">✖</button>
+      </div>
+
+      <div class="modal-custom-body">
+        <div class="col-itens">
+            <h6 class="titulo-secao"><i class="bi bi-basket2-fill"></i> Itens do Pedido</h6>
+            <ul class="lista-itens-detalhe">
+                @for (item of pedidoSelecionado.itens; track $index) {
+                  <li>
+                    <div>
+                        <span class="badge-qtd">{{ item.quantidade }}x</span> 
+                        <span class="nome-prod">{{ item.nomeProduto }}</span>
+                    </div>
+                    <span class="preco-prod">{{ (item.total) | currency:'BRL' }}</span>
+                  </li>
+                }
+            </ul>
+            @if (pedidoSelecionado.observacao) {
+                <div class="box-observacao"><strong>Obs:</strong> {{ pedidoSelecionado.observacao }}</div>
+            }
+            <div class="total-area">
+                <span>Total Geral:</span>
+                <span class="valor-total">{{ (pedidoSelecionado.valorTotal) | currency:'BRL' }}</span>
+            </div>
+        </div>
+
+        <div class="col-info">
+            <h6 class="titulo-secao"><i class="bi bi-geo-alt-fill"></i> Dados de Entrega</h6>
+            
+            <div class="cliente-info">
+                <p class="nome-cliente">{{ pedidoSelecionado.nomeCliente }}</p>
+                <p class="tel-cliente">{{ pedidoSelecionado.telefone || 'Sem telefone' }}</p>
+            </div>
+
+            <div class="endereco-box">
+                <p><strong>{{ pedidoSelecionado.logradouro }}, {{ pedidoSelecionado.numero }}</strong></p>
+                <p>{{ pedidoSelecionado.bairroNome }}</p>
+                @if (pedidoSelecionado.complemento) { <small>Comp: {{ pedidoSelecionado.complemento }}</small> }
+            </div>
+
+            <div class="pagamento-box">
+                 <label>FORMA DE PAGAMENTO</label>
+                 <div><i class="bi bi-credit-card-2-front"></i> {{ pedidoSelecionado.formaPagamento }}</div>
+            </div>
+
+            <hr>
+
+            <button (click)="imprimirComanda(pedidoSelecionado)" class="btn-imprimir">
+                <i class="bi bi-printer-fill"></i> IMPRIMIR COMANDA
+            </button>
+            <button (click)="fecharModal()" class="btn-fechar-texto">Fechar Janela</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+}
