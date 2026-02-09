@@ -158,7 +158,17 @@ public class PedidoService : IPedidoService
             pagedResult.TotalCount
         );
     }
-    
+
+    public async Task<Result<PedidoDTO>> GetPedidoByIdAsync(Guid pedidoId)
+    {
+        var pedido = await _pedidoRepository.GetByIdWithDetailsAsync(pedidoId);
+        
+        if (pedido is null) return Result<PedidoDTO>.Failure("Pedido inexistente");
+        
+        var pedidoDto = _mapper.Map<PedidoDTO>(pedido);
+        return Result<PedidoDTO>.Success(pedidoDto);
+    }
+
     private async Task<bool> LojaEstaAberta()
     {
         var config = await _configuracaoRepository.GetAsync(c => c.Id == 1);

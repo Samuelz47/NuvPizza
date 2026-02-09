@@ -1,0 +1,206 @@
+/* --- FUNDO GERAL (AZULZINHO DA PIZZARIA) --- */
+.checkout-bg { 
+  background-color: #e3f2fd; /* Azul clarinho agradável */
+  min-height: 100vh; 
+  padding: 40px 15px; /* Espaço nas laterais em mobile */
+  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  display: flex;
+  justify-content: center;
+}
+
+.checkout-container {
+  max-width: 1100px;
+  width: 100%;
+}
+
+/* --- CARTÕES (Borda arredondada e Sombra) --- */
+.card-custom {
+  background: #fff;
+  border: none;
+  border-radius: 20px; /* Borda bem redondinha */
+  box-shadow: 0 8px 30px rgba(0, 50, 100, 0.08); /* Sombra azulada suave */
+  overflow: hidden;
+  height: 100%; /* Para alinhar altura das colunas */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Cabeçalho do Card (Onde fica o Título) */
+.card-header-custom {
+    background: #fff;
+    padding: 25px 30px 15px 30px; /* Topo, Dir, Baixo, Esq */
+    border-bottom: 1px solid #f0f4f8;
+}
+
+.card-header-custom h2 {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #1565c0; /* Azul mais forte para o título */
+    margin: 0;
+}
+
+/* CORPO DO CARD (AQUI RESOLVE O "COLADO NA BORDA") */
+.card-body-custom {
+    padding: 30px; /* 30px de respiro em todos os lados */
+    flex-grow: 1;
+}
+
+/* Títulos das Seções (1. Dados, 2. Entrega...) */
+.section-title {
+    font-size: 1rem;
+    font-weight: 800;
+    color: #546e7a; /* Cinza azulado */
+    margin-bottom: 20px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    border-left: 4px solid #42a5f5; /* Detalhe azul na esquerda */
+    padding-left: 10px;
+}
+
+/* --- FORMULÁRIOS --- */
+.form-group {
+    margin-bottom: 20px; /* Espaço entre os campos */
+}
+
+.form-label {
+  font-weight: 600; 
+  color: #455a64; 
+  font-size: 0.9rem; 
+  margin-bottom: 8px;
+  display: block;
+}
+
+.form-control {
+  width: 100%;
+  border: 2px solid #e1f5fe; /* Borda azul bem clarinha */
+  background-color: #fbfdfe;
+  border-radius: 12px;
+  padding: 12px 15px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  color: #333;
+}
+
+.form-control:focus {
+  border-color: #29b6f6; /* Azul vibrante no foco */
+  background-color: #fff;
+  box-shadow: 0 0 0 4px rgba(41, 182, 246, 0.15);
+  outline: none;
+}
+
+/* Campos Readonly (Rua, Bairro) */
+.input-readonly { 
+  background-color: #eceff1; 
+  color: #78909c; 
+  border-color: #eceff1; 
+  cursor: default;
+}
+
+/* Ícone de Loading no CEP */
+.input-icon-group { position: relative; }
+.input-icon-right {
+  position: absolute; right: 15px; top: 50%; transform: translateY(-50%);
+}
+
+/* --- OPÇÕES DE PAGAMENTO --- */
+.payment-option {
+  border: 2px solid #e1f5fe;
+  border-radius: 16px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #fbfdfe;
+  height: 100%;
+}
+
+.payment-option:hover {
+  border-color: #81d4fa; 
+  background: #fff;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+}
+
+.payment-option.selected {
+  border-color: #039be5;
+  background-color: #e1f5fe;
+}
+
+/* Sub-opções (Radio Buttons) */
+.payment-sub-options {
+    background-color: #f1f8e9; /* Um verdinho bem claro ou azul claro */
+    padding: 20px;
+    border-radius: 12px;
+    border: 1px dashed #c5e1a5;
+    margin-top: 15px;
+}
+.option-item {
+    border: 1px solid #fff;
+    transition: 0.2s;
+}
+.option-item:hover { border-color: #81c784 !important; }
+
+/* --- RESUMO E TOTAIS --- */
+.summary-item {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 12px 0; border-bottom: 1px dashed #e0e0e0; color: #555;
+}
+.total-row {
+  display: flex; justify-content: space-between;
+  font-size: 1.5rem; font-weight: 800; color: #1565c0;
+  margin-top: 20px; padding-top: 20px; border-top: 2px solid #e3f2fd;
+}
+
+/* --- BOTÕES --- */
+.btn-pagar {
+  width: 100%;
+  padding: 18px;
+  background: linear-gradient(135deg, #039be5 0%, #0277bd 100%); /* Azul degradê */
+  color: white; border: none; border-radius: 14px;
+  font-weight: 700; font-size: 1.1rem; cursor: pointer;
+  box-shadow: 0 10px 25px rgba(3, 155, 229, 0.3);
+  transition: transform 0.2s, box-shadow 0.2s;
+  margin-top: 25px;
+}
+.btn-pagar:hover:not(:disabled) {
+  transform: translateY(-3px); 
+  box-shadow: 0 15px 30px rgba(3, 155, 229, 0.4);
+}
+.btn-pagar:disabled {
+  background: #cfd8dc; 
+  box-shadow: none; 
+  cursor: not-allowed;
+}
+
+/* --- MODAL DE SUCESSO --- */
+.modal-overlay-sucesso {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(21, 101, 192, 0.6); /* Azul escuro transparente */
+    z-index: 9999;
+    display: flex; justify-content: center; align-items: center;
+    backdrop-filter: blur(8px);
+}
+.card-sucesso {
+    background: white; padding: 40px; border-radius: 30px;
+    text-align: center; width: 90%; max-width: 450px;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+}
+.icone-check {
+    width: 90px; height: 90px; background: #43a047; color: white;
+    border-radius: 50%; font-size: 45px; 
+    display: flex; justify-content: center; align-items: center;
+    margin: 0 auto 20px auto;
+    box-shadow: 0 0 0 12px rgba(67, 160, 71, 0.2);
+}
+.btn-acompanhar {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; padding: 18px; margin-top: 25px;
+    background: #fb8c00; /* Laranja para contraste no botão de ação */
+    color: white; font-weight: 800; text-decoration: none;
+    border-radius: 12px; font-size: 1.2rem;
+    transition: transform 0.2s;
+}
+.btn-acompanhar:hover { transform: translateY(-3px); color: white; }
+.btn-fechar-modal {
+    margin-top: 20px; background: none; border: none; 
+    color: #fff; text-decoration: underline; cursor: pointer;
+}

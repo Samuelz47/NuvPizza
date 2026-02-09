@@ -2,6 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { environment } from '../../environments/environment';
 import { Observable } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 
 // --- AQUI ESTAVA O PROBLEMA ---
 // Atualizamos a interface para incluir 'numero' e 'nomeCliente'
@@ -33,6 +34,10 @@ export class PedidoService {
       .set('PageSize', pageSize);
     
     return this.http.get<Pedido[]>(this.apiUrl, { params });
+  }
+
+  getPedidoPorId(id: string): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/${id}`);
   }
 
   // 2. Criar Pedido (Usado no Checkout)

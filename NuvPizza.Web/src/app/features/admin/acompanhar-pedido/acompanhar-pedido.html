@@ -1,0 +1,93 @@
+<div class="mobile-container">
+  
+  @if (carregando()) {
+    <div class="loading-screen">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p>Buscando seu pedido...</p>
+    </div>
+  } @else if (pedido()) {
+
+    <div class="status-header">
+      <h3>Acompanhar Pedido</h3>
+      <p class="pedido-num">#{{ pedido().numero || pedido().id.substring(0,4) }}</p>
+      
+      @if (pedido().statusPedido === 0) {
+        <div class="alert alert-danger text-center mt-3">
+            🚫 Este pedido foi cancelado.
+        </div>
+      } @else {
+        <div class="timeline-wrapper">
+            @for (step of steps; track step.status) {
+                <div class="step-item" 
+                     [class.active]="isStepActive(step.status)"
+                     [class.current]="isCurrentStep(step.status)">
+                    
+                    <div class="step-circle">
+                        <i class="bi" [ngClass]="step.icon"></i>
+                    </div>
+                    <span class="step-label">{{ step.label }}</span>
+                </div>
+                @if (!$last) { 
+                    <div class="step-line" [class.active]="pedido().statusPedido > step.status"></div> 
+                }
+            }
+        </div>
+      }
+    </div>
+
+    <div class="card-detalhes">
+        <div class="loja-info">
+            <i class="bi bi-shop window-icon"></i>
+            <div>
+                <strong>NuvPizza Delivery</strong>
+                <span>Seu pedido está sendo cuidado com carinho!</span>
+            </div>
+        </div>
+
+        <hr>
+
+        <h6><i class="bi bi-bag"></i> Resumo do Pedido</h6>
+        <ul class="lista-itens">
+            @for (item of pedido().itens; track $index) {
+                <li>
+                    <span class="qtd">{{ item.quantidade }}x</span>
+                    <span class="nome">{{ item.nomeProduto }}</span>
+                    <span class="preco">{{ (item.total) | currency:'BRL' }}</span>
+                </li>
+            }
+        </ul>
+
+        <div class="resumo-total">
+            <div class="row-val"><span>Taxa de Entrega</span> <span>{{ (pedido().valorFrete || 0) | currency:'BRL' }}</span></div>
+            <div class="row-val total"><span>Total</span> <span>{{ (pedido().valorTotal) | currency:'BRL' }}</span></div>
+        </div>
+    </div>
+
+    <div class="card-info-extra">
+        <div class="info-row">
+            <i class="bi bi-geo-alt-fill text-danger"></i>
+            <div>
+                <strong>Endereço de Entrega</strong>
+                <p>{{ pedido().logradouro }}, {{ pedido().numero }} - {{ pedido().bairroNome }}</p>
+            </div>
+        </div>
+        <div class="info-row mt-3">
+            <i class="bi bi-credit-card-2-front-fill text-success"></i>
+            <div>
+                <strong>Pagamento na Entrega</strong>
+                <p>{{ pedido().formaPagamento }}</p>
+            </div>
+        </div>
+    </div>
+
+    <a href="https://wa.me/55999999999?text=Olá, estou acompanhando o pedido #{{pedido().numero}}" target="_blank" class="btn-whatsapp">
+        <i class="bi bi-whatsapp"></i> Preciso de Ajuda
+    </a>
+
+  } @else {
+    <div class="text-center p-5">
+        <h3>Pedido não encontrado 😕</h3>
+        <p>Verifique o link ou entre em contato com a loja.</p>
+    </div>
+  }
+</div>

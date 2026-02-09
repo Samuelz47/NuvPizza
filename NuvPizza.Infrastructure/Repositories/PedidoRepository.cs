@@ -45,4 +45,11 @@ public class PedidoRepository : Repository<Pedido>, IPedidoRepository
         
         return new PagedResult<Pedido>(items, pedidoParameters.PageNumber, pedidoParameters.PageSize, totalCount);
     }
+
+    public async Task<Pedido?> GetByIdWithDetailsAsync(Guid pedidoId)
+    {
+        return await _context.Pedidos
+                                    .Include(p => p.Itens)
+                                    .FirstOrDefaultAsync(p => p.Id == pedidoId);
+    }
 }

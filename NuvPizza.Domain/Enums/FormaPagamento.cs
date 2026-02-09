@@ -7,5 +7,6 @@ public enum FormaPagamento
     Dinheiro = 2,
     CartaoCredito = 3,
     CartaoDebito = 4,
-    CartaoEntrega = 5
+    CartaoEntrega = 5,
+    MercadoPago = 6
 }

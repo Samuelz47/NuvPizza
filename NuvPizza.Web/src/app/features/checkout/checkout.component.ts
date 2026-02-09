@@ -1,7 +1,7 @@
 import { Component, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router'; 
+import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http'; 
 import { PedidoService } from '../../core/services/pedido.service';
 import { CarrinhoService } from '../../core/services/carrinho.service'; 
@@ -9,163 +9,9 @@ import { CarrinhoService } from '../../core/services/carrinho.service';
 @Component({
   selector: 'app-checkout',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterModule], 
   templateUrl: './checkout.html',
-  styles: [`
-    /* --- DESIGN PREMIUM CSS --- */
-    .checkout-bg { 
-      background-color: #e3f2fd; /* Fundo cinza bem clarinho e moderno */
-      min-height: 100vh; 
-      padding: 3rem 1rem; 
-      display: flex; 
-      justify-content: center; 
-      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-    }
-    
-    .checkout-container {
-      max-width: 1100px;
-      width: 100%;
-    }
-
-    .card-custom {
-      background: #fff;
-      border: none;
-      border-radius: 16px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.06); /* Sombra suave */
-      padding: 2rem;
-      margin-bottom: 20px;
-    }
-
-    h2 { font-weight: 800; color: #2c3e50; letter-spacing: -0.5px; }
-    h3 { font-weight: 700; color: #34495e; font-size: 1.3rem; margin-bottom: 1.5rem; }
-
-    .form-label {
-      font-weight: 600;
-      color: #58687a;
-      font-size: 0.9rem;
-      margin-bottom: 6px;
-    }
-
-    .form-control {
-      border: 2px solid #eaeff4;
-      border-radius: 10px;
-      padding: 12px;
-      font-size: 1rem;
-      transition: all 0.3s ease;
-    }
-
-    .form-control:focus {
-      border-color: #009ee3;
-      box-shadow: 0 0 0 4px rgba(0, 158, 227, 0.1);
-    }
-
-    .input-readonly { 
-      background-color: #f8f9fa; 
-      color: #6c757d; 
-      border-color: #f0f0f0; 
-      cursor: default;
-    }
-
-    /* Input com Ícone/Spinner */
-    .input-icon-group { position: relative; }
-    .input-icon-right {
-      position: absolute;
-      right: 15px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: #009ee3;
-    }
-
-    /* Opções de Pagamento Estilizadas */
-    .payment-option {
-      border: 2px solid #eaeff4;
-      border-radius: 12px;
-      padding: 20px;
-      cursor: pointer;
-      transition: all 0.2s;
-      background: #fff;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .payment-option:hover {
-      border-color: #b3e0f5;
-      transform: translateY(-2px);
-    }
-
-    .payment-option.selected {
-      border-color: #009ee3;
-      background-color: #f0f9ff;
-    }
-
-    .payment-option.selected::after {
-      content: '✔';
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      color: #009ee3;
-      font-weight: bold;
-    }
-
-    /* Resumo do Pedido */
-    .summary-item {
-      display: flex;
-      justify-content: space-between;
-      padding: 12px 0;
-      border-bottom: 1px dashed #eee;
-      color: #555;
-    }
-    
-    .total-row {
-      display: flex;
-      justify-content: space-between;
-      margin-top: 20px;
-      font-size: 1.4rem;
-      font-weight: 800;
-      color: #2c3e50;
-    }
-
-    .btn-pagar {
-      width: 100%;
-      padding: 18px;
-      background: linear-gradient(135deg, #009ee3 0%, #0077b5 100%);
-      color: white;
-      border: none;
-      border-radius: 50px;
-      font-weight: 700;
-      font-size: 1.1rem;
-      cursor: pointer;
-      box-shadow: 0 10px 20px rgba(0, 158, 227, 0.25);
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .btn-pagar:hover:not(:disabled) {
-      transform: translateY(-2px);
-      box-shadow: 0 15px 25px rgba(0, 158, 227, 0.35);
-    }
-
-    .btn-pagar:disabled {
-      background: #bdc3c7;
-      box-shadow: none;
-      cursor: not-allowed;
-    }
-
-    /* Botão de Teste */
-    .btn-teste {
-      background: #fff3cd;
-      color: #856404;
-      border: 1px solid #ffeeba;
-      font-weight: bold;
-      padding: 8px 15px;
-      border-radius: 20px;
-      font-size: 0.85rem;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      margin-bottom: 20px;
-      cursor: pointer;
-    }
-  `]
+  styleUrls: ['./checkout.css']
 })
 export class CheckoutComponent {
   private pedidoService = inject(PedidoService);
@@ -173,15 +19,33 @@ export class CheckoutComponent {
   private router = inject(Router);
   private http = inject(HttpClient); 
 
+  // Sinais de Estado
   loading = signal<boolean>(false);
   errorMessage = signal<string>('');
-  
   buscandoCep = signal<boolean>(false);
+  
+  // Controle do Modal
+  mostrarModalSucesso = signal<boolean>(false);
+  idPedidoCriado = signal<string | null>(null);
+
+  // Controle de UI do Pagamento
   tipoPagamento = signal<'ONLINE' | 'ENTREGA'>('ONLINE'); 
+  opcaoEntregaSelecionada = signal<string>('');
+
+  // MAPEAMENTO STRINGS (Igual ao C#)
+  readonly PAGAMENTO_ENUM = {
+    NaoDefinido: 'NaoDefinido',
+    Pix: 'Pix',
+    Dinheiro: 'Dinheiro',
+    CartaoCredito: 'CartaoCredito',
+    CartaoDebito: 'CartaoDebito',
+    CartaoEntrega: 'CartaoEntrega',
+    MercadoPago: 'MercadoPago'
+  };
 
   pedido: any = {
     nomeCliente: '',
-    emailCliente: 'cliente@teste.com',
+    emailCliente: '', // <--- NOVO CAMPO ADICIONADO
     telefoneCliente: '',
     cep: '',
     logradouro: '',
@@ -189,43 +53,38 @@ export class CheckoutComponent {
     complemento: '',
     bairro: '',
     observacao: '',
-    formaPagamento: 'Pix', 
+    formaPagamento: 'NaoDefinido', 
     itens: [] 
   };
+
+  constructor() {
+    this.selecionarTipoPagamento('ONLINE');
+  }
 
   // --- BOTÃO DE TESTE ---
   adicionarItemTeste() {
     this.carrinhoService.adicionar({
-      id: 1, // <--- GARANTA QUE ESSE ID EXISTE NO SEU BANCO
-      nome: 'Pizza Calabresa (Teste)',
+      id: 1, 
+      nome: 'Pizza de Teste (Calabresa)',
       preco: 45.90,
       imagemUrl: ''
     });
   }
-  // ----------------------
 
-  constructor() {
-    // Se quiser bloquear acesso sem itens, descomente:
-    // if (this.carrinhoService.quantidadeTotal() === 0) { this.router.navigate(['/']); }
-  }
-
+  // --- BUSCA CEP ---
   buscarCep() {
     const cep = this.pedido.cep?.replace(/\D/g, ''); 
     if (cep?.length !== 8) return;
 
     this.buscandoCep.set(true);
-    
     this.http.get<any>(`https://viacep.com.br/ws/${cep}/json/`).subscribe({
       next: (dados) => {
         this.buscandoCep.set(false);
         if (!dados.erro) {
           this.pedido.logradouro = dados.logradouro;
           this.pedido.bairro = dados.bairro;
-          // Foca no número automaticamente
           setTimeout(() => document.getElementById('numeroInput')?.focus(), 100);
         } else {
-          this.pedido.logradouro = '';
-          this.pedido.bairro = '';
           this.errorMessage.set('CEP não encontrado.');
         }
       },
@@ -236,16 +95,37 @@ export class CheckoutComponent {
     });
   }
 
-  selecionarPagamento(tipo: 'ONLINE' | 'ENTREGA') {
+  // --- SELEÇÃO DE PAGAMENTO ---
+  selecionarTipoPagamento(tipo: 'ONLINE' | 'ENTREGA') {
     this.tipoPagamento.set(tipo);
-    // Mapeia para o que o Backend espera (Enum ou String tratada)
+    
     if (tipo === 'ONLINE') {
-      this.pedido.formaPagamento = 'Pix'; 
+        this.pedido.formaPagamento = this.PAGAMENTO_ENUM.MercadoPago; 
+        this.opcaoEntregaSelecionada.set('');
     } else {
-      this.pedido.formaPagamento = 'Pagar na Entrega'; 
+        this.pedido.formaPagamento = this.PAGAMENTO_ENUM.NaoDefinido; 
     }
   }
 
+  selecionarOpcaoEntrega(opcaoUI: string) {
+      this.opcaoEntregaSelecionada.set(opcaoUI);
+      
+      switch (opcaoUI) {
+          case 'Cartão de Crédito':
+              this.pedido.formaPagamento = this.PAGAMENTO_ENUM.CartaoCredito;
+              break;
+          case 'Cartão de Débito':
+              this.pedido.formaPagamento = this.PAGAMENTO_ENUM.CartaoDebito;
+              break;
+          case 'Dinheiro':
+              this.pedido.formaPagamento = this.PAGAMENTO_ENUM.Dinheiro;
+              break;
+          default:
+              this.pedido.formaPagamento = this.PAGAMENTO_ENUM.NaoDefinido;
+      }
+  }
+
+  // --- FINALIZAR PEDIDO ---
   finalizarPedido() {
     if (!this.validar()) return;
 
@@ -254,17 +134,29 @@ export class CheckoutComponent {
 
     const itensReais = this.carrinhoService.itens().map(item => ({
       produtoId: item.id,
-      quantidade: item.quantidade
+      quantidade: item.quantidade,
+      precoUnitario: item.preco 
     }));
 
+    // Constrói o payload com todos os dados
     const payload = {
         ...this.pedido,
-        numero: Number(this.pedido.numero),
+        // Garante que numero vai como string para evitar erro
+        numero: this.pedido.numero.toString(), 
+        valorFrete: this.carrinhoService.valorFrete(), 
+        valorTotal: this.carrinhoService.totalComFrete(),
         itens: itensReais
     };
 
+    console.log('Payload Enviado:', payload);
+
     this.pedidoService.createPedido(payload).subscribe({
       next: (resp: any) => {
+        this.loading.set(false);
+        
+        const idGerado = resp.id || resp.Id || resp.numero;
+        this.idPedidoCriado.set(idGerado);
+        
         this.carrinhoService.limpar();
 
         if (this.tipoPagamento() === 'ONLINE') {
@@ -272,32 +164,52 @@ export class CheckoutComponent {
             if (url) {
                 window.location.href = url;
             } else {
-                this.router.navigate(['/sucesso']); 
+                this.mostrarModalSucesso.set(true);
             }
         } else {
-            this.router.navigate(['/sucesso']);
+            this.mostrarModalSucesso.set(true);
         }
       },
       error: (err: any) => {
-        console.error(err);
+        console.error('Erro Backend:', err);
         this.loading.set(false);
         
-        // Tratamento de erro mais bonito
         if (err.error?.errors) {
-            const msg = Object.values(err.error.errors)[0] as string[];
-            this.errorMessage.set(msg[0]);
+            // Pega o primeiro erro da lista
+            const keys = Object.keys(err.error.errors);
+            const firstError = err.error.errors[keys[0]][0];
+            this.errorMessage.set(`Erro: ${firstError}`);
+        } else if (err.error?.title) {
+            this.errorMessage.set(err.error.title);
         } else {
-            this.errorMessage.set('Não foi possível realizar o pedido. Tente novamente.');
+            this.errorMessage.set('Não foi possível realizar o pedido. Verifique os dados.');
         }
       }
     });
   }
 
   validar(): boolean {
-    if (!this.pedido.nomeCliente || !this.pedido.telefoneCliente || !this.pedido.cep || !this.pedido.numero || !this.pedido.logradouro) {
+    // Adicionei emailCliente na validação
+    if (!this.pedido.nomeCliente || !this.pedido.emailCliente || !this.pedido.telefoneCliente || 
+        !this.pedido.cep || !this.pedido.numero || !this.pedido.logradouro) {
       this.errorMessage.set('Por favor, preencha todos os campos obrigatórios (*).');
       return false;
     }
+    
+    if (!this.pedido.formaPagamento || this.pedido.formaPagamento === 'NaoDefinido') {
+        if (this.tipoPagamento() === 'ENTREGA') {
+            this.errorMessage.set('Selecione como deseja pagar na entrega.');
+        } else {
+            this.errorMessage.set('Forma de pagamento inválida.');
+        }
+        return false;
+    }
+    
     return true;
+  }
+
+  fecharModal() {
+      this.mostrarModalSucesso.set(false);
+      this.router.navigate(['/']); 
   }
 }

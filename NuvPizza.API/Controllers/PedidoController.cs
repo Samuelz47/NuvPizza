@@ -91,4 +91,14 @@ public class PedidoController : Controller
             
         return Ok(pedidoUpdated.Data);
     }
+    
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var result = await _pedidoService.GetPedidoByIdAsync(id);
+
+        if (!result.IsSuccess) return NotFound(result.Message);
+
+        return Ok(result.Data);
+    }
 }

@@ -6,6 +6,7 @@ import { SucessoComponent } from './features/sucesso/sucesso.component';
 import { PainelPedidosComponent } from './features/admin/painel-pedidos/painel-pedidos.component';
 import { LoginComponent } from './features/admin/login/login.component'; // Importe
 import { AuthService } from './core/services/auth.service'; // Importe
+import { AcompanharPedidoComponent } from './features/admin/acompanhar-pedido/acompanhar-pedido.component'; // Importe
 
 // Guard funcional simples (embutido)
 const authGuard = () => {
@@ -26,7 +27,8 @@ export const routes: Routes = [
   // Nova rota de Login
   { path: 'login', component: LoginComponent },
 
-  // Rota Protegida
+  { path: 'acompanhar/:id', component: AcompanharPedidoComponent },
+  
   { 
     path: 'admin/pedidos', 
     component: PainelPedidosComponent,

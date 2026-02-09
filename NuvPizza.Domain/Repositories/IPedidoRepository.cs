@@ -6,4 +6,5 @@ namespace NuvPizza.Domain.Repositories;
 public interface IPedidoRepository : IRepository<Pedido>
 {
     Task<PagedResult<Pedido>> GetAllWithDetailsAsync(PedidoParameters pedidoParametersParameters);
+    Task<Pedido?> GetByIdWithDetailsAsync(Guid pedidoId);
 }

@@ -6,6 +6,7 @@ export interface ItemCarrinho {
   preco: number;
   quantidade: number;
   imagem?: string;
+  observacao?: string; // Adicionei opcional caso queira salvar obs por item
 }
 
 @Injectable({
@@ -14,37 +15,52 @@ export interface ItemCarrinho {
 export class CarrinhoService {
   private key = 'nuvpizza_carrinho';
   
+  // Lista de Itens (Carrega do localStorage ao iniciar)
   itens = signal<ItemCarrinho[]>(this.carregarDoStorage());
 
-  // A CORREÇÃO ESTÁ AQUI: Adicione <number> depois de computed
+  // --- NOVAS PROPRIEDADES NECESSÁRIAS PARA O CHECKOUT ---
+  
+  // 1. O valor do frete (Pode ser atualizado via signal)
+  valorFrete = signal<number>(0); 
+
+  // 2. Total dos Produtos (Soma de preço * quantidade)
   valorTotal = computed<number>(() => {
     return this.itens().reduce((acc, item) => acc + (item.preco * item.quantidade), 0);
   });
+
+  // 3. Total Final (Produtos + Frete)
+  totalComFrete = computed<number>(() => {
+    return this.valorTotal() + this.valorFrete();
+  });
   
+  // 4. Quantidade de itens (para o badge do ícone)
   quantidadeTotal = computed<number>(() => {
     return this.itens().reduce((acc, item) => acc + item.quantidade, 0);
   });
 
   constructor() {}
 
-  // ... (o restante do código continua igual: adicionar, remover, etc.)
-  
+  // --- AÇÕES DO CARRINHO ---
+
   adicionar(produto: any) {
     const listaAtual = this.itens();
     const itemExistente = listaAtual.find(i => i.id === produto.id);
 
     if (itemExistente) {
+      // Se já existe, só aumenta a quantidade
       const novaLista = listaAtual.map(i => 
         i.id === produto.id ? { ...i, quantidade: i.quantidade + 1 } : i
       );
       this.itens.set(novaLista);
     } else {
+      // Se não existe, cria um novo
       const novoItem: ItemCarrinho = {
         id: produto.id,
         nome: produto.nome,
         preco: produto.preco,
         quantidade: 1,
-        imagem: produto.imagemUrl 
+        imagem: produto.imagemUrl || produto.imagem, // Tenta pegar imagemUrl ou imagem
+        observacao: ''
       };
       this.itens.update(lista => [...lista, novoItem]);
     }
@@ -75,15 +91,23 @@ export class CarrinhoService {
 
   limpar() {
     this.itens.set([]);
+    this.valorFrete.set(0); // Reseta o frete também
     localStorage.removeItem(this.key);
   }
 
+  // --- PERSISTÊNCIA (LOCALSTORAGE) ---
+
   private carregarDoStorage(): ItemCarrinho[] {
-    const salvo = localStorage.getItem(this.key);
-    return salvo ? JSON.parse(salvo) : [];
+    if (typeof localStorage !== 'undefined') { // Verificação para evitar erro em SSR
+        const salvo = localStorage.getItem(this.key);
+        return salvo ? JSON.parse(salvo) : [];
+    }
+    return [];
   }
 
   private salvarNoStorage(itens: ItemCarrinho[]) {
-    localStorage.setItem(this.key, JSON.stringify(itens));
+    if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(this.key, JSON.stringify(itens));
+    }
   }
 }
