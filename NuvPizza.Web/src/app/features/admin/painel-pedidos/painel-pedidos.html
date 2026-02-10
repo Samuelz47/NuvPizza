@@ -16,12 +16,16 @@
       @for (pedido of pedidos(); track pedido.id) {
         <div class="card" [ngClass]="getStatusClass(pedido.statusPedido)">
           <div class="card-header">
-            <span class="pedido-id">#{{ pedido.numero || pedido.id.substring(0,4) }}</span> 
+            <span class="pedido-id">#{{ pedido.id.substring(0,8).toUpperCase() }}</span> 
             <span class="badge-status">{{ getNomeStatus(pedido.statusPedido) }}</span>
           </div>
           <div class="card-body">
             <p><strong>Cliente:</strong> {{ pedido.nomeCliente }}</p>
-            <p class="mb-2"><i class="bi bi-wallet2"></i> {{ pedido.formaPagamento || 'Não informado' }}</p>
+            
+            <p class="mb-2">
+                <i class="bi bi-wallet2"></i> 
+                {{ traduzirPagamento(pedido.formaPagamento) }}
+            </p>
             
             <div class="itens-lista">
               @for (item of pedido.itens; track $index) {
@@ -69,7 +73,7 @@
       
       <div class="modal-custom-header" [ngClass]="getStatusClass(pedidoSelecionado.statusPedido)">
         <div>
-           <h5>Pedido #{{ pedidoSelecionado.numero || pedidoSelecionado.id.substring(0,4) }}</h5>
+           <h5>Pedido #{{ pedidoSelecionado.id.substring(0,8).toUpperCase() }}</h5>
            <span class="badge-modal">{{ getNomeStatus(pedidoSelecionado.statusPedido) }}</span>
         </div>
         <button class="btn-close-custom" (click)="fecharModal()">✖</button>
@@ -114,7 +118,7 @@
 
             <div class="pagamento-box">
                  <label>FORMA DE PAGAMENTO</label>
-                 <div><i class="bi bi-credit-card-2-front"></i> {{ pedidoSelecionado.formaPagamento }}</div>
+                 <div><i class="bi bi-credit-card-2-front"></i> {{ traduzirPagamento(pedidoSelecionado.formaPagamento) }}</div>
             </div>
 
             <hr>

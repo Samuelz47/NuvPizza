@@ -73,7 +73,12 @@ public class PedidoService : IPedidoService
         pedido.Complemento = pedidoRegister.Complemento;
         pedido.Numero = pedidoRegister.Numero;
         pedido.FormaPagamento = formaPagamentoEnum;
-
+        
+        if (formaPagamentoEnum != FormaPagamento.MercadoPago)
+        {
+            pedido.StatusPedido = StatusPedido.Confirmado; 
+        }
+        
         foreach (var itemDto in pedidoRegister.Itens)
         {
             var produto = await _produtoRepository.GetAsync(p => p.Id == itemDto.ProdutoId);

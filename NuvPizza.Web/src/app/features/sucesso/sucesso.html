@@ -2,42 +2,45 @@
   <div class="card-sucesso animate__animated animate__zoomIn">
     
     <div class="icone-check-wrapper">
-      <div class="icone-check">
-        <i class="bi bi-check-lg"></i>
+      <div class="icone-check" [ngClass]="{'bg-success': isConfirmado(), 'bg-warning': !isConfirmado()}">
+        @if (isConfirmado()) {
+            <i class="bi bi-check-lg"></i>
+        } @else {
+            <div class="spinner-border text-light" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
+        }
       </div>
-      <div class="ripple-effect"></div>
+      @if (isConfirmado()) { <div class="ripple-effect"></div> }
     </div>
 
-    <h1 class="titulo-sucesso">Oba! Pedido Confirmado 🎉</h1>
-    <p class="subtitulo-sucesso">A cozinha já recebeu seu pedido e vai começar a preparar em breve.</p>
+    <h1 class="titulo-sucesso">
+        @if (isConfirmado()) { Pedido Recebido! 🎉 } @else { Aguarde... }
+    </h1>
+    
+    <p class="subtitulo-sucesso">{{ statusTexto() }}</p>
 
     @if (idPedido()) {
       <div class="order-ticket">
         <span class="ticket-label">Protocolo do Pedido</span>
         <div class="ticket-number">
-          #{{ idPedido()?.substring(0,8) }}
+          #{{ idPedido()?.substring(0,8)?.toUpperCase() }}
           <i class="bi bi-receipt ms-2 opacity-50"></i>
         </div>
-        <small class="text-muted d-block mt-2">Guarde este número se precisar entrar em contato.</small>
+        <small class="text-muted d-block mt-2">Guarde este número para acompanhar.</small>
       </div>
 
       <button (click)="acompanharPedido()" class="btn-acompanhar pulse-button">
         <span>🚀 Acompanhar em Tempo Real</span>
       </button>
-    } @else {
-      <div class="alert alert-warning border-warning mt-4 mb-4 d-flex align-items-center">
-        <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
-        <div class="text-start small">
-          <strong>Atenção:</strong> Não conseguimos capturar o número do pedido automaticamente para o rastreio, mas fique tranquilo que ele já foi confirmado no sistema!
+    } 
+    @else {
+        <div class="alert alert-warning small">
+            Seu pedido foi processado, mas não conseguimos recuperar o número aqui. Verifique seu WhatsApp/Email.
         </div>
-      </div>
-      <a routerLink="/" class="btn-voltar-loja">Voltar ao Cardápio</a>
+        <a routerLink="/" class="btn-acompanhar">Voltar ao Início</a>
     }
     
-    @if (idPedido()) {
-        <button (click)="router.navigate(['/'])" class="btn-link-secundario mt-4">
-        <i class="bi bi-arrow-left me-1"></i> Voltar para a loja
-        </button>
-    }
+    <button (click)="router.navigate(['/'])" class="btn-link-secundario mt-4">
+      <i class="bi bi-arrow-left me-1"></i> Voltar para a loja
+    </button>
   </div>
 </div>

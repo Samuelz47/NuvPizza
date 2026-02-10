@@ -24,15 +24,14 @@ export class CheckoutComponent {
   errorMessage = signal<string>('');
   buscandoCep = signal<boolean>(false);
   
-  // Controle do Modal
-  mostrarModalSucesso = signal<boolean>(false);
   idPedidoCriado = signal<string | null>(null);
 
   // Controle de UI do Pagamento
   tipoPagamento = signal<'ONLINE' | 'ENTREGA'>('ONLINE'); 
   opcaoEntregaSelecionada = signal<string>('');
+  trocoPara = signal<string>(''); // <--- NOVO: Controle do Troco
 
-  // MAPEAMENTO STRINGS (Igual ao C#)
+  // MAPEAMENTO STRINGS
   readonly PAGAMENTO_ENUM = {
     NaoDefinido: 'NaoDefinido',
     Pix: 'Pix',
@@ -45,7 +44,7 @@ export class CheckoutComponent {
 
   pedido: any = {
     nomeCliente: '',
-    emailCliente: '', // <--- NOVO CAMPO ADICIONADO
+    emailCliente: '', 
     telefoneCliente: '',
     cep: '',
     logradouro: '',
@@ -61,7 +60,6 @@ export class CheckoutComponent {
     this.selecionarTipoPagamento('ONLINE');
   }
 
-  // --- BOTÃO DE TESTE ---
   adicionarItemTeste() {
     this.carrinhoService.adicionar({
       id: 1, 
@@ -71,7 +69,6 @@ export class CheckoutComponent {
     });
   }
 
-  // --- BUSCA CEP ---
   buscarCep() {
     const cep = this.pedido.cep?.replace(/\D/g, ''); 
     if (cep?.length !== 8) return;
@@ -95,13 +92,13 @@ export class CheckoutComponent {
     });
   }
 
-  // --- SELEÇÃO DE PAGAMENTO ---
   selecionarTipoPagamento(tipo: 'ONLINE' | 'ENTREGA') {
     this.tipoPagamento.set(tipo);
     
     if (tipo === 'ONLINE') {
         this.pedido.formaPagamento = this.PAGAMENTO_ENUM.MercadoPago; 
         this.opcaoEntregaSelecionada.set('');
+        this.trocoPara.set(''); // Limpa troco se for online
     } else {
         this.pedido.formaPagamento = this.PAGAMENTO_ENUM.NaoDefinido; 
     }
@@ -110,6 +107,11 @@ export class CheckoutComponent {
   selecionarOpcaoEntrega(opcaoUI: string) {
       this.opcaoEntregaSelecionada.set(opcaoUI);
       
+      // Limpa troco se mudar para algo que não seja dinheiro
+      if (opcaoUI !== 'Dinheiro') {
+          this.trocoPara.set('');
+      }
+
       switch (opcaoUI) {
           case 'Cartão de Crédito':
               this.pedido.formaPagamento = this.PAGAMENTO_ENUM.CartaoCredito;
@@ -125,7 +127,6 @@ export class CheckoutComponent {
       }
   }
 
-  // --- FINALIZAR PEDIDO ---
   finalizarPedido() {
     if (!this.validar()) return;
 
@@ -138,10 +139,16 @@ export class CheckoutComponent {
       precoUnitario: item.preco 
     }));
 
-    // Constrói o payload com todos os dados
+    // --- LÓGICA DO TROCO ---
+    // Adiciona a informação do troco na observação para a cozinha ler
+    let obsFinal = this.pedido.observacao || '';
+    if (this.pedido.formaPagamento === this.PAGAMENTO_ENUM.Dinheiro && this.trocoPara()) {
+        obsFinal += ` | (Precisa de troco para: R$ ${this.trocoPara()})`;
+    }
+
     const payload = {
         ...this.pedido,
-        // Garante que numero vai como string para evitar erro
+        observacao: obsFinal, 
         numero: this.pedido.numero.toString(), 
         valorFrete: this.carrinhoService.valorFrete(), 
         valorTotal: this.carrinhoService.totalComFrete(),
@@ -154,20 +161,26 @@ export class CheckoutComponent {
       next: (resp: any) => {
         this.loading.set(false);
         
-        const idGerado = resp.id || resp.Id || resp.numero;
-        this.idPedidoCriado.set(idGerado);
+        // --- CORREÇÃO DO ID ---
+        // O seu controller retorna { pedido: { id: "..." }, paymentLink: "..." }
+        // Então pegamos de resp.pedido.id
+        const idGerado = resp.pedido?.id || resp.pedido?.Id; 
         
+        console.log("ID Recuperado:", idGerado); // Confira no console!
+
         this.carrinhoService.limpar();
 
         if (this.tipoPagamento() === 'ONLINE') {
-            const url = resp.paymentLink || resp.linkPagamento || resp.data;
-            if (url) {
+            const url = resp.paymentLink || resp.data;
+            if (url && typeof url === 'string' && url.startsWith('http')) {
                 window.location.href = url;
             } else {
-                this.mostrarModalSucesso.set(true);
+                // Se não gerou link, vai pra sucesso com o ID
+                this.router.navigate(['/sucesso'], { state: { id: idGerado } });
             }
         } else {
-            this.mostrarModalSucesso.set(true);
+            // Pagamento na Entrega: Vai pra sucesso com o ID
+            this.router.navigate(['/sucesso'], { state: { id: idGerado } });
         }
       },
       error: (err: any) => {
@@ -175,21 +188,19 @@ export class CheckoutComponent {
         this.loading.set(false);
         
         if (err.error?.errors) {
-            // Pega o primeiro erro da lista
             const keys = Object.keys(err.error.errors);
-            const firstError = err.error.errors[keys[0]][0];
+            const firstError = err.error.errors[keys[0]] ? err.error.errors[keys[0]][0] : 'Erro de validação.';
             this.errorMessage.set(`Erro: ${firstError}`);
         } else if (err.error?.title) {
             this.errorMessage.set(err.error.title);
         } else {
-            this.errorMessage.set('Não foi possível realizar o pedido. Verifique os dados.');
+            this.errorMessage.set('Não foi possível realizar o pedido.');
         }
       }
     });
   }
 
   validar(): boolean {
-    // Adicionei emailCliente na validação
     if (!this.pedido.nomeCliente || !this.pedido.emailCliente || !this.pedido.telefoneCliente || 
         !this.pedido.cep || !this.pedido.numero || !this.pedido.logradouro) {
       this.errorMessage.set('Por favor, preencha todos os campos obrigatórios (*).');
@@ -206,10 +217,5 @@ export class CheckoutComponent {
     }
     
     return true;
-  }
-
-  fecharModal() {
-      this.mostrarModalSucesso.set(false);
-      this.router.navigate(['/']); 
   }
 }

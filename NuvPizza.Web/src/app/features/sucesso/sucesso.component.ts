@@ -1,13 +1,13 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { CommonModule } from '@angular/common'; // <--- OBRIGATÓRIO
-import { ActivatedRoute, Router, RouterModule } from '@angular/router'; // <--- OBRIGATÓRIO
+import { CommonModule } from '@angular/common'; 
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { PedidoService } from '../../core/services/pedido.service';
 import { NotificacaoService } from '../../core/services/notificacao.service';
 
 @Component({
   selector: 'app-sucesso',
-  standalone: true, // <--- ESSA LINHA RESOLVE O ERRO
-  imports: [CommonModule, RouterModule], // <--- ESSA LINHA PERMITE USAR @IF E ROUTERLINK
+  standalone: true,
+  imports: [CommonModule, RouterModule], 
   templateUrl: './sucesso.html',
   styleUrls: ['./sucesso.css']
 })
@@ -19,42 +19,42 @@ export class SucessoComponent implements OnInit {
 
   // Signals
   idPedido = signal<string | null>(null);
-  statusTexto = signal('Aguardando confirmação...'); 
+  statusTexto = signal('Processando...'); 
   statusCor = signal('text-warning'); 
   isConfirmado = signal(false);
 
   ngOnInit(): void {
-    // 1. Captura parâmetros da URL
-    this.route.queryParams.subscribe(params => {
-      const mpStatus = params['collection_status'] || params['status'];
-      const externalRef = params['external_reference']; // O ID do Pedido devolvido pelo MP
+    const params = this.route.snapshot.queryParams;
+    const externalRef = params['external_reference']; 
+    const stateId = history.state?.id;
 
-      // Se tiver ID na URL (volta do MP), salva
-      if (externalRef) {
-        this.idPedido.set(externalRef);
-      } 
-      // Se não, tenta pegar do state (navegação interna)
-      else if (history.state?.id) {
-        this.idPedido.set(history.state.id);
-      }
-
-      // Se o MP disse que está aprovado, já mostra verde
-      if (mpStatus === 'approved') {
+    // 1. Prioridade: ID vindo do Checkout (Pagamento na Entrega)
+    if (stateId) {
+        this.idPedido.set(stateId);
+        // Pagamento na entrega = Confirmado Imediato
         this.atualizarParaConfirmado();
-      }
-    });
+    } 
+    // 2. Prioridade: ID vindo do Mercado Pago
+    else if (externalRef) {
+        this.idPedido.set(externalRef);
+        const mpStatus = params['collection_status'] || params['status'];
+        if (mpStatus === 'approved') {
+            this.atualizarParaConfirmado();
+        } else {
+            this.statusTexto.set('Aguardando confirmação do pagamento...');
+        }
+    }
 
-    // 2. Escuta o SignalR para atualizações em tempo real
+    // 3. Atualização em Tempo Real
     this.notificacaoService.ouvirAtualizacaoStatus().subscribe((dados: any) => {
-      console.log('Update recebido na tela de sucesso:', dados);
-      if (dados.novoStatus >= 1) { // 1=Recebido/Pago
+      if (dados.novoStatus >= 1) { 
         this.atualizarParaConfirmado();
       }
     });
   }
 
   atualizarParaConfirmado() {
-    this.statusTexto.set('Pagamento Confirmado! A cozinha já vai começar.');
+    this.statusTexto.set('Pedido Recebido! A cozinha já vai começar.');
     this.statusCor.set('text-success'); 
     this.isConfirmado.set(true);
   }

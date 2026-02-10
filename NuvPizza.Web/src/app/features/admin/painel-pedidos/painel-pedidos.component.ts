@@ -14,13 +14,9 @@ export class PainelPedidosComponent implements OnInit {
   private pedidoService = inject(PedidoService);
   private notificacaoService = inject(NotificacaoService);
 
-  // Sinais e Variáveis
   pedidos = signal<any[]>([]);
-  
-  // Controle do Modal Manual
   pedidoSelecionado: any = null;
   mostrarModal: boolean = false;
-  
   toast = signal<{ mensagem: string, tipo: 'sucesso' | 'erro' | 'info', visivel: boolean }>({
     mensagem: '', tipo: 'info', visivel: false
   });
@@ -34,21 +30,24 @@ export class PainelPedidosComponent implements OnInit {
     this.pedidoService.getPedidos().subscribe({ 
       next: (dados: any) => {
         const lista = dados.items || dados;
-        // Normaliza o status para número caso venha texto
         const listaTratada = lista.map((p: any) => ({
           ...p,
           statusPedido: this.converterStatusParaNumero(p.statusPedido)
         }));
         this.ordenarLista(listaTratada);
       },
-      error: (err) => console.error(err)
+      error: (err) => console.error('Erro ao carregar pedidos', err)
     });
   }
 
-  // --- NOVA LÓGICA DE MODAL (Simples e Direta) ---
+  getCodigoPedido(pedido: any): string {
+    if (!pedido || !pedido.id) return '#???';
+    return `#${pedido.id.substring(0, 8).toUpperCase()}`;
+  }
+
   verDetalhes(pedido: any) {
     this.pedidoSelecionado = pedido;
-    this.mostrarModal = true; // O *ngIf no HTML vai fazer o resto
+    this.mostrarModal = true;
   }
 
   fecharModal() {
@@ -59,20 +58,19 @@ export class PainelPedidosComponent implements OnInit {
   avancarStatus(pedido: any) {
     if (pedido.statusPedido >= 5) return;
     const novoStatus = pedido.statusPedido + 1;
+    const codigo = this.getCodigoPedido(pedido);
     
     this.pedidoService.atualizarStatus(pedido.id, novoStatus).subscribe({
       next: () => {
-        if (novoStatus === 5) this.mostrarToast(`Pedido #${pedido.numero} Concluído! 🎉`, 'sucesso');
-        else if (novoStatus === 4) this.mostrarToast(`Pedido #${pedido.numero} saiu para entrega! 🛵`, 'info');
-        else this.mostrarToast(`Status atualizado!`, 'info');
+        if (novoStatus === 5) this.mostrarToast(`Pedido ${codigo} Concluído! 🎉`, 'sucesso');
+        else if (novoStatus === 4) this.mostrarToast(`Pedido ${codigo} saiu para entrega! 🛵`, 'info');
+        else this.mostrarToast(`Status do pedido ${codigo} atualizado!`, 'info');
         
-        // Atualiza a lista localmente para não precisar recarregar tudo
         this.pedidos.update(lista => 
             lista.map(p => p.id === pedido.id ? { ...p, statusPedido: novoStatus } : p)
         );
         this.ordenarLista(this.pedidos());
         
-        // Se o modal estiver aberto com este pedido, atualiza ele também
         if (this.pedidoSelecionado && this.pedidoSelecionado.id === pedido.id) {
             this.pedidoSelecionado.statusPedido = novoStatus;
         }
@@ -82,30 +80,32 @@ export class PainelPedidosComponent implements OnInit {
   }
 
   cancelarPedido(pedido: any) {
-    if (!confirm(`Cancelar pedido #${pedido.numero}?`)) return;
+    const codigo = this.getCodigoPedido(pedido);
+    if (!confirm(`Tem certeza que deseja cancelar o pedido ${codigo}?`)) return;
+
     this.pedidoService.atualizarStatus(pedido.id, 0).subscribe({
       next: () => {
-        this.mostrarToast(`Pedido #${pedido.numero} Cancelado.`, 'erro');
+        this.mostrarToast(`Pedido ${codigo} Cancelado.`, 'erro');
         this.carregarPedidos();
-        this.fecharModal(); // Fecha o modal se estiver aberto
+        this.fecharModal();
       },
       error: () => this.mostrarToast('Erro ao cancelar.', 'erro')
     });
   }
 
-  // --- IMPRESSÃO ---
   imprimirComanda(pedido: any) {
     const dataHora = new Date(pedido.dataPedido).toLocaleString('pt-BR');
     const telefone = pedido.telefone || pedido.linkWhatsapp || 'Não informado';
+    const codigo = this.getCodigoPedido(pedido);
 
-    const totalItens = pedido.itens.reduce((acc: number, item: any) => acc + item.total, 0);
+    const totalItens = pedido.itens.reduce((acc: number, item: any) => acc + (item.total || (item.preco * item.quantidade)), 0);
     const frete = (pedido.valorFrete || 0);
-    const totalGeral = (pedido.valorTotal || 0);
+    const totalGeral = (pedido.valorTotal || (totalItens + frete));
 
     const conteudo = `
       <html>
         <head>
-          <title>Comanda #${pedido.numero}</title>
+          <title>Comanda ${codigo}</title>
           <style>
             @media print { body { margin: 0; padding: 0; } }
             body { font-family: 'Courier New', monospace; width: 80mm; font-size: 13px; margin: 0 auto; padding: 10px; }
@@ -119,7 +119,7 @@ export class PainelPedidosComponent implements OnInit {
         <body>
           <div class="header">
             <div class="bold">NUVPIZZA DELIVERY</div>
-            <div>Pedido: #${pedido.numero || pedido.id.substring(0,4)}</div>
+            <div class="bold" style="font-size: 14px; margin-top: 5px;">${codigo}</div>
             <div style="font-size:11px">${dataHora}</div>
           </div>
           <div class="section">
@@ -137,9 +137,9 @@ export class PainelPedidosComponent implements OnInit {
             ${pedido.itens.map((item: any) => `
                <div class="row">
                   <span style="width:10%">${item.quantidade}x</span>
-                  <span style="width:60%">${item.nomeProduto}</span>
+                  <span style="width:60%">${item.nomeProduto || item.nome}</span>
                   <span style="width:30%; text-align:right">
-                    ${(item.total).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                    ${(item.total || item.preco * item.quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
                   </span>
                </div>
             `).join('')}
@@ -152,7 +152,9 @@ export class PainelPedidosComponent implements OnInit {
           </div>
           <div style="text-align:center; margin-top:10px">
             <div>PAGAMENTO:</div>
-            <div class="bold" style="font-size:16px">${pedido.formaPagamento}</div>
+            <div class="bold" style="font-size:16px">
+                ${this.traduzirPagamento(pedido.formaPagamento)}
+            </div>
           </div>
           <script>window.onload = function() { window.print(); }</script>
         </body>
@@ -162,7 +164,6 @@ export class PainelPedidosComponent implements OnInit {
     if(popup) { popup.document.write(conteudo); popup.document.close(); }
   }
 
-  // Auxiliares
   mostrarToast(msg: string, tipo: any) {
     this.toast.set({ mensagem: msg, tipo: tipo, visivel: true });
     setTimeout(() => this.toast.update(t => ({ ...t, visivel: false })), 3000);
@@ -186,4 +187,25 @@ export class PainelPedidosComponent implements OnInit {
 
   getNomeStatus(status: number) { return ['Cancelado', 'Criado', 'Confirmado', 'Em Preparo', 'Saiu p/ Entrega', 'Entregue'][status] || '...'; }
   getStatusClass(status: number) { return ['status-cancelado', 'status-criado', 'status-confirmado', 'status-preparo', 'status-entrega', 'status-finalizado'][status] || ''; }
+
+  traduzirPagamento(forma: any): string {
+      // Mapeamento ajustado
+      const mapa: any = { 
+          1: 'Pix', 
+          2: 'Dinheiro', 
+          3: 'Crédito (Entrega)', // Enum 3
+          4: 'Débito (Entrega)',  // Enum 4
+          5: 'Cartão (Entrega)', 
+          6: 'Online (MP)' 
+      };
+      
+      if (typeof forma === 'number') return mapa[forma] || 'Outro';
+      
+      // Fallbacks para strings
+      if (forma === 'MercadoPago') return 'Online (MP)';
+      if (forma === 'CartaoCredito') return 'Crédito (Entrega)';
+      if (forma === 'CartaoDebito') return 'Débito (Entrega)';
+      
+      return forma || 'A Definir';
+  }
 }

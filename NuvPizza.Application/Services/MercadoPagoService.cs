@@ -53,8 +53,9 @@ public class MercadoPagoService : IPagamentoService
                 },
                 Payer = new PreferencePayerRequest
                 {
-                    // Mantivemos o email aleatório para o Sandbox não bloquear por "vendedor comprando de si mesmo"
-                    Email = $"teste_{Guid.NewGuid().ToString().Substring(0, 8)}@nuvpizza.com"
+                    Email = !string.IsNullOrEmpty(dto.EmailPagador) 
+                        ? dto.EmailPagador 
+                        : $"cliente_anonimo_{Guid.NewGuid().ToString().Substring(0,4)}@nuvpizza.com"
                 },
                 
                 NotificationUrl = $"{baseUrl}/Pagamento/webhook",

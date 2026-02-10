@@ -55,7 +55,7 @@ public class PedidoController : Controller
         var pedidoCriado = pedidoResult.Data;
         var preferenceDto = new CriarPreferenceDTO
         {
-            Titulo = $"Pedido NuvPizza #{pedidoCriado.Numero}", // Ou use pedidoCriado.Id se não tiver Numero
+            Titulo = $"Pedido NuvPizza #{pedidoCriado.Id}", // Ou use pedidoCriado.Id se não tiver Numero
             Quantidade = 1,
             PrecoUnitario = pedidoCriado.ValorTotal,
             ExternalReference = pedidoCriado.Id.ToString(),
