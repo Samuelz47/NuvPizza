@@ -54,53 +54,38 @@ public class PagamentoController : ControllerBase
                 topic = Request.Query["topic"];
             }
             
-            _logger.LogInformation($"🔍 Debug Webhook: ID={id}, Topic/Type={topic}");
-            
-            if (string.IsNullOrEmpty(id)) 
-            {
-                _logger.LogWarning("⚠️ Webhook ignorado: ID veio nulo.");
-                return Ok();
-            }
-            
-            if (topic != "payment")
-            {
-                _logger.LogInformation($"ℹ️ Webhook ignorado: Tópico '{topic}' não é pagamento.");
-                return Ok();
-            }
+            if (string.IsNullOrEmpty(id) || topic != "payment") return Ok();
 
-            _logger.LogInformation($"🔔 Webhook: Processando Pagamento ID: {id}");
-            
+            // 1. Consulta o MP
             var consulta = await _pagamentoService.ConsultarStatusPagamentoAsync(id);
-            if (!consulta.IsSuccess)
-            {
-                _logger.LogError($"❌ Webhook: Erro ao consultar MP: {consulta.Message}");
-                return Ok();
-            }
+            if (!consulta.IsSuccess) return Ok();
             
             var dadosPagamento = consulta.Data;
-            _logger.LogInformation($"🔔 Webhook: Status do Pagamento: {dadosPagamento.Status}");
 
+            // 2. Se aprovado, processa a atualização
             if (dadosPagamento.Status == "approved")
             {
                 if (Guid.TryParse(dadosPagamento.PedidoIdExterno, out Guid pedidoId))
                 {
-                    _logger.LogInformation($"🔔 Webhook: Tentando atualizar Pedido {pedidoId} para EmPreparo...");
+                    _logger.LogInformation($"🔔 Webhook: Pagamento aprovado para Pedido {pedidoId}. Tipo: {dadosPagamento.TipoPagamento}");
 
-                    var updateDto = new StatusPedidoForUpdateDTO { StatusDoPedido = StatusPedido.Confirmado };
-                    
-                    // AQUI ESTÁ A MUDANÇA: Pegamos o resultado!
-                    var resultado = await _pedidoService.UpdateStatusPedidoAsync(pedidoId, updateDto);
+                    // 3. Traduz MP -> Enum NuvPizza
+                    FormaPagamento formaReal = dadosPagamento.TipoPagamento switch
+                    {
+                        "credit_card" => FormaPagamento.CartaoCredito,
+                        "debit_card" => FormaPagamento.CartaoDebito,
+                        "bank_transfer" or "ticket" => FormaPagamento.Pix,
+                        _ => FormaPagamento.MercadoPago // Fallback
+                    };
 
-                    await _notificacaoService.NotificarAtualizacaoStatus(pedidoId, (int)StatusPedido.Confirmado);
-                    
+                    // 4. Chama o novo método do Service que atualiza Status E Pagamento
+                    var resultado = await _pedidoService.ConfirmarPagamentoAsync(pedidoId, formaReal);
+
                     if (resultado.IsSuccess)
                     {
-                        _logger.LogInformation($"✅ SUCESSO: Pedido {pedidoId} atualizado e notificado!");
-                        // Não chamamos _notificacaoService aqui, pois o PedidoService já chamou!
-                    }
-                    else
-                    {
-                        _logger.LogError($"❌ FALHA: Pedido {pedidoId} não atualizou. Motivo: {resultado.Message}");
+                        // Notifica o painel em tempo real
+                        await _notificacaoService.NotificarAtualizacaoStatus(pedidoId, (int)StatusPedido.Confirmado);
+                        _logger.LogInformation($"✅ Pedido atualizado para {formaReal} e Confirmado!");
                     }
                 }
             }

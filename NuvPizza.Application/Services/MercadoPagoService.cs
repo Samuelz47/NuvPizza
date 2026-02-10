@@ -102,17 +102,20 @@ public class MercadoPagoService : IPagamentoService
     {
         try
         {
-            if (!long.TryParse(pagamentoId, out long idLong)) return Result<StatusPagamentoDTO>.Failure("ID de pagamento inválido");
+            if (!long.TryParse(pagamentoId, out long idLong)) 
+                return Result<StatusPagamentoDTO>.Failure("ID de pagamento inválido");
 
             var client = new PaymentClient();
             Payment payment = await client.GetAsync(idLong);
             
-            if (payment is null) return Result<StatusPagamentoDTO>.Failure("Pagamento não encontrado");
+            if (payment is null) 
+                return Result<StatusPagamentoDTO>.Failure("Pagamento não encontrado");
 
             return Result<StatusPagamentoDTO>.Success(new StatusPagamentoDTO
             {
                 Status = payment.Status,
                 PedidoIdExterno = payment.ExternalReference,
+                TipoPagamento = payment.PaymentTypeId 
             });
         }
         catch (Exception ex)

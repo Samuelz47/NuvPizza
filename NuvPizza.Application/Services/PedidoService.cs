@@ -169,6 +169,27 @@ public class PedidoService : IPedidoService
         return Result<PedidoDTO>.Success(pedidoDto);
     }
 
+    public async Task<Result<PedidoDTO>> ConfirmarPagamentoAsync(Guid pedidoId, FormaPagamento formaPagamento)
+    {
+        var pedido = await _pedidoRepository.GetByIdWithDetailsAsync(pedidoId);
+        if (pedido == null) return Result<PedidoDTO>.Failure("Pedido não encontrado");
+
+        // Atualiza os dados
+        pedido.StatusPedido = StatusPedido.Confirmado; // Ou Recebido
+        pedido.FormaPagamento = formaPagamento;        // Atualiza de 'MercadoPago' para 'Pix/Credito'
+
+        try
+        {
+            await _uow.CommitAsync();
+            var pedidoDto = _mapper.Map<PedidoDTO>(pedido);
+            return Result<PedidoDTO>.Success(pedidoDto);
+        }
+        catch (Exception ex)
+        {
+            return Result<PedidoDTO>.Failure($"Erro ao salvar pagamento: {ex.Message}");
+        }
+    }
+
     private async Task<bool> LojaEstaAberta()
     {
         var config = await _configuracaoRepository.GetAsync(c => c.Id == 1);

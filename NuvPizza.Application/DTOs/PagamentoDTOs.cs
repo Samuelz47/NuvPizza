@@ -37,6 +37,7 @@ public class PagamentoResponseDTO
 
 public class StatusPagamentoDTO
 {
-    public string Status { get; set; }
-    public string PedidoIdExterno { get; set; }
+    public string Status { get; set; } = string.Empty;
+    public string PedidoIdExterno { get; set; } = string.Empty;
+    public string TipoPagamento { get; set; } = string.Empty;
 }

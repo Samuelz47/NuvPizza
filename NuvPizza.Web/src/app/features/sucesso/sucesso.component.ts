@@ -13,7 +13,7 @@ import { NotificacaoService } from '../../core/services/notificacao.service';
 })
 export class SucessoComponent implements OnInit {
   private route = inject(ActivatedRoute);
-  private router = inject(Router);
+  public router = inject(Router);
   private pedidoService = inject(PedidoService);
   private notificacaoService = inject(NotificacaoService);
 
