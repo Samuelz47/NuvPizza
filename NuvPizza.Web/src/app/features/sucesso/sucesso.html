@@ -1,32 +1,43 @@
-<div class="container text-center mt-5">
+<div class="sucesso-container animate__animated animate__fadeIn">
+  <div class="card-sucesso animate__animated animate__zoomIn">
     
-    <div class="mb-4">
-        @if (isConfirmado()) {
-            <i class="bi bi-check-circle-fill text-success" style="font-size: 5rem;"></i>
-        } @else {
-            <div class="spinner-border text-warning" role="status" style="width: 4rem; height: 4rem;">
-                <span class="visually-hidden">Carregando...</span>
-            </div>
-        }
+    <div class="icone-check-wrapper">
+      <div class="icone-check">
+        <i class="bi bi-check-lg"></i>
+      </div>
+      <div class="ripple-effect"></div>
     </div>
 
-    <h2 class="mb-3">Pedido Recebido!</h2>
+    <h1 class="titulo-sucesso">Oba! Pedido Confirmado 🎉</h1>
+    <p class="subtitulo-sucesso">A cozinha já recebeu seu pedido e vai começar a preparar em breve.</p>
 
-    <div class="card p-4 shadow-sm mx-auto" style="max-width: 500px;">
-        <p class="text-muted">Status atual:</p>
-        
-        <h3 [class]="statusCor()">{{ statusTexto() }}</h3>
-    </div>
+    @if (idPedido()) {
+      <div class="order-ticket">
+        <span class="ticket-label">Protocolo do Pedido</span>
+        <div class="ticket-number">
+          #{{ idPedido()?.substring(0,8) }}
+          <i class="bi bi-receipt ms-2 opacity-50"></i>
+        </div>
+        <small class="text-muted d-block mt-2">Guarde este número se precisar entrar em contato.</small>
+      </div>
 
-    <p class="mt-4 text-muted">
-        @if (!isConfirmado()) {
-            Aguardando confirmação do pagamento...
-        } @else {
-            A cozinha já foi notificada e vai começar o preparo! 🍕
-        }
-    </p>
-
-    <button (click)="voltarCardapio()" class="btn btn-primary mt-3 btn-lg">
-        Voltar ao Cardápio
-    </button>
+      <button (click)="acompanharPedido()" class="btn-acompanhar pulse-button">
+        <span>🚀 Acompanhar em Tempo Real</span>
+      </button>
+    } @else {
+      <div class="alert alert-warning border-warning mt-4 mb-4 d-flex align-items-center">
+        <i class="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+        <div class="text-start small">
+          <strong>Atenção:</strong> Não conseguimos capturar o número do pedido automaticamente para o rastreio, mas fique tranquilo que ele já foi confirmado no sistema!
+        </div>
+      </div>
+      <a routerLink="/" class="btn-voltar-loja">Voltar ao Cardápio</a>
+    }
+    
+    @if (idPedido()) {
+        <button (click)="router.navigate(['/'])" class="btn-link-secundario mt-4">
+        <i class="bi bi-arrow-left me-1"></i> Voltar para a loja
+        </button>
+    }
+  </div>
 </div>

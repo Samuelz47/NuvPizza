@@ -1,95 +1,129 @@
-/* Garante que o fundo pegue a tela toda */
-:host {
-  display: block;
-  min-height: 100vh;
-  background-color: #e3f2fd; /* Azulzinho claro suave */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
+/* --- CONTAINER GERAL --- */
+.sucesso-container {
+    min-height: 100vh;
+    display: flex; 
+    justify-content: center; 
+    align-items: center;
+    /* Degradê sutil no seu azulzinho padrão */
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    padding: 20px;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
-/* Container principal centralizado */
-.container {
-  width: 100%;
-  max-width: 600px;
-  text-align: center;
+/* --- CARD PRINCIPAL --- */
+.card-sucesso {
+    background: rgba(255, 255, 255, 0.95); /* Levemente transparente */
+    padding: 50px 30px;
+    border-radius: 30px;
+    text-align: center;
+    width: 100%;
+    max-width: 450px;
+    /* Sombra mais difusa e elegante */
+    box-shadow: 0 30px 60px rgba(0, 60, 120, 0.15);
+    backdrop-filter: blur(10px); /* Efeito moderno se o fundo tiver imagem */
+    border: 1px solid rgba(255, 255, 255, 0.5);
 }
 
-/* Ícone de Sucesso (Verde) */
-.bi-check-circle-fill {
-  font-size: 5rem;
-  color: #28a745;
-  margin-bottom: 20px;
-  display: inline-block;
-  animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+/* --- ÍCONE ANIMADO --- */
+.icone-check-wrapper {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto 30px auto;
+    display: flex; justify-content: center; align-items: center;
 }
 
-/* Título Principal */
-h2 {
-  font-family: 'Poppins', sans-serif; /* Ou a fonte do seu projeto */
-  font-weight: 700;
-  color: #333;
-  margin-bottom: 30px;
+.icone-check {
+    width: 90px; height: 90px;
+    background: linear-gradient(135deg, #43a047, #2e7d32); /* Degradê verde */
+    color: white;
+    border-radius: 50%;
+    font-size: 45px;
+    display: flex; justify-content: center; align-items: center;
+    z-index: 2;
+    box-shadow: 0 10px 20px rgba(46, 125, 50, 0.3);
 }
 
-/* O Cartão Branco */
-.card {
-  background: white;
-  border-radius: 20px;
-  padding: 40px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1); /* Sombra suave e moderna */
-  margin-bottom: 30px;
-  border: none;
+/* Animação de "Ondinha" (Ripple) */
+.ripple-effect {
+    position: absolute;
+    width: 100%; height: 100%;
+    background: rgba(67, 160, 71, 0.4);
+    border-radius: 50%;
+    z-index: 1;
+    animation: ripple-animation 2s infinite;
 }
 
-.text-muted {
-  color: #6c757d;
-  font-size: 0.9rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin-bottom: 10px;
+@keyframes ripple-animation {
+    0% { transform: scale(1); opacity: 0.6; }
+    100% { transform: scale(1.5); opacity: 0; }
 }
 
-/* Status do Pedido (Texto Grande) */
-h3 {
-  font-size: 1.8rem;
-  font-weight: 800;
-  margin: 0;
+/* --- TIPOGRAFIA --- */
+.titulo-sucesso {
+    font-size: 2rem; font-weight: 800; color: #1565c0; margin-bottom: 10px;
+    letter-spacing: -0.5px;
+}
+.subtitulo-sucesso {
+    color: #546e7a; font-size: 1.1rem; margin-bottom: 30px; line-height: 1.4;
 }
 
-.text-warning { color: #ffc107; }
-.text-success { color: #28a745; }
-
-/* Texto de rodapé (A cozinha já foi...) */
-p.mt-4 {
-  font-size: 1.1rem;
-  color: #555;
-  margin-bottom: 30px;
+/* --- TICKET DO PEDIDO --- */
+.order-ticket {
+    background-color: #f8faff;
+    border: 2px dashed #c5cae9; /* Borda tracejada estilo cupom */
+    padding: 20px;
+    border-radius: 16px;
+    margin-bottom: 30px;
+    position: relative;
 }
 
-/* Botão Bonitão */
-.btn-primary {
-  background-color: #0d6efd;
-  border: none;
-  padding: 15px 40px;
-  font-size: 1rem;
-  font-weight: 600;
-  border-radius: 50px;
-  box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
-  transition: all 0.2s ease;
-  text-transform: uppercase;
+.ticket-label {
+    display: block; font-size: 0.85rem; font-weight: 700;
+    text-transform: uppercase; color: #7986cb; letter-spacing: 1px;
+    margin-bottom: 5px;
 }
 
-.btn-primary:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(13, 110, 253, 0.4);
-  background-color: #0b5ed7;
+.ticket-number {
+    font-size: 2rem; font-weight: 800; color: #303f9f; font-family: monospace;
+    display: flex; align-items: center; justify-content: center;
 }
 
-/* Animação do ícone */
-@keyframes popIn {
-  0% { transform: scale(0); opacity: 0; }
-  60% { transform: scale(1.2); }
-  100% { transform: scale(1); opacity: 1; }
+/* --- BOTÕES --- */
+.btn-acompanhar {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; padding: 18px;
+    /* Laranja vibrante para ação */
+    background: linear-gradient(45deg, #ff9800, #f57c00);
+    color: white; font-weight: 800; border: none;
+    border-radius: 14px; font-size: 1.2rem;
+    box-shadow: 0 8px 25px rgba(245, 124, 0, 0.4);
+    transition: all 0.3s ease;
+    cursor: pointer;
 }
+.btn-acompanhar:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 35px rgba(245, 124, 0, 0.5);
+}
+
+/* Efeito sutil de pulso no botão */
+.pulse-button { animation: pulse-btn 2s infinite; }
+@keyframes pulse-btn {
+    0% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0.7); }
+    70% { box-shadow: 0 0 0 15px rgba(255, 152, 0, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 152, 0, 0); }
+}
+
+.btn-link-secundario {
+    background: none; border: none;
+    color: #90a4ae; font-weight: 600; font-size: 0.95rem;
+    cursor: pointer; transition: color 0.2s;
+}
+.btn-link-secundario:hover { color: #546e7a; text-decoration: underline; }
+
+.btn-voltar-loja {
+    display: inline-block; padding: 12px 25px; background: #eceff1;
+    color: #546e7a; font-weight: 700; border-radius: 12px;
+    text-decoration: none; transition: all 0.2s;
+}
+.btn-voltar-loja:hover { background: #cfd8dc; color: #37474f; }
