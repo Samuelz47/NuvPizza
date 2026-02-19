@@ -158,8 +158,9 @@ try
     {
         app.UseSwagger();
         app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "NuvPizza.API v1"); });
-        app.UseCors("DevelopmentCors");
     }
+
+    app.UseCors("DevelopmentCors");
 
     //app.UseHttpsRedirection();
     

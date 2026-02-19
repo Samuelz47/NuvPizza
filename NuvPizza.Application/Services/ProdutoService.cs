@@ -67,6 +67,56 @@ public class ProdutoService : IProdutoService
         var produtosDto = _mapper.Map<IEnumerable<ProdutoDTO>>(produtos);
         return produtosDto;
     }
+
+    public async Task<Result<ProdutoDTO>> DeleteProdutoAsync(int id)
+    {
+        var produto = await _produtoRepository.GetAsync(p => p.Id == id);
+        if (produto is null) return Result<ProdutoDTO>.Failure("O produto não existe");
+        
+        _produtoRepository.Delete(produto);
+        await _uow.CommitAsync();
+        
+        var produtoDto = _mapper.Map<ProdutoDTO>(produto);
+        return Result<ProdutoDTO>.Success(produtoDto);
+    }
+
+    public async Task<Result<ProdutoDTO>> UpdateProdutoAsync(int id, ProdutoForUpdateDTO produtoDto)
+    {
+        if (produtoDto is null) return Result<ProdutoDTO>.Failure("Dados inválidos");
+        
+        var produto = await _produtoRepository.GetAsync(p => p.Id == id);
+        if (produto is null) return Result<ProdutoDTO>.Failure("Produto não encontrado");
+
+        // Regra de Negócio: Tamanho
+        if (produtoDto.Categoria == Domain.Enums.Categoria.Pizza)
+        {
+            produto.Tamanho = produtoDto.Tamanho;
+        }
+        else
+        {
+            produto.Tamanho = Domain.Enums.Tamanho.Unico;
+        }
+
+        // Atualiza campos básicos
+        produto.Nome = produtoDto.Nome;
+        produto.Descricao = produtoDto.Descricao;
+        produto.Preco = produtoDto.Preco;
+        produto.Categoria = produtoDto.Categoria;
+        produto.Ativo = produtoDto.Ativo;
+
+        // Atualiza Imagem se fornecida
+        if (produtoDto.Imagem != null)
+        {
+            var caminhoImagem = await SalvarArquivo(produtoDto.Imagem);
+            produto.ImagemUrl = caminhoImagem;
+        }
+
+        _produtoRepository.Update(produto);
+        await _uow.CommitAsync();
+
+        var produtoResult = _mapper.Map<ProdutoDTO>(produto);
+        return Result<ProdutoDTO>.Success(produtoResult);
+    }
     
     private async Task<string> SalvarArquivo(IFormFile arquivo)
     {
@@ -82,6 +132,6 @@ public class ProdutoService : IProdutoService
             await arquivo.CopyToAsync(stream);
         }
 
-        return $"/imagens/{nomeArquivo}";
+        return $"/images/{nomeArquivo}";
     }
 }

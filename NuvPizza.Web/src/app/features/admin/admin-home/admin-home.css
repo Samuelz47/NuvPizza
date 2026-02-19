@@ -1,0 +1,63 @@
+.admin-home-container {
+  min-height: 100vh;
+  background-color: #f0f4f8;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  text-align: center;
+  font-family: 'Segoe UI', sans-serif;
+}
+
+h1 {
+  color: #2c3e50;
+  margin-bottom: 10px;
+  font-size: 2.5rem;
+}
+
+p {
+  color: #7f8c8d;
+  margin-bottom: 40px;
+  font-size: 1.2rem;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 30px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.card-action {
+  background: white;
+  padding: 40px 20px;
+  border-radius: 15px;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 2px solid transparent;
+}
+
+.card-action:hover {
+  transform: translateY(-10px);
+  box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+  border-color: #3498db;
+}
+
+.card-action i {
+  font-size: 3rem;
+  color: #3498db;
+  margin-bottom: 20px;
+}
+
+.card-action h3 {
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.card-action p {
+  font-size: 1rem;
+  margin: 0;
+}

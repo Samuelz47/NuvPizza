@@ -23,7 +23,10 @@ import { AuthService } from '../../../core/services/auth.service';
             <input type="password" [(ngModel)]="password" name="password" required>
           </div>
 
-          <button type="submit" [disabled]="loading()" class="btn-login">
+          <button type="submit" [disabled]="loading()" class="btn-login" style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+            @if (loading()) {
+              <span class="spinner">⏳</span>
+            }
             {{ loading() ? 'Entrando...' : 'Acessar Painel' }}
           </button>
 
@@ -44,6 +47,8 @@ import { AuthService } from '../../../core/services/auth.service';
     .btn-login:hover { background: #0056b3; }
     .btn-login:disabled { background: #ccc; cursor: not-allowed; }
     .error { color: #dc3545; margin-top: 15px; padding: 10px; background: #ffe6e6; border-radius: 4px; font-size: 0.9rem; }
+    .spinner { animation: spin 1s linear infinite; display: inline-block; }
+    @keyframes spin { 100% { transform: rotate(360deg); } }
   `]
 })
 export class LoginComponent {

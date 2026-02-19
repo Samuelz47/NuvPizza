@@ -30,6 +30,20 @@ public class ProdutosController : ControllerBase
         return Created($"/api/produtos/{produtoCreated.Data.Id}", produtoCreated.Data);
     }
 
+    [HttpPut("{id}")]
+    [Authorize]
+    public async Task<IActionResult> Put(int id, [FromForm] ProdutoForUpdateDTO produtoDto)
+    {
+        if (id != produtoDto.Id) return BadRequest("IDs não conferem");
+
+        var result = await _produtoService.UpdateProdutoAsync(id, produtoDto);
+        if (!result.IsSuccess)
+        {
+            return BadRequest(new { error = result.Message });
+        }
+        return Ok(result.Data);
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetProdutos(int id)
     {
@@ -45,5 +59,17 @@ public class ProdutosController : ControllerBase
     {
         var produtosDto = await _produtoService.GetAllProdutosAsync();
         return Ok(produtosDto);
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var result = await _produtoService.DeleteProdutoAsync(id);
+        if (!result.IsSuccess)
+        {
+            return BadRequest(new { error = result.Message });
+        }
+        return NoContent();
     }
 }

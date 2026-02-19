@@ -14,7 +14,7 @@ namespace NuvPizza.Domain.Entities
         public decimal Preco { get; set; }
         public string ImagemUrl { get; set; } = string.Empty;
         public Categoria Categoria { get; set; }
-        public string Tamanho { get; set; } = string.Empty;
+        public Tamanho Tamanho { get; set; } = Tamanho.Unico;
         public bool Ativo { get; set; } = true;
     }
 }

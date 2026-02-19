@@ -10,5 +10,5 @@ public class ProdutoForRegistrationDTO
     public decimal Preco { get; set; }
     public IFormFile? Imagem { get; set; }
     public Categoria Categoria { get; set; }
-    public string Tamanho { get; set; }
+    public Tamanho Tamanho { get; set; }
 }

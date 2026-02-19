@@ -1,0 +1,18 @@
+@if (quantidade() > 0) {
+  <div class="carrinho-bar" (click)="irParaCheckout()">
+    
+    <div class="info">
+      <span class="qtd">
+        {{ quantidade() }} item(ns)
+      </span>
+      <span class="total">
+        {{ total() | currency:'BRL' }}
+      </span>
+    </div>
+
+    <div class="acao">
+      Ver Sacola <i class="pi pi-arrow-right"></i>
+    </div>
+    
+  </div>
+}

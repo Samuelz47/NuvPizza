@@ -1,15 +1,16 @@
+using Microsoft.AspNetCore.Http;
 using NuvPizza.Domain.Enums;
 
 namespace NuvPizza.Application.DTOs;
 
-public class ProdutoDTO
+public class ProdutoForUpdateDTO
 {
     public int Id { get; set; }
     public string Nome { get; set; }
     public string Descricao { get; set; }
     public decimal Preco { get; set; }
-    public string ImagemUrl { get; set; }
-    public int Categoria { get; set; }
-    public int Tamanho { get; set; }
+    public IFormFile? Imagem { get; set; }
+    public Categoria Categoria { get; set; }
+    public Tamanho Tamanho { get; set; }
     public bool Ativo { get; set; }
 }

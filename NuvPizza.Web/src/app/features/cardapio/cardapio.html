@@ -1,0 +1,45 @@
+<div class="cardapio-container">
+  <div class="tabs">
+    <button *ngFor="let cat of categorias" 
+            [class.active]="categoriaAtiva === cat.id"
+            (click)="categoriaAtiva = cat.id">
+      {{ cat.nome }}
+    </button>
+  </div>
+
+  <div class="produtos-grid">
+    <div class="produto-card" *ngFor="let prod of produtosFiltrados" (click)="selecionarProduto(prod)">
+      <img [src]="prod.imagemUrl || 'assets/sem-imagem.png'" alt="{{ prod.nome }}">
+      <div class="info">
+        <h3>{{ prod.nome }}</h3>
+        <p class="desc">{{ prod.descricao }}</p>
+        <div class="price-row">
+          <span class="preco">{{ prod.preco | currency:'BRL' }}</span>
+          <button class="add-btn">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="modalAberto">
+  <div class="modal-content">
+    <h2>Montar sua Pizza</h2>
+    <p>Sabor 1: <strong>{{ saborPrincipal?.nome }}</strong></p>
+    
+    <label>Deseja meio a meio? (Opcional)</label>
+    <select [(ngModel)]="saborSecundario" class="form-select">
+      <option [ngValue]="null">Não, pizza inteira</option>
+      <option *ngFor="let p of listaSaboresCompativeis" [ngValue]="p">
+        {{ p.nome }} (+ {{ p.preco | currency:'BRL' }})
+      </option>
+    </select>
+
+    <div class="modal-actions">
+      <button (click)="modalAberto = false" class="btn-cancel">Cancelar</button>
+      <button (click)="confirmarPizza()" class="btn-confirm">Adicionar à Sacola</button>
+    </div>
+  </div>
+</div>
+
+<app-carrinho-float></app-carrinho-float>

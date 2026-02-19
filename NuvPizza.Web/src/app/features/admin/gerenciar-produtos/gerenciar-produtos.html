@@ -1,0 +1,86 @@
+<div class="admin-container">
+  <div class="header">
+    <h1>Gerenciar Produtos</h1>
+    <button (click)="novoProduto()" class="btn-primary">+ Novo Produto</button>
+  </div>
+
+  <table class="tabela-produtos">
+    <thead>
+      <tr>
+        <th>Img</th>
+        <th>Nome</th>
+        <th>Categoria</th>
+        <th>Preço</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let prod of produtos">
+        <td><img [src]="getImagemUrl(prod.imagemUrl)" width="40" style="object-fit: cover; border-radius: 4px;"></td>
+        <td>{{ prod.nome }} <small *ngIf="prod.categoria === 1">({{ getDescricaoTamanho(prod.tamanho) }})</small></td>
+        <td>
+          <span [style.color]="prod.ativo ? 'green' : 'red'">
+            {{ prod.ativo ? 'Ativo' : 'Inativo' }}
+          </span>
+        </td>
+        <td>{{ getDescricaoCategoria(prod.categoria) }}</td>
+        <td>{{ prod.preco | currency:'BRL' }}</td>
+        <td>
+          <button (click)="editar(prod)">✏️</button>
+          <button (click)="excluir(prod.id)">🗑️</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="modal-backdrop" *ngIf="exibindoFormulario">
+  <div class="modal-content">
+    <h2>{{ produtoEmEdicao.id ? 'Editar' : 'Novo' }} Produto</h2>
+
+    <label>Nome:</label>
+    <input [(ngModel)]="produtoEmEdicao.nome" [disabled]="produtoEmEdicao.id" type="text" class="form-input">
+
+    <label>Descrição:</label>
+    <textarea [(ngModel)]="produtoEmEdicao.descricao" class="form-input"></textarea>
+
+    <div class="row">
+      <div>
+        <label>Preço:</label>
+        <input [(ngModel)]="produtoEmEdicao.preco" (blur)="onPrecoBlur()" type="text" class="form-input"
+          placeholder="0,00">
+      </div>
+      <div>
+        <label>Categoria:</label>
+        <select [(ngModel)]="produtoEmEdicao.categoria" (change)="onCategoriaChange()" [disabled]="produtoEmEdicao.id"
+          class="form-input">
+          <option *ngFor="let c of categorias" [ngValue]="c.id">{{ c.nome }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div *ngIf="produtoEmEdicao.categoria == 1">
+      <label>Tamanho:</label>
+      <select [(ngModel)]="produtoEmEdicao.tamanho" class="form-input">
+        <option *ngFor="let t of tamanhos" [ngValue]="t.id">{{ t.nome }}</option>
+      </select>
+    </div>
+
+    <div style="margin-top: 10px; margin-bottom: 10px;">
+      <label>
+        <input type="checkbox" [(ngModel)]="produtoEmEdicao.ativo"> Produto Ativo
+      </label>
+    </div>
+
+    <label>Imagem:</label>
+    <input type="file" (change)="onFileSelected($event)">
+
+    <div class="modal-actions">
+      <button (click)="exibindoFormulario = false" [disabled]="isLoading">Cancelar</button>
+      <button (click)="salvar()" class="btn-primary" [disabled]="isLoading">
+        <span *ngIf="isLoading" class="spinner"></span>
+        {{ isLoading ? 'Salvando...' : 'Salvar' }}
+      </button>
+    </div>
+  </div>
+</div>
