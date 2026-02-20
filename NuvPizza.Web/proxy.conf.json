@@ -1,25 +1,25 @@
 {
-  "/Pagamento": {
+  "/pagamento": {
     "target": "http://localhost:5269",
     "secure": false,
     "changeOrigin": true
   },
-  "/Pedido": {
+  "/pedido": {
     "target": "http://localhost:5269",
     "secure": false,
     "changeOrigin": true
   },
-  "/Produtos": {
+  "/produtos": {
     "target": "http://localhost:5269",
     "secure": false,
     "changeOrigin": true
   },
-  "/Bairros": {
+  "/bairros": {
     "target": "http://localhost:5269",
     "secure": false,
     "changeOrigin": true
   },
-  "/Loja": {
+  "/loja": {
     "target": "http://localhost:5269",
     "secure": false,
     "changeOrigin": true

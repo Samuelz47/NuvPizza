@@ -28,8 +28,8 @@ public class MercadoPagoService : IPagamentoService
 
             // Mantenha a URL do Ngrok se estiver usando, ou localhost se for só teste local
             // Se estiver usando Ngrok, substitua a linha abaixo
-            string baseUrl = "https://coralliferous-gloatingly-song.ngrok-free.dev"; 
-            //string baseUrl = "http://localhost:4200"; 
+            //string baseUrl = "https://coralliferous-gloatingly-song.ngrok-free.dev"; 
+            string baseUrl = "http://localhost:4200"; 
         
             var backUrls = new PreferenceBackUrlsRequest
             {

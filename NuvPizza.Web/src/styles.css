@@ -1,1 +1,20 @@
-/* You can add global styles to this file, and also import other style files */
+/* =============================================
+   ESTILOS GLOBAIS — NUVPIZZA
+   Cor de marca: #EDECEA (Creme Quente)
+   ============================================= */
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #EDECEA;
+    color: #2c3e50;
+    min-height: 100vh;
+}

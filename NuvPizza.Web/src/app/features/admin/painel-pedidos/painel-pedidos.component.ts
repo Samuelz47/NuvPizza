@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PedidoService } from '../../../core/services/pedido.service';
 import { NotificacaoService } from '../../../core/services/notificacao.service';
+import { LojaService } from '../../../core/services/loja.service';
 
 @Component({
   selector: 'app-painel-pedidos',
@@ -13,6 +14,7 @@ import { NotificacaoService } from '../../../core/services/notificacao.service';
 export class PainelPedidosComponent implements OnInit {
   private pedidoService = inject(PedidoService);
   private notificacaoService = inject(NotificacaoService);
+  private lojaService = inject(LojaService);
 
   pedidos = signal<any[]>([]);
   pedidoSelecionado: any = null;
@@ -26,8 +28,30 @@ export class PainelPedidosComponent implements OnInit {
     this.ouvirNovosPedidos();
   }
 
+  abrirLoja() {
+    const hora = prompt("Qual será o horário de encerramento da loja hoje? (Ex: 23:59)");
+    if (!hora) return;
+
+    // Adiciona :00 se o usuário só digitar HH:MM
+    const horaFormatada = hora.length === 5 ? `${hora}:00` : hora;
+
+    this.lojaService.abrirLoja(horaFormatada).subscribe({
+      next: () => this.mostrarToast(`Loja aberta até as ${hora}! 🍕`, 'sucesso'),
+      error: () => this.mostrarToast('Erro ao abrir a loja. Verifique o horário.', 'erro')
+    });
+  }
+
+  fecharLoja() {
+    if (!confirm("Tem certeza que deseja FECHAR a loja agora? Os clientes não conseguirão fazer novos pedidos.")) return;
+
+    this.lojaService.fecharLoja().subscribe({
+      next: () => this.mostrarToast('Loja fechada com sucesso. 🛑', 'sucesso'),
+      error: () => this.mostrarToast('Erro ao fechar a loja.', 'erro')
+    });
+  }
+
   carregarPedidos() {
-    this.pedidoService.getPedidos().subscribe({ 
+    this.pedidoService.getPedidos().subscribe({
       next: (dados: any) => {
         const lista = dados.items || dados;
         const listaTratada = lista.map((p: any) => ({
@@ -59,20 +83,20 @@ export class PainelPedidosComponent implements OnInit {
     if (pedido.statusPedido >= 5) return;
     const novoStatus = pedido.statusPedido + 1;
     const codigo = this.getCodigoPedido(pedido);
-    
+
     this.pedidoService.atualizarStatus(pedido.id, novoStatus).subscribe({
       next: () => {
         if (novoStatus === 5) this.mostrarToast(`Pedido ${codigo} Concluído! 🎉`, 'sucesso');
         else if (novoStatus === 4) this.mostrarToast(`Pedido ${codigo} saiu para entrega! 🛵`, 'info');
         else this.mostrarToast(`Status do pedido ${codigo} atualizado!`, 'info');
-        
-        this.pedidos.update(lista => 
-            lista.map(p => p.id === pedido.id ? { ...p, statusPedido: novoStatus } : p)
+
+        this.pedidos.update(lista =>
+          lista.map(p => p.id === pedido.id ? { ...p, statusPedido: novoStatus } : p)
         );
         this.ordenarLista(this.pedidos());
-        
+
         if (this.pedidoSelecionado && this.pedidoSelecionado.id === pedido.id) {
-            this.pedidoSelecionado.statusPedido = novoStatus;
+          this.pedidoSelecionado.statusPedido = novoStatus;
         }
       },
       error: () => this.mostrarToast('Erro ao atualizar status.', 'erro')
@@ -161,7 +185,7 @@ export class PainelPedidosComponent implements OnInit {
       </html>
     `;
     const popup = window.open('', '_blank', 'width=380,height=600');
-    if(popup) { popup.document.write(conteudo); popup.document.close(); }
+    if (popup) { popup.document.write(conteudo); popup.document.close(); }
   }
 
   mostrarToast(msg: string, tipo: any) {
@@ -169,13 +193,13 @@ export class PainelPedidosComponent implements OnInit {
     setTimeout(() => this.toast.update(t => ({ ...t, visivel: false })), 3000);
   }
 
-  ordenarLista(lista: any[]) { 
-      lista.sort((a, b) => (a.statusPedido === 5 || a.statusPedido === 0) ? 1 : -1);
-      this.pedidos.set(lista);
+  ordenarLista(lista: any[]) {
+    lista.sort((a, b) => (a.statusPedido === 5 || a.statusPedido === 0) ? 1 : -1);
+    this.pedidos.set(lista);
   }
 
-  ouvirNovosPedidos() { 
-      this.notificacaoService.ouvirAtualizacaoStatus().subscribe(() => this.carregarPedidos()); 
+  ouvirNovosPedidos() {
+    this.notificacaoService.ouvirAtualizacaoStatus().subscribe(() => this.carregarPedidos());
   }
 
   converterStatusParaNumero(status: any) {
@@ -189,23 +213,23 @@ export class PainelPedidosComponent implements OnInit {
   getStatusClass(status: number) { return ['status-cancelado', 'status-criado', 'status-confirmado', 'status-preparo', 'status-entrega', 'status-finalizado'][status] || ''; }
 
   traduzirPagamento(forma: any): string {
-      // Mapeamento ajustado
-      const mapa: any = { 
-          1: 'Pix', 
-          2: 'Dinheiro', 
-          3: 'Crédito (Entrega)', // Enum 3
-          4: 'Débito (Entrega)',  // Enum 4
-          5: 'Cartão (Entrega)', 
-          6: 'Online (MP)' 
-      };
-      
-      if (typeof forma === 'number') return mapa[forma] || 'Outro';
-      
-      // Fallbacks para strings
-      if (forma === 'MercadoPago') return 'Online (MP)';
-      if (forma === 'CartaoCredito') return 'Crédito (Entrega)';
-      if (forma === 'CartaoDebito') return 'Débito (Entrega)';
-      
-      return forma || 'A Definir';
+    // Mapeamento ajustado
+    const mapa: any = {
+      1: 'Pix',
+      2: 'Dinheiro',
+      3: 'Crédito (Entrega)', // Enum 3
+      4: 'Débito (Entrega)',  // Enum 4
+      5: 'Cartão (Entrega)',
+      6: 'Online (MP)'
+    };
+
+    if (typeof forma === 'number') return mapa[forma] || 'Outro';
+
+    // Fallbacks para strings
+    if (forma === 'MercadoPago') return 'Online (MP)';
+    if (forma === 'CartaoCredito') return 'Crédito (Entrega)';
+    if (forma === 'CartaoDebito') return 'Débito (Entrega)';
+
+    return forma || 'A Definir';
   }
 }

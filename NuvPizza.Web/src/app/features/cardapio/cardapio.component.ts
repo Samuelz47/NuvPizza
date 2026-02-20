@@ -1,10 +1,11 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProdutoService } from '../../core/services/produto.service';
 import { CarrinhoService } from '../../core/services/carrinho.service';
 import { Produto, CategoriaProduto, TamanhoProduto } from '../../core/models/produto.model';
 import { CarrinhoFloatComponent } from '../../shared/components/carrinho-float/carrinho-float.component';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-cardapio',
@@ -16,22 +17,25 @@ import { CarrinhoFloatComponent } from '../../shared/components/carrinho-float/c
 export class CardapioComponent implements OnInit {
   private produtoService = inject(ProdutoService);
   private carrinhoService = inject(CarrinhoService);
+  private cdr = inject(ChangeDetectorRef);
 
   produtos: Produto[] = [];
   categoriaAtiva: CategoriaProduto = CategoriaProduto.Pizza;
-  
+
   // Helpers para o HTML
   categorias = [
-    { id: CategoriaProduto.Pizza, nome: 'Pizzas' },
-    { id: CategoriaProduto.Bebida, nome: 'Bebidas' },
-    { id: CategoriaProduto.Combo, nome: 'Combos' }
+    { id: CategoriaProduto.Pizza, nome: '🍕 Pizzas' },
+    { id: CategoriaProduto.Bebida, nome: '🥤 Bebidas' },
+    { id: CategoriaProduto.Combo, nome: '🍱 Combos' },
+    { id: CategoriaProduto.Sobremesa, nome: '🍰 Sobremesas' }
   ];
 
   // Modal
   modalAberto = false;
+  modoMeioAMeio = false;
   saborPrincipal: Produto | null = null;
   saborSecundario: Produto | null = null;
-  
+
   listaSaboresCompativeis: Produto[] = []; // Para o 2º sabor
 
   ngOnInit() {
@@ -41,35 +45,58 @@ export class CardapioComponent implements OnInit {
   carregarProdutos() {
     this.produtoService.getAll().subscribe(dados => {
       this.produtos = dados;
+      this.cdr.detectChanges(); // Força o Angular a renderizar os produtos logo que eles chegam da API
     });
   }
 
   // Filtra na tela para não ficar fazendo request toda hora
   get produtosFiltrados() {
-    return this.produtos.filter(p => p.categoria === this.categoriaAtiva);
+    return this.produtos.filter(p => p.categoria === this.categoriaAtiva && p.ativo);
   }
+
+  // Agrupa pizzas ativas por tamanho (ordem crescente de tamanho)
+  get pizzasPorTamanho(): { tamanho: number; nome: string; pizzas: Produto[] }[] {
+    const pizzasAtivas = this.produtos.filter(
+      p => p.categoria === CategoriaProduto.Pizza && p.ativo
+    );
+
+    // Monta um mapa de tamanhoId -> lista de pizzas
+    const mapa = new Map<number, Produto[]>();
+    for (const pizza of pizzasAtivas) {
+      if (!mapa.has(pizza.tamanho)) mapa.set(pizza.tamanho, []);
+      mapa.get(pizza.tamanho)!.push(pizza);
+    }
+
+    // Ordena por tamanho (enum numérico crescente) e monta o resultado
+    return Array.from(mapa.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([tamanho, pizzas]) => ({
+        tamanho,
+        nome: this.getNomeTamanho(tamanho),
+        pizzas
+      }));
+  }
+
 
   selecionarProduto(produto: Produto) {
     if (produto.categoria === CategoriaProduto.Pizza) {
-      // Abre o modal para personalizar
       this.abrirModalPizza(produto);
     } else {
-      // Bebida adiciona direto
       this.carrinhoService.adicionar(produto);
-      // Feedback visual simples (opcional)
-      alert('Adicionado!'); 
     }
   }
 
   abrirModalPizza(pizza: Produto) {
     this.saborPrincipal = pizza;
     this.saborSecundario = null;
-    
+    this.modoMeioAMeio = false;
+
     // Busca pizzas do mesmo tamanho para ser o 2º sabor
-    this.listaSaboresCompativeis = this.produtos.filter(p => 
+    this.listaSaboresCompativeis = this.produtos.filter(p =>
       p.categoria === CategoriaProduto.Pizza &&
       p.tamanho === pizza.tamanho &&
-      p.id !== pizza.id
+      p.id !== pizza.id &&
+      p.ativo
     );
 
     this.modalAberto = true;
@@ -82,22 +109,24 @@ export class CardapioComponent implements OnInit {
     let precoFinal = this.saborPrincipal.preco;
     let imgFinal = this.saborPrincipal.imagemUrl;
 
-    if (this.saborSecundario) {
-      nomeFinal += ` / ${this.saborSecundario.nome}`;
+    const meioAMeioSelecionado = this.modoMeioAMeio && this.saborSecundario;
+
+    if (meioAMeioSelecionado) {
+      nomeFinal += ` / ${this.saborSecundario!.nome}`;
       // Regra: Cobra pela maior
-      if (this.saborSecundario.preco > precoFinal) {
-        precoFinal = this.saborSecundario.preco;
+      if (this.saborSecundario!.preco > precoFinal) {
+        precoFinal = this.saborSecundario!.preco;
       }
     }
 
     // Cria o objeto para o carrinho
     const item = {
-      id: this.saborPrincipal.id, // ID referência
+      id: meioAMeioSelecionado ? 'custom-' + Date.now() : this.saborPrincipal.id, // ID único para meio a meio
       nome: nomeFinal,
       preco: precoFinal,
       imagem: imgFinal,
       quantidade: 1,
-      observacao: this.saborSecundario ? 'Meio a Meio' : ''
+      observacao: meioAMeioSelecionado ? 'Meio a Meio' : ''
     };
 
     this.carrinhoService.adicionar(item);
@@ -106,5 +135,18 @@ export class CardapioComponent implements OnInit {
 
   getNomeTamanho(t: number): string {
     return TamanhoProduto[t] || '';
+  }
+
+  getImagemUrl(imagemUrl: string | undefined): string {
+    if (!imagemUrl) return 'assets/logo.png';
+    if (imagemUrl.startsWith('http')) return imagemUrl;
+
+    // Se for da pasta assets (local), não usa o apiUrl do backend
+    if (imagemUrl.startsWith('assets/')) {
+      return imagemUrl; // Removida a barra do início para não quebrar a rota no Angular
+    }
+
+    const cleanUrl = imagemUrl.startsWith('/') ? imagemUrl.substring(1) : imagemUrl;
+    return `${environment.apiUrl}/${cleanUrl}`;
   }
 }

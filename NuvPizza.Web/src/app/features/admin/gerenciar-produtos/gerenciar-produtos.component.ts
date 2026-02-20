@@ -26,7 +26,7 @@ export class GerenciarProdutosComponent implements OnInit {
 
   // Enums para o select do HTML
   categorias = [
-    { id: 1, nome: 'Pizza' }, { id: 2, nome: 'Bebida' }, { id: 3, nome: 'Combo' }, { id: 4, nome: 'Sobremesa' }, { id: 5, nome: 'Acompanhamento' }
+    { id: 1, nome: 'Pizza' }, { id: 2, nome: 'Bebida' }, { id: 3, nome: 'Combo' }, { id: 4, nome: 'Sobremesa' }
   ];
   tamanhos = [
     { id: 0, nome: 'Único' }, { id: 1, nome: 'Pequena' }, { id: 2, nome: 'Média' }, { id: 3, nome: 'Grande' }, { id: 4, nome: 'Gigante' }

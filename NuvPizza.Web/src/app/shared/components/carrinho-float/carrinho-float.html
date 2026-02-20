@@ -1,18 +1,54 @@
 @if (quantidade() > 0) {
-  <div class="carrinho-bar" (click)="irParaCheckout()">
-    
-    <div class="info">
-      <span class="qtd">
-        {{ quantidade() }} item(ns)
-      </span>
-      <span class="total">
-        {{ total() | currency:'BRL' }}
-      </span>
-    </div>
 
-    <div class="acao">
-      Ver Sacola <i class="pi pi-arrow-right"></i>
-    </div>
-    
+<!-- Painel deslizante dos itens -->
+@if (painelAberto()) {
+<div class="carrinho-painel">
+
+  <div class="painel-header">
+    <span class="painel-titulo">🛒 Sua Sacola</span>
+    <button class="fechar-btn" (click)="togglePainel()">✕</button>
   </div>
+
+  <ul class="painel-itens">
+    @for (item of itens(); track item.id) {
+    <li class="painel-item">
+      <!-- Nome e subtotal -->
+      <div class="item-info">
+        <span class="item-nome">{{ item.nome }}</span>
+        <span class="item-subtotal">{{ (item.preco * item.quantidade) | currency:'BRL' }}</span>
+      </div>
+
+      <!-- Controles estilo iFood -->
+      <div class="item-controles">
+        <button class="ctrl-btn minus" (click)="decrementar(item.id)" aria-label="Remover 1">−</button>
+        <span class="ctrl-qtd">{{ item.quantidade }}</span>
+        <button class="ctrl-btn plus" (click)="adicionarItem(item)" aria-label="Adicionar 1">+</button>
+      </div>
+    </li>
+    }
+  </ul>
+
+  <!-- Rodapé com total e checkout -->
+  <div class="painel-footer">
+    <div class="footer-total">
+      <span>Total</span>
+      <span class="footer-valor">{{ total() | currency:'BRL' }}</span>
+    </div>
+    <button class="btn-checkout" (click)="irParaCheckout()">
+      Finalizar Pedido →
+    </button>
+  </div>
+
+</div>
+}
+
+<!-- Barra flutuante fixa -->
+<div class="carrinho-bar" [class.pulse]="animando()" (click)="togglePainel()">
+  <div class="info">
+    <span class="qtd">{{ quantidade() }} item(ns)</span>
+    <span class="total">{{ total() | currency:'BRL' }}</span>
+  </div>
+  <div class="acao">{{ painelAberto() ? 'Fechar ✕' : 'Ver Sacola →' }}</div>
+</div>
+
 }

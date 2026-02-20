@@ -1,58 +1,303 @@
+/* ============================================
+   CARRINHO FLUTUANTE — Estilo iFood
+   ============================================ */
+
+/* --- Barra fixa no rodapé --- */
 .carrinho-bar {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
-  background-color: #e74c3c; /* Vermelho pizza */
+  background: #4B6FA5;
   color: white;
-  padding: 15px 20px;
+  padding: 16px 22px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  box-shadow: 0 -4px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 -4px 18px rgba(75, 111, 165, 0.35);
   z-index: 1000;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  animation: slideUp 0.3s ease-out;
+  user-select: none;
+  transition: background 0.18s;
+}
+
+.carrinho-bar:hover {
+  background: #3a5a8a;
+}
+
+/* Pulse ao adicionar item */
+.carrinho-bar.pulse {
+  animation: barPulse 0.55s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+@keyframes barPulse {
+  0% {
+    transform: scale(1);
+    background: #4B6FA5;
+  }
+
+  35% {
+    transform: scale(1.03);
+    background: #e74c3c;
+  }
+
+  65% {
+    transform: scale(0.98);
+    background: #e74c3c;
+  }
+
+  100% {
+    transform: scale(1);
+    background: #4B6FA5;
+  }
 }
 
 .info {
   display: flex;
   align-items: center;
-  gap: 15px;
+  gap: 14px;
 }
 
 .qtd {
-  background: rgba(255, 255, 255, 0.2);
-  padding: 5px 12px;
+  background: rgba(255, 255, 255, 0.22);
+  padding: 4px 13px;
   border-radius: 20px;
-  font-weight: bold;
-  font-size: 0.9rem;
+  font-weight: 700;
+  font-size: 0.875rem;
 }
 
 .total {
-  font-weight: bold;
-  font-size: 1.1rem;
+  font-weight: 800;
+  font-size: 1.05rem;
 }
 
 .acao {
   font-weight: 600;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+/* ============================================
+   PAINEL DE ITENS (slide up, estilo iFood)
+   ============================================ */
+
+.carrinho-painel {
+  position: fixed;
+  bottom: 56px;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  max-width: 500px;
+  width: 100%;
+  background: white;
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.15);
+  z-index: 999;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  animation: slideUpPanel 0.25s ease-out;
+  display: flex;
+  flex-direction: column;
+  max-height: 70vh;
+}
+
+@keyframes slideUpPanel {
+  from {
+    transform: translateY(40px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Cabeçalho */
+.painel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px 12px;
+  border-bottom: 1px solid #f2f2f2;
+  flex-shrink: 0;
+}
+
+.painel-titulo {
+  font-weight: 800;
+  font-size: 1rem;
+  color: #1e2a3a;
+}
+
+.fechar-btn {
+  background: #f2f2f2;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: #666;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
+  transition: background 0.15s;
 }
 
-@keyframes slideUp {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+.fechar-btn:hover {
+  background: #e0e0e0;
 }
 
-/* Ajuste para mobile */
+/* Lista de itens */
+.painel-itens {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.painel-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 13px 18px;
+  border-bottom: 1px solid #f8f8f8;
+  gap: 12px;
+}
+
+.painel-item:last-child {
+  border-bottom: none;
+}
+
+/* Info do item */
+.item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.item-nome {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1e2a3a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-subtotal {
+  font-size: 0.8rem;
+  color: #4B6FA5;
+  font-weight: 700;
+}
+
+/* Controles − N + estilo iFood */
+.item-controles {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: #f5f5f5;
+  border-radius: 24px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.ctrl-btn {
+  background: none;
+  border: none;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  flex-shrink: 0;
+}
+
+.ctrl-btn.minus {
+  color: #e74c3c;
+}
+
+.ctrl-btn.minus:hover {
+  background: #ffe8e8;
+}
+
+.ctrl-btn.plus {
+  color: #4B6FA5;
+}
+
+.ctrl-btn.plus:hover {
+  background: #e8eef7;
+}
+
+.ctrl-qtd {
+  min-width: 28px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #1e2a3a;
+  padding: 0 2px;
+}
+
+/* Rodapé do painel */
+.painel-footer {
+  padding: 14px 18px 16px;
+  border-top: 1px solid #f2f2f2;
+  flex-shrink: 0;
+}
+
+.footer-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.footer-valor {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1e2a3a;
+}
+
+.btn-checkout {
+  display: block;
+  width: 100%;
+  background: #4B6FA5;
+  color: white;
+  border: none;
+  padding: 14px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.18s, transform 0.15s;
+  box-shadow: 0 4px 14px rgba(75, 111, 165, 0.3);
+}
+
+.btn-checkout:hover {
+  background: #3a5a8a;
+  transform: translateY(-1px);
+}
+
+/* Mobile */
 @media (max-width: 400px) {
   .carrinho-bar {
-    padding: 12px 15px;
+    padding: 13px 15px;
   }
+
   .acao {
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+  }
+
+  .carrinho-painel {
+    max-height: 80vh;
   }
 }

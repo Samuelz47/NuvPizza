@@ -1,43 +1,122 @@
 <div class="cardapio-container">
+  <!-- Header com Logo -->
+  <div class="cardapio-header">
+    <img [src]="getImagemUrl('assets/logo.png')" alt="NuvPizza" class="logo-img">
+    <p>Escolha seus favoritos e monte seu pedido</p>
+  </div>
+
+  <!-- Abas de Categorias -->
   <div class="tabs">
-    <button *ngFor="let cat of categorias" 
-            [class.active]="categoriaAtiva === cat.id"
-            (click)="categoriaAtiva = cat.id">
+    <button *ngFor="let cat of categorias" [class.active]="categoriaAtiva === cat.id" (click)="categoriaAtiva = cat.id">
       {{ cat.nome }}
     </button>
   </div>
 
-  <div class="produtos-grid">
-    <div class="produto-card" *ngFor="let prod of produtosFiltrados" (click)="selecionarProduto(prod)">
-      <img [src]="prod.imagemUrl || 'assets/sem-imagem.png'" alt="{{ prod.nome }}">
-      <div class="info">
-        <h3>{{ prod.nome }}</h3>
-        <p class="desc">{{ prod.descricao }}</p>
-        <div class="price-row">
-          <span class="preco">{{ prod.preco | currency:'BRL' }}</span>
-          <button class="add-btn">+</button>
+  <!-- Grid de Produtos (categorias que não são pizza) -->
+  <ng-container *ngIf="categoriaAtiva !== 1">
+    <div class="produtos-grid">
+      <div class="produto-card" *ngFor="let prod of produtosFiltrados" (click)="selecionarProduto(prod)">
+        <div class="produto-img-wrap">
+          <img [src]="getImagemUrl(prod.imagemUrl)" alt="{{ prod.nome }}">
+        </div>
+        <div class="info">
+          <h3>{{ prod.nome }}</h3>
+          <p class="desc">{{ prod.descricao }}</p>
+          <div class="price-row">
+            <span class="preco">{{ prod.preco | currency:'BRL' }}</span>
+            <button class="add-btn" aria-label="Adicionar {{ prod.nome }}">+</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="vazio" *ngIf="produtosFiltrados.length === 0">
+        <p>😕 Nenhum produto disponível nessa categoria.</p>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Pizzas agrupadas por tamanho -->
+  <ng-container *ngIf="categoriaAtiva === 1">
+    <div *ngIf="pizzasPorTamanho.length === 0" class="produtos-grid">
+      <div class="vazio">
+        <p>😕 Nenhuma pizza disponível no momento.</p>
+      </div>
+    </div>
+
+    <div *ngFor="let grupo of pizzasPorTamanho" class="tamanho-secao">
+      <div class="tamanho-header">
+        <span class="tamanho-badge">{{ grupo.nome }}</span>
+        <span class="tamanho-divider"></span>
+      </div>
+      <div class="produtos-grid">
+        <div class="produto-card" *ngFor="let prod of grupo.pizzas" (click)="selecionarProduto(prod)">
+          <div class="produto-img-wrap">
+            <img [src]="getImagemUrl(prod.imagemUrl)" alt="{{ prod.nome }}">
+          </div>
+          <div class="info">
+            <h3>{{ prod.nome }}</h3>
+            <p class="desc">{{ prod.descricao }}</p>
+            <div class="price-row">
+              <span class="preco">{{ prod.preco | currency:'BRL' }}</span>
+              <button class="add-btn" aria-label="Adicionar {{ prod.nome }}">+</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+  </ng-container>
+
 </div>
 
-<div class="modal-backdrop" *ngIf="modalAberto">
-  <div class="modal-content">
-    <h2>Montar sua Pizza</h2>
-    <p>Sabor 1: <strong>{{ saborPrincipal?.nome }}</strong></p>
-    
-    <label>Deseja meio a meio? (Opcional)</label>
-    <select [(ngModel)]="saborSecundario" class="form-select">
-      <option [ngValue]="null">Não, pizza inteira</option>
-      <option *ngFor="let p of listaSaboresCompativeis" [ngValue]="p">
-        {{ p.nome }} (+ {{ p.preco | currency:'BRL' }})
-      </option>
-    </select>
+<!-- ====== MODAL PIZZA ====== -->
+<div class="modal-backdrop" *ngIf="modalAberto" (click)="modalAberto = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+
+    <div class="modal-header">
+      <h2>🍕 Monte sua Pizza</h2>
+      <button class="close-btn" (click)="modalAberto = false">✕</button>
+    </div>
+
+    <div class="sabor-principal">
+      <span class="label-tag">Sabor escolhido</span>
+      <p class="sabor-nome">{{ saborPrincipal?.nome }}</p>
+      <p class="sabor-preco">{{ saborPrincipal?.preco | currency:'BRL' }}</p>
+    </div>
+
+    <div class="opcoes-pizza">
+      <button class="opcao-btn" [class.selected]="!modoMeioAMeio"
+        (click)="modoMeioAMeio = false; saborSecundario = null">
+        <span class="opcao-icon">🍕</span>
+        <span class="opcao-texto">Pizza Inteira</span>
+      </button>
+      <button class="opcao-btn" [class.selected]="modoMeioAMeio" (click)="modoMeioAMeio = true"
+        [disabled]="listaSaboresCompativeis.length === 0">
+        <span class="opcao-icon">⟨ | ⟩</span>
+        <span class="opcao-texto">Meio a Meio</span>
+        <span class="opcao-sub" *ngIf="listaSaboresCompativeis.length === 0">Indisponível</span>
+      </button>
+    </div>
+
+    <div class="segundo-sabor" *ngIf="modoMeioAMeio">
+      <label class="label-tag">Escolha o 2º sabor</label>
+      <select [(ngModel)]="saborSecundario" class="form-select">
+        <option [ngValue]="null">-- Selecione --</option>
+        <option *ngFor="let p of listaSaboresCompativeis" [ngValue]="p">
+          {{ p.nome }} — {{ p.preco | currency:'BRL' }}
+        </option>
+      </select>
+      <p class="meio-info" *ngIf="saborSecundario">
+        ⚠️ Cobra pelo sabor mais caro. Preço final:
+        <strong>{{ (saborSecundario.preco > (saborPrincipal?.preco || 0) ? saborSecundario.preco :
+          saborPrincipal?.preco) | currency:'BRL' }}</strong>
+      </p>
+    </div>
 
     <div class="modal-actions">
       <button (click)="modalAberto = false" class="btn-cancel">Cancelar</button>
-      <button (click)="confirmarPizza()" class="btn-confirm">Adicionar à Sacola</button>
+      <button (click)="confirmarPizza()" class="btn-confirm" [disabled]="modoMeioAMeio && !saborSecundario">
+        🛒 Adicionar à Sacola
+      </button>
     </div>
   </div>
 </div>

@@ -12,6 +12,6 @@ export class PaymentService {
 
   criarPreferencia(dados: CriarPreferenciaRequest) {
     // O retorno agora é tipado como CriarPreferenciaResponse
-    return this.http.post<CriarPreferenciaResponse>(`${this.apiUrl}/Pagamento/criar-link`, dados);
+    return this.http.post<CriarPreferenciaResponse>(`${this.apiUrl}/pagamento/criar-link`, dados);
   }
 }

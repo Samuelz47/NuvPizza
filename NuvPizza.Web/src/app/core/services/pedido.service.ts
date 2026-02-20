@@ -23,16 +23,15 @@ export interface Pedido {
 })
 export class PedidoService {
   private http = inject(HttpClient);
-  
-  // Confirma se a tua API é /Pedido ou /pedidos
-  private apiUrl = `${environment.apiUrl}/Pedido`; 
+
+  private apiUrl = `${environment.apiUrl}/pedido`;
 
   // 1. Listar Pedidos (Usado no Painel Admin)
   getPedidos(pageNumber: number = 1, pageSize: number = 50): Observable<Pedido[]> {
     let params = new HttpParams()
       .set('PageNumber', pageNumber)
       .set('PageSize', pageSize);
-    
+
     return this.http.get<Pedido[]>(this.apiUrl, { params });
   }
 

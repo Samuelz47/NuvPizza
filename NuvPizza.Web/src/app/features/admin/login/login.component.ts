@@ -68,8 +68,8 @@ export class LoginComponent {
     this.authService.login(this.email, this.password).subscribe({
       next: () => {
         this.loading.set(false);
-        // Sucesso! Vai para o painel
-        this.router.navigate(['/admin/pedidos']);
+        // Sucesso! Vai para a tela intermediária
+        this.router.navigate(['/admin/home']);
       },
       error: (err: any) => { // <--- Importante: tipagem 'any'
         this.loading.set(false);

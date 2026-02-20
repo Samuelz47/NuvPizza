@@ -1,46 +1,107 @@
-/* Container Principal (Fundo Azul Clarinho) */
+/* ============================================
+   CARDÁPIO DO CLIENTE — Estilo Claro/Moderno
+   Fundo herdado do body (#EDECEA)
+   ============================================ */
+
 .cardapio-container {
-  background-color: #f0f4f8; /* Azul bem suave */
   min-height: 100vh;
-  padding: 20px;
-  padding-bottom: 80px; /* Espaço pro carrinho flutuante */
-  font-family: 'Segoe UI', sans-serif;
+  padding: 30px 20px 100px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* --- Header com Logo --- */
+.cardapio-header {
+  text-align: center;
+  padding: 20px 0 10px;
+}
+
+.logo-img {
+  max-height: 140px;
+  max-width: 420px;
+  width: 80%;
+  object-fit: contain;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.10));
+}
+
+.cardapio-header p {
+  font-size: 0.95rem;
+  color: #7a7a7a;
+  margin: 0 0 28px;
+  font-weight: 500;
 }
 
 /* --- Abas (Tabs) --- */
 .tabs {
   display: flex;
   justify-content: center;
-  gap: 15px;
+  gap: 8px;
   margin-bottom: 30px;
   flex-wrap: wrap;
 }
 
 .tabs button {
-  background: white;
-  border: 1px solid #ddd;
-  padding: 10px 25px;
-  border-radius: 25px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1.5px solid rgba(0, 0, 0, 0.08);
+  padding: 9px 20px;
+  border-radius: 30px;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.875rem;
   color: #555;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+  backdrop-filter: blur(4px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
 }
 
-.tabs button.active, .tabs button:hover {
-  background-color: #e74c3c; /* Vermelho da marca */
+.tabs button.active,
+.tabs button:hover {
+  background: #4B6FA5;
   color: white;
-  border-color: #e74c3c;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(231, 76, 60, 0.3);
+  border-color: #4B6FA5;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(75, 111, 165, 0.35);
+}
+
+/* --- Seções por Tamanho (Pizzas) --- */
+.tamanho-secao {
+  max-width: 1200px;
+  margin: 0 auto 30px;
+}
+
+.tamanho-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.tamanho-badge {
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #4B6FA5;
+  background: rgba(75, 111, 165, 0.1);
+  border: 1.5px solid rgba(75, 111, 165, 0.25);
+  padding: 4px 14px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.tamanho-divider {
+  flex: 1;
+  height: 1px;
+  background: rgba(0, 0, 0, 0.08);
 }
 
 /* --- Grid de Produtos --- */
+
 .produtos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 18px;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -48,45 +109,59 @@
 /* --- Card do Produto --- */
 .produto-card {
   background: white;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  transition: transform 0.22s, box-shadow 0.22s;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.07);
   display: flex;
   flex-direction: column;
+  border: 1px solid rgba(0, 0, 0, 0.04);
 }
 
 .produto-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.13);
 }
 
-.produto-card img {
+.produto-img-wrap {
   width: 100%;
   height: 180px;
+  overflow: hidden;
+  background: #f5f4f2;
+}
+
+.produto-img-wrap img {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  border-bottom: 1px solid #f0f0f0;
+  transition: transform 0.3s ease;
+}
+
+.produto-card:hover .produto-img-wrap img {
+  transform: scale(1.04);
 }
 
 .produto-card .info {
-  padding: 15px;
+  padding: 14px 16px 16px;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
 }
 
 .produto-card h3 {
-  margin: 0 0 5px 0;
-  font-size: 1.1rem;
-  color: #333;
+  margin: 0 0 5px;
+  font-size: 1rem;
+  color: #1e2a3a;
+  font-weight: 700;
 }
 
 .produto-card .desc {
-  font-size: 0.9rem;
-  color: #777;
-  margin-bottom: 15px;
+  font-size: 0.845rem;
+  color: #9a9a9a;
+  margin-bottom: 14px;
   flex-grow: 1;
+  line-height: 1.45;
 }
 
 .price-row {
@@ -97,86 +172,276 @@
 }
 
 .price-row .preco {
-  font-weight: bold;
-  font-size: 1.2rem;
-  color: #2c3e50;
+  font-weight: 800;
+  font-size: 1.1rem;
+  color: #4B6FA5;
 }
 
 .add-btn {
-  background-color: #27ae60; /* Verde compra */
+  background: #4B6FA5;
   color: white;
   border: none;
-  width: 35px;
-  height: 35px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 3px 8px rgba(75, 111, 165, 0.35);
+  line-height: 1;
 }
 
 .add-btn:hover {
-  background-color: #219150;
+  background: #3a5a8a;
+  transform: scale(1.12);
+  box-shadow: 0 5px 12px rgba(75, 111, 165, 0.5);
 }
 
-/* --- Modal --- */
+/* Estado vazio */
+.vazio {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #aaa;
+  font-size: 1rem;
+  padding: 60px 0;
+}
+
+/* ============================================
+   MODAL DE PIZZA
+   ============================================ */
+
 .modal-backdrop {
   position: fixed;
-  top: 0; left: 0; width: 100%; height: 100%;
-  background: rgba(0,0,0,0.5);
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(30, 30, 30, 0.45);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 2000;
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(6px);
+  padding: 20px;
 }
 
 .modal-content {
   background: white;
-  padding: 25px;
-  border-radius: 15px;
-  width: 90%;
-  max-width: 500px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-  animation: slideUp 0.3s ease-out;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 460px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2);
+  animation: slideUp 0.28s cubic-bezier(0.34, 1.46, 0.64, 1);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.15rem;
+  color: #1e2a3a;
+  font-weight: 800;
+}
+
+.close-btn {
+  background: #f2f2f2;
+  border: none;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.close-btn:hover {
+  background: #e5e5e5;
+}
+
+.sabor-principal {
+  padding: 14px 22px;
+  background: #fafaf8;
+  border-bottom: 1px solid #f0efec;
+}
+
+.label-tag {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: #4B6FA5;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.sabor-nome {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e2a3a;
+  margin: 0 0 2px;
+}
+
+.sabor-preco {
+  font-size: 0.9rem;
+  color: #888;
+  margin: 0;
+}
+
+.opcoes-pizza {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 16px 22px;
+}
+
+.opcao-btn {
+  background: #f8f8f6;
+  border: 2px solid #e8e8e3;
+  border-radius: 12px;
+  padding: 12px 8px;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.opcao-btn:hover:not(:disabled) {
+  border-color: #4B6FA5;
+  background: white;
+}
+
+.opcao-btn.selected {
+  border-color: #4B6FA5;
+  background: #EEF2F9;
+  box-shadow: 0 0 0 3px rgba(75, 111, 165, 0.12);
+}
+
+.opcao-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.opcao-icon {
+  font-size: 1.4rem;
+}
+
+.opcao-texto {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #333;
+}
+
+.opcao-sub {
+  font-size: 0.7rem;
+  color: #e74c3c;
+}
+
+.segundo-sabor {
+  padding: 0 22px 16px;
 }
 
 .form-select {
   width: 100%;
-  padding: 10px;
-  margin: 15px 0 25px 0;
-  border: 1px solid #ddd;
+  padding: 10px 12px;
+  margin: 8px 0 8px;
+  border: 1.5px solid #ddd;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #4B6FA5;
+}
+
+.meio-info {
+  font-size: 0.82rem;
+  color: #666;
+  background: #fffbe6;
+  border: 1px solid #ffe8a0;
   border-radius: 8px;
-  font-size: 1rem;
+  padding: 8px 12px;
+  margin: 0;
 }
 
 .modal-actions {
   display: flex;
   gap: 10px;
-  justify-content: flex-end;
+  padding: 14px 22px 18px;
+  border-top: 1px solid #f0f0f0;
 }
 
 .btn-cancel {
   background: transparent;
-  border: 1px solid #ccc;
-  padding: 10px 20px;
-  border-radius: 8px;
+  border: 1.5px solid #ddd;
+  padding: 11px 18px;
+  border-radius: 10px;
   cursor: pointer;
+  font-size: 0.88rem;
+  color: #666;
+  transition: all 0.15s;
+}
+
+.btn-cancel:hover {
+  border-color: #bbb;
+  background: #f8f8f8;
 }
 
 .btn-confirm {
-  background: #e74c3c;
+  background: #4B6FA5;
   color: white;
   border: none;
-  padding: 10px 20px;
-  border-radius: 8px;
+  padding: 11px 18px;
+  border-radius: 10px;
   cursor: pointer;
-  font-weight: bold;
+  font-weight: 700;
+  font-size: 0.9rem;
+  flex: 1;
+  transition: all 0.18s;
+  box-shadow: 0 3px 10px rgba(75, 111, 165, 0.3);
+}
+
+.btn-confirm:hover:not(:disabled) {
+  background: #3a5a8a;
+  box-shadow: 0 5px 14px rgba(75, 111, 165, 0.45);
+  transform: translateY(-1px);
+}
+
+.btn-confirm:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 @keyframes slideUp {
-  from { transform: translateY(20px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
+  from {
+    transform: translateY(25px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
