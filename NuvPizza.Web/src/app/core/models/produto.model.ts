@@ -7,6 +7,15 @@ export interface Produto {
   categoria: CategoriaProduto;
   tamanho: TamanhoProduto;
   ativo: boolean;
+  comboTemplates?: ComboItemTemplate[];
+}
+
+export interface ComboItemTemplate {
+  id?: number;
+  produtoId?: number;
+  quantidade: number;
+  categoriaPermitida: CategoriaProduto;
+  tamanhoObrigatorio: TamanhoProduto;
 }
 
 // Tem que bater com o Enum do C# (NuvPizza.Domain/Enums)

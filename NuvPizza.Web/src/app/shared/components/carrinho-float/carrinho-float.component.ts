@@ -41,7 +41,7 @@ export class CarrinhoFloatComponent {
     this.painelAberto.update(v => !v);
   }
 
-  decrementar(id: number) {
+  decrementar(id: string) {
     this.carrinhoService.decrementar(id);
   }
 
@@ -49,7 +49,7 @@ export class CarrinhoFloatComponent {
     this.carrinhoService.adicionar(item);
   }
 
-  removerItem(id: number) {
+  removerItem(id: string) {
     this.carrinhoService.remover(id);
   }
 

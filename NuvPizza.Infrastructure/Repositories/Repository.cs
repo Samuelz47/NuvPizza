@@ -1,5 +1,6 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using NuvPizza.Domain.Entities;
 using NuvPizza.Domain.Repositories;
 using NuvPizza.Infrastructure.Persistence;
 
@@ -15,11 +16,22 @@ public class Repository<T> : IRepository<T> where T : class
     }
     public async Task<IEnumerable<T>> GetAllAsync()
     {
-        return await _context.Set<T>().AsNoTracking().ToListAsync();
+        IQueryable<T> query = _context.Set<T>().AsNoTracking();
+        // Se T for Produto, carrega as templates
+        if (typeof(T) == typeof(Produto))
+        {
+            query = query.Include("ComboTemplates");
+        }
+        return await query.ToListAsync();
     }
     public async Task<T?> GetAsync(Expression<Func<T, bool>> predicate)
     {
-        return await _context.Set<T>().FirstOrDefaultAsync(predicate);
+        IQueryable<T> query = _context.Set<T>();
+        if (typeof(T) == typeof(Produto))
+        {
+            query = query.Include("ComboTemplates");
+        }
+        return await query.FirstOrDefaultAsync(predicate);
     }
 
     public T Create(T entity)

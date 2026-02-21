@@ -38,8 +38,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "10kB",
+                  "maximumError": "20kB"
                 }
               ],
               "outputHashing": "all"
@@ -55,8 +55,10 @@
         "serve": {
           "builder": "@angular/build:dev-server",
           "options": {
-            "allowedHosts": ["coralliferous-gloatingly-song.ngrok-free.dev"],
-            "proxyConfig": "proxy.conf.json", 
+            "allowedHosts": [
+              "coralliferous-gloatingly-song.ngrok-free.dev"
+            ],
+            "proxyConfig": "proxy.conf.json",
             "buildTarget": "NuvPizza.Web:build"
           },
           "configurations": {

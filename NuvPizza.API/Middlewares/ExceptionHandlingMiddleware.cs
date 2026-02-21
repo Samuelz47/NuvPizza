@@ -35,7 +35,7 @@ public class ExceptionHandlingMiddleware
         var response = new
         {
             StatusCode = context.Response.StatusCode,
-            Message = "Ocorreu um erro interno no servidor. Por favor, tente novamente mais tarde.",
+            Message = "Ocorreu um erro interno: " + exception.ToString(),
         };
 
         return context.Response.WriteAsync(JsonSerializer.Serialize(response));

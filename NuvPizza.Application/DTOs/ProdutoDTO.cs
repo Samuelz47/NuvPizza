@@ -12,4 +12,6 @@ public class ProdutoDTO
     public int Categoria { get; set; }
     public int Tamanho { get; set; }
     public bool Ativo { get; set; }
+
+    public ICollection<ComboItemTemplateDTO> ComboTemplates { get; set; } = new List<ComboItemTemplateDTO>();
 }

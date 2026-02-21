@@ -11,4 +11,7 @@ public class ProdutoForRegistrationDTO
     public IFormFile? Imagem { get; set; }
     public Categoria Categoria { get; set; }
     public Tamanho Tamanho { get; set; }
+
+    // Use string if sending via FormData to deserialize later, but for now we define as string
+    public string? ComboTemplatesJson { get; set; }
 }

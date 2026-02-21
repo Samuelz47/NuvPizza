@@ -26,11 +26,24 @@ export class GerenciarProdutosComponent implements OnInit {
 
   // Enums para o select do HTML
   categorias = [
-    { id: 1, nome: 'Pizza' }, { id: 2, nome: 'Bebida' }, { id: 3, nome: 'Combo' }, { id: 4, nome: 'Sobremesa' }
+    { id: 1, nome: 'Pizza' }, { id: 2, nome: 'Bebida' }, { id: 3, nome: 'Combo' }, { id: 4, nome: 'Sobremesa' }, { id: 5, nome: 'Acompanhamento' }
   ];
   tamanhos = [
     { id: 0, nome: 'Único' }, { id: 1, nome: 'Pequena' }, { id: 2, nome: 'Média' }, { id: 3, nome: 'Grande' }, { id: 4, nome: 'Gigante' }
   ];
+
+  get categoriasParaCombo() {
+    return this.categorias.filter(c => c.id !== 3); // Remove categoria Combo
+  }
+
+  get tamanhosPizza() {
+    return this.tamanhos.filter(t => t.id !== 0);
+  }
+
+  getTamanhosPorCategoria(categoriaId: number) {
+    if (categoriaId === 1) return this.tamanhosPizza;
+    return this.tamanhos;
+  }
 
   ngOnInit() {
     this.carregar();
@@ -50,11 +63,12 @@ export class GerenciarProdutosComponent implements OnInit {
   novoProduto() {
     this.produtoEmEdicao = {
       categoria: 1,
-      tamanho: 0,
+      tamanho: 3, // Default para Grande em Pizza
       preco: '',
       ativo: true,
       nome: '',
-      descricao: ''
+      descricao: '',
+      comboTemplates: []
     };
     this.arquivoSelecionado = null;
     this.exibindoFormulario = true;
@@ -65,7 +79,8 @@ export class GerenciarProdutosComponent implements OnInit {
       ...prod,
       // Garante que sejam números e não nulos
       categoria: prod.categoria !== undefined && prod.categoria !== null ? Number(prod.categoria) : 1,
-      tamanho: prod.tamanho !== undefined && prod.tamanho !== null ? Number(prod.tamanho) : 0
+      tamanho: prod.tamanho !== undefined && prod.tamanho !== null ? Number(prod.tamanho) : 0,
+      comboTemplates: prod.comboTemplates ? [...prod.comboTemplates] : []
     };
     this.arquivoSelecionado = null;
     this.exibindoFormulario = true;
@@ -79,7 +94,46 @@ export class GerenciarProdutosComponent implements OnInit {
   onCategoriaChange() {
     if (this.produtoEmEdicao.categoria !== 1) {
       this.produtoEmEdicao.tamanho = 0; // Único
+    } else {
+      // Se mudou pra pizza e está como Único, muda pra Grande
+      if (this.produtoEmEdicao.tamanho === 0) {
+        this.produtoEmEdicao.tamanho = 3;
+      }
     }
+    if (this.produtoEmEdicao.categoria === 3 && !this.produtoEmEdicao.comboTemplates) {
+      this.produtoEmEdicao.comboTemplates = [];
+    }
+  }
+
+  // --- Funcoes para o construtor do Combo ---
+  adicionarItemCombo() {
+    if (!this.produtoEmEdicao.comboTemplates) {
+      this.produtoEmEdicao.comboTemplates = [];
+    }
+    this.produtoEmEdicao.comboTemplates.push({
+      quantidade: 1,
+      categoriaPermitida: 1, // Default para Pizza
+      tamanhoObrigatorio: 3 // Default para Grande em Pizza
+    });
+  }
+
+  onComboSlotCategoriaChange(template: any) {
+    if (template.categoriaPermitida !== 1) {
+      template.tamanhoObrigatorio = 0; // Único
+    } else {
+      if (template.tamanhoObrigatorio === 0) {
+        template.tamanhoObrigatorio = 3; // Grande
+      }
+    }
+  }
+
+  removerItemCombo(index: number) {
+    this.produtoEmEdicao.comboTemplates.splice(index, 1);
+  }
+
+  getDescricaoCategoriaCombo(cat: number): string {
+    const found = this.categorias.find(c => c.id == cat);
+    return found ? found.nome : '';
   }
 
   // Formata o preço enquanto o usuário digita ou ao sair do campo

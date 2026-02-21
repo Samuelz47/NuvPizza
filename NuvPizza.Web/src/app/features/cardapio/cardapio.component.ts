@@ -26,8 +26,7 @@ export class CardapioComponent implements OnInit {
   categorias = [
     { id: CategoriaProduto.Pizza, nome: '🍕 Pizzas' },
     { id: CategoriaProduto.Bebida, nome: '🥤 Bebidas' },
-    { id: CategoriaProduto.Combo, nome: '🍱 Combos' },
-    { id: CategoriaProduto.Sobremesa, nome: '🍰 Sobremesas' }
+    { id: CategoriaProduto.Combo, nome: '🍱 Combos' }
   ];
 
   // Modal
@@ -35,8 +34,17 @@ export class CardapioComponent implements OnInit {
   modoMeioAMeio = false;
   saborPrincipal: Produto | null = null;
   saborSecundario: Produto | null = null;
+  bordaSelecionada: Produto | null = null;
 
   listaSaboresCompativeis: Produto[] = []; // Para o 2º sabor
+
+  // Modal de Combos
+  modalComboAberto = false;
+  comboSelecionado: Produto | null = null;
+  // Guardamos as escolhas na mesma ordem dos templates do combo
+  escolhasCombo: any[] = []; // { template: ComboItemTemplate, escolhido: Produto, secundario: Produto?, borda: Produto? }
+  // Opcoes para cada slot para preencher os selects
+  opcoesCombo: { [index: number]: Produto[] } = {};
 
   ngOnInit() {
     this.carregarProdutos();
@@ -51,7 +59,15 @@ export class CardapioComponent implements OnInit {
 
   // Filtra na tela para não ficar fazendo request toda hora
   get produtosFiltrados() {
-    return this.produtos.filter(p => p.categoria === this.categoriaAtiva && p.ativo);
+    return this.produtos.filter(p => p.ativo && p.categoria === this.categoriaAtiva);
+  }
+
+  // Lista de bordas para o modal da pizza (todos os acompanhamentos ativos)
+  get listaBordas() {
+    return this.produtos.filter(p =>
+      p.categoria === CategoriaProduto.Acompanhamento &&
+      p.ativo
+    );
   }
 
   // Agrupa pizzas ativas por tamanho (ordem crescente de tamanho)
@@ -81,14 +97,117 @@ export class CardapioComponent implements OnInit {
   selecionarProduto(produto: Produto) {
     if (produto.categoria === CategoriaProduto.Pizza) {
       this.abrirModalPizza(produto);
+    } else if (produto.categoria === CategoriaProduto.Combo) {
+      this.abrirModalCombo(produto);
     } else {
       this.carrinhoService.adicionar(produto);
     }
   }
 
+  // ---- LOGICA DO COMBO BUILDER ----
+  abrirModalCombo(combo: Produto) {
+    this.comboSelecionado = combo;
+    this.escolhasCombo = [];
+    this.opcoesCombo = {};
+
+    // Configura escolhas baseadas nos templates e carrega os arrays de opcoes
+    let templates = combo.comboTemplates || [];
+    templates.forEach((template, index) => {
+      // Filtra os produtos daquela categoria e tamanho obrigatorio
+      // O backend manda Enum como string ("Pizza", "Bebida"). Precisamos converter ou buscar o id
+      const catPermitidaStr = template.categoriaPermitida as unknown as string;
+      const catId = typeof template.categoriaPermitida === 'number'
+        ? template.categoriaPermitida
+        : CategoriaProduto[catPermitidaStr as keyof typeof CategoriaProduto];
+
+      const tamObrigatorioStr = template.tamanhoObrigatorio as unknown as string;
+      const tamId = typeof template.tamanhoObrigatorio === 'number'
+        ? template.tamanhoObrigatorio
+        : TamanhoProduto[tamObrigatorioStr as keyof typeof TamanhoProduto];
+
+      this.opcoesCombo[index] = this.produtos.filter(p =>
+        p.ativo &&
+        p.categoria === catId &&
+        (tamId === TamanhoProduto.Unico || p.tamanho === tamId)
+      );
+
+      // Inicializa as escolhas de modelo vazias
+      this.escolhasCombo.push({
+        template: template,
+        escolhido: null,
+        meioAMeio: false, // se a categoria for pizza, user pode ligar meio a meio
+        secundario: null,
+        borda: null
+      });
+    });
+
+    this.modalComboAberto = true;
+    this.cdr.detectChanges(); // Força a atualização da view
+  }
+
+  confirmarCombo() {
+    if (!this.comboSelecionado) return;
+
+    // TODO: Verify if all are populated before submitting
+    let allValid = true;
+    for (let eq of this.escolhasCombo) {
+      if (!eq.escolhido) {
+        allValid = false;
+      }
+    }
+
+    if (!allValid) {
+      alert('Por favor, faça todas as escolhas do combo antes de adicionar ao carrinho.');
+      return;
+    }
+
+    // Criar o payload complexo (String de representacao e o DTO pro carrinho)
+    let comboItem = {
+      id: `combo_${this.comboSelecionado.id}_${new Date().getTime()}`,
+      produtoId: this.comboSelecionado.id,
+      nome: this.comboSelecionado.nome,
+      preco: this.comboSelecionado.preco, // preco base do combo
+      imagem: this.comboSelecionado.imagemUrl,
+      quantidade: 1,
+      escolhasCombo: [] as any[]
+    };
+
+    // Para cada template adiciona valor extra de borda e adiciona na string de desc
+    let subDescricoes: string[] = [];
+
+    this.escolhasCombo.forEach(e => {
+      let strName = e.escolhido.nome;
+      if (e.secundario) {
+        strName += ` / ${e.secundario.nome}`;
+      }
+      if (e.borda) {
+        strName += ` (Borda: ${e.borda.nome})`;
+        // Add borda price to combo final total
+        comboItem.preco += e.borda.preco;
+      }
+
+      subDescricoes.push(`+ ${strName}`);
+
+      comboItem.escolhasCombo.push({
+        comboItemTemplateId: e.template.id,
+        produtoEscolhidoId: e.escolhido.id,
+        produtoSecundarioId: e.secundario ? e.secundario.id : undefined,
+        bordaId: e.borda ? e.borda.id : undefined
+      });
+    });
+
+    // Anexar no nome
+    comboItem.nome += ' - ' + subDescricoes.join(', ');
+
+    this.carrinhoService.adicionar(comboItem);
+    this.modalComboAberto = false;
+  }
+  // ---------------------------------
+
   abrirModalPizza(pizza: Produto) {
     this.saborPrincipal = pizza;
     this.saborSecundario = null;
+    this.bordaSelecionada = null;
     this.modoMeioAMeio = false;
 
     // Busca pizzas do mesmo tamanho para ser o 2º sabor
@@ -110,18 +229,29 @@ export class CardapioComponent implements OnInit {
     let imgFinal = this.saborPrincipal.imagemUrl;
 
     const meioAMeioSelecionado = this.modoMeioAMeio && this.saborSecundario;
+    const borda = this.bordaSelecionada;
 
     if (meioAMeioSelecionado) {
       nomeFinal += ` / ${this.saborSecundario!.nome}`;
-      // Regra: Cobra pela maior
-      if (this.saborSecundario!.preco > precoFinal) {
-        precoFinal = this.saborSecundario!.preco;
-      }
+      // Regra: Soma dos dois sabores dividido por 2
+      precoFinal = (this.saborPrincipal.preco + this.saborSecundario!.preco) / 2;
     }
+
+    if (borda) {
+      nomeFinal += ` (Borda: ${borda.nome})`;
+      precoFinal += borda.preco;
+    }
+
+    const idSec = meioAMeioSelecionado ? this.saborSecundario!.id : 0;
+    const idBor = borda ? borda.id : 0;
+    const strId = `${this.saborPrincipal.id}_${idSec}_${idBor}`;
 
     // Cria o objeto para o carrinho
     const item = {
-      id: meioAMeioSelecionado ? 'custom-' + Date.now() : this.saborPrincipal.id, // ID único para meio a meio
+      id: strId,
+      produtoId: this.saborPrincipal.id,
+      produtoSecundarioId: meioAMeioSelecionado ? this.saborSecundario!.id : undefined,
+      bordaId: borda ? borda.id : undefined,
       nome: nomeFinal,
       preco: precoFinal,
       imagem: imgFinal,
@@ -133,8 +263,20 @@ export class CardapioComponent implements OnInit {
     this.modalAberto = false;
   }
 
-  getNomeTamanho(t: number): string {
-    return TamanhoProduto[t] || '';
+  getNomeTamanho(t: any): string {
+    if (typeof t === 'number') return TamanhoProduto[t] || '';
+    return t || '';
+  }
+
+  getNomeCategoria(c: any): string {
+    const val = typeof c === 'number' ? CategoriaProduto[c] : c;
+    return val || '';
+  }
+
+  getTamanhoTemplate(t: any): string {
+    const val = typeof t === 'number' ? TamanhoProduto[t] : t;
+    if (!val || val === 'Unico') return '';
+    return val;
   }
 
   getImagemUrl(imagemUrl: string | undefined): string {

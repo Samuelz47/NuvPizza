@@ -14,5 +14,7 @@ namespace NuvPizza.Domain.Entities
         public decimal PrecoUnitario { get; set; }
         public int Quantidade { get; set; }
         public decimal Total => Quantidade * PrecoUnitario;
+
+        public ICollection<ItemPedidoComboEscolha> EscolhasCombo { get; set; }
     }
 }

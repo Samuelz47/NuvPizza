@@ -44,6 +44,15 @@ public class ProdutoService : IProdutoService
         {
             produto.ImagemUrl = "images/sem_imagem.png";
         }
+
+        if (produto.Categoria == Domain.Enums.Categoria.Combo && !string.IsNullOrEmpty(produtoForRegister.ComboTemplatesJson))
+        {
+            var templatesDto = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ComboItemTemplateDTO>>(produtoForRegister.ComboTemplatesJson);
+            if (templatesDto != null && templatesDto.Any())
+            {
+                produto.ComboTemplates = _mapper.Map<List<ComboItemTemplate>>(templatesDto);
+            }
+        }
         
         _produtoRepository.Create(produto);
         await _uow.CommitAsync();
@@ -109,6 +118,37 @@ public class ProdutoService : IProdutoService
         {
             var caminhoImagem = await SalvarArquivo(produtoDto.Imagem);
             produto.ImagemUrl = caminhoImagem;
+        }
+
+        // Atualiza os templates de combo
+        if (produto.Categoria == Domain.Enums.Categoria.Combo)
+        {
+            // Limpa os antigos (por causa do Cascade Delete configurado no EF)
+            if (produto.ComboTemplates != null)
+            {
+                produto.ComboTemplates.Clear();
+            }
+            else
+            {
+                produto.ComboTemplates = new List<ComboItemTemplate>();
+            }
+
+            if (!string.IsNullOrEmpty(produtoDto.ComboTemplatesJson))
+            {
+                var templatesDto = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ComboItemTemplateDTO>>(produtoDto.ComboTemplatesJson);
+                if (templatesDto != null && templatesDto.Any())
+                {
+                    foreach (var templateDto in templatesDto)
+                    {
+                        produto.ComboTemplates.Add(_mapper.Map<ComboItemTemplate>(templateDto));
+                    }
+                }
+            }
+        }
+        else
+        {
+            // Se não for combo, garante que não tenha templates
+            produto.ComboTemplates?.Clear();
         }
 
         _produtoRepository.Update(produto);

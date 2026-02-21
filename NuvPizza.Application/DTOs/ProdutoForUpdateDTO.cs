@@ -13,4 +13,7 @@ public class ProdutoForUpdateDTO
     public Categoria Categoria { get; set; }
     public Tamanho Tamanho { get; set; }
     public bool Ativo { get; set; }
+
+    // Use string if sending via FormData to deserialize later
+    public string? ComboTemplatesJson { get; set; }
 }

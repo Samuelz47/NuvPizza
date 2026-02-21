@@ -14,5 +14,7 @@ public class ProdutoMappingProfile : Profile
         CreateMap<Produto, ProdutoDTO>()
             .ForMember(dest => dest.Categoria, opt => opt.MapFrom(src => (int)src.Categoria))
             .ForMember(dest => dest.Tamanho, opt => opt.MapFrom(src => (int)src.Tamanho));
+
+        CreateMap<ComboItemTemplate, ComboItemTemplateDTO>().ReverseMap();
     }
 }

@@ -17,6 +17,8 @@ namespace NuvPizza.Infrastructure.Persistence
         public DbSet<Produto> Produtos { get; set; }
         public DbSet<Bairro> Bairros { get; set; }
         public DbSet<Configuracao> Configuracoes { get; set; }
+        public DbSet<ComboItemTemplate> ComboTemplates { get; set; }
+        public DbSet<ItemPedidoComboEscolha> EscolhasCombo { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -31,12 +33,51 @@ namespace NuvPizza.Infrastructure.Persistence
                 e.Property(p => p.Tamanho).HasMaxLength(50);
             });
 
+            builder.Entity<ComboItemTemplate>(e => 
+            {
+                e.HasKey(c => c.Id);
+                e.HasOne(c => c.Produto)
+                 .WithMany(p => p.ComboTemplates)
+                 .HasForeignKey(c => c.ProdutoId)
+                 .OnDelete(DeleteBehavior.Cascade);
+            });
+
             builder.Entity<ItemPedido>(e =>
             {
                 e.HasKey(i => i.Id);
                 e.Property(i => i.Nome).IsRequired().HasMaxLength(100);
                 e.Property(i => i.PrecoUnitario).HasColumnType("decimal(10,2)");
             });
+
+            builder.Entity<ItemPedidoComboEscolha>(e => 
+            {
+                e.HasKey(c => c.Id);
+                e.HasOne(c => c.ItemPedido)
+                 .WithMany(i => i.EscolhasCombo)
+                 .HasForeignKey(c => c.ItemPedidoId)
+                 .OnDelete(DeleteBehavior.Cascade);
+                 
+                e.HasOne(c => c.ComboItemTemplate)
+                 .WithMany()
+                 .HasForeignKey(c => c.ComboItemTemplateId)
+                 .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(c => c.ProdutoEscolhido)
+                 .WithMany()
+                 .HasForeignKey(c => c.ProdutoEscolhidoId)
+                 .OnDelete(DeleteBehavior.Restrict);
+                 
+                e.HasOne(c => c.ProdutoSecundario)
+                 .WithMany()
+                 .HasForeignKey(c => c.ProdutoSecundarioId)
+                 .OnDelete(DeleteBehavior.Restrict);
+                 
+                e.HasOne(c => c.Borda)
+                 .WithMany()
+                 .HasForeignKey(c => c.BordaId)
+                 .OnDelete(DeleteBehavior.Restrict);
+            });
+
             builder.Entity<ItemPedido>()
                 .HasOne<Pedido>()
                 .WithMany(p => p.Itens)

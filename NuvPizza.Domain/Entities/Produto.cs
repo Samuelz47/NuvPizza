@@ -16,5 +16,7 @@ namespace NuvPizza.Domain.Entities
         public Categoria Categoria { get; set; }
         public Tamanho Tamanho { get; set; } = Tamanho.Unico;
         public bool Ativo { get; set; } = true;
+
+        public ICollection<ComboItemTemplate> ComboTemplates { get; set; }
     }
 }

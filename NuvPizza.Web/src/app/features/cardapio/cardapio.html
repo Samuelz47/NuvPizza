@@ -102,20 +102,102 @@
       <select [(ngModel)]="saborSecundario" class="form-select">
         <option [ngValue]="null">-- Selecione --</option>
         <option *ngFor="let p of listaSaboresCompativeis" [ngValue]="p">
-          {{ p.nome }} — {{ p.preco | currency:'BRL' }}
+          {{ p.nome }}
         </option>
       </select>
       <p class="meio-info" *ngIf="saborSecundario">
-        ⚠️ Cobra pelo sabor mais caro. Preço final:
-        <strong>{{ (saborSecundario.preco > (saborPrincipal?.preco || 0) ? saborSecundario.preco :
-          saborPrincipal?.preco) | currency:'BRL' }}</strong>
+        ℹ️ O preço do meio a meio é a média dos dois sabores. Preço final:
+        <strong>{{ ((saborSecundario.preco + (saborPrincipal?.preco || 0)) / 2) | currency:'BRL' }}</strong>
       </p>
+    </div>
+
+    <div class="segundo-sabor" *ngIf="listaBordas.length > 0">
+      <label class="label-tag">Deseja adicionar Borda?</label>
+      <select [(ngModel)]="bordaSelecionada" class="form-select">
+        <option [ngValue]="null">Sem borda (Grátis)</option>
+        <option *ngFor="let b of listaBordas" [ngValue]="b">
+          {{ b.nome }} — +{{ b.preco | currency:'BRL' }}
+        </option>
+      </select>
     </div>
 
     <div class="modal-actions">
       <button (click)="modalAberto = false" class="btn-cancel">Cancelar</button>
       <button (click)="confirmarPizza()" class="btn-confirm" [disabled]="modoMeioAMeio && !saborSecundario">
         🛒 Adicionar à Sacola
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL COMBO BUILDER -->
+<div class="modal-overlay" *ngIf="modalComboAberto" (click)="modalComboAberto = false">
+  <div class="modal-content" (click)="$event.stopPropagation()">
+    <button class="btn-close" (click)="modalComboAberto = false">✕</button>
+
+    <div class="modal-header">
+      <img [src]="getImagemUrl(comboSelecionado?.imagemUrl)" class="modal-img">
+      <div class="modal-title-group">
+        <h2>{{ comboSelecionado?.nome }}</h2>
+        <p class="modal-desc">{{ comboSelecionado?.descricao }}</p>
+        <span class="modal-price">{{ comboSelecionado?.preco | currency:'BRL' }}</span>
+      </div>
+    </div>
+
+    <div class="combo-slots-container">
+      <div *ngFor="let escolha of escolhasCombo; let i = index" class="combo-slot-box">
+        <h4>{{ getNomeCategoria(escolha.template.categoriaPermitida) }} {{
+          getTamanhoTemplate(escolha.template.tamanhoObrigatorio) }}</h4>
+        <p class="slot-rule">
+          Selecione uma opção para este item do seu combo
+        </p>
+
+        <select [(ngModel)]="escolhasCombo[i].escolhido" class="form-select">
+          <option [ngValue]="null">-- Selecione --</option>
+          <option *ngFor="let opt of opcoesCombo[i]" [ngValue]="opt">
+            {{ opt.nome }}
+          </option>
+        </select>
+
+        <!-- Se a escolha for Pizza, permite meio-a-meio e borda -->
+        <div
+          *ngIf="(escolha.template.categoriaPermitida === 1 || escolha.template.categoriaPermitida === 'Pizza') && escolhasCombo[i].escolhido"
+          style="margin-top: 10px; padding: 10px; background: #fff; border-radius: 4px; border: 1px solid #eee;">
+          <label
+            style="display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 0.9rem; cursor: pointer; margin-bottom: 10px;">
+            <input type="checkbox" [(ngModel)]="escolhasCombo[i].meioAMeio">
+            🍕 Fazer Meio a Meio?
+          </label>
+
+          <div *ngIf="escolhasCombo[i].meioAMeio" style="margin-bottom: 10px;">
+            <label class="label-tag" style="font-size: 0.8rem;">2º Sabor:</label>
+            <select [(ngModel)]="escolhasCombo[i].secundario" class="form-select"
+              style="font-size: 0.9rem; padding: 6px;">
+              <option [ngValue]="null">-- Selecione --</option>
+              <option *ngFor="let opt of opcoesCombo[i]" [ngValue]="opt">
+                <span *ngIf="opt.id !== escolhasCombo[i].escolhido.id">{{ opt.nome }}</span>
+              </option>
+            </select>
+          </div>
+
+          <div *ngIf="listaBordas.length > 0">
+            <label class="label-tag" style="font-size: 0.8rem;">Borda Recheada:</label>
+            <select [(ngModel)]="escolhasCombo[i].borda" class="form-select" style="font-size: 0.9rem; padding: 6px;">
+              <option [ngValue]="null">Sem borda (Grátis)</option>
+              <option *ngFor="let b of listaBordas" [ngValue]="b">
+                {{ b.nome }} — +{{ b.preco | currency:'BRL' }}
+              </option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="modal-actions" style="margin-top: 20px;">
+      <button (click)="modalComboAberto = false" class="btn-cancel">Cancelar</button>
+      <button (click)="confirmarCombo()" class="btn-confirm">
+        🛒 Confirmar Combo
       </button>
     </div>
   </div>

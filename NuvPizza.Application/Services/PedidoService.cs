@@ -85,14 +85,88 @@ public class PedidoService : IPedidoService
             if (produto is null) { return Result<PedidoDTO>.Failure("Produto não encontrado"); }
             if (itemDto.Quantidade <= 0) { return Result<PedidoDTO>.Failure("Quantidade precisa ser maior que 0"); }
 
+            var precoFinal = produto.Preco;
+            var nomeFinal = produto.Nome;
+
+            // Se for meio a meio
+            if (itemDto.ProdutoSecundarioId.HasValue)
+            {
+                var produtoSecundario = await _produtoRepository.GetAsync(p => p.Id == itemDto.ProdutoSecundarioId.Value);
+                if (produtoSecundario != null)
+                {
+                    nomeFinal = $"{produto.Nome} / {produtoSecundario.Nome}";
+                    // Regra: Soma dos dois sabores dividido por 2
+                    precoFinal = (produto.Preco + produtoSecundario.Preco) / 2;
+                }
+            }
+
+            // Se tiver borda
+            if (itemDto.BordaId.HasValue)
+            {
+                var borda = await _produtoRepository.GetAsync(p => p.Id == itemDto.BordaId.Value);
+                if (borda != null)
+                {
+                    nomeFinal += $" (Borda: {borda.Nome})";
+                    precoFinal += borda.Preco;
+                }
+            }
+
             var item = new ItemPedido
             {
                 ProdutoId = produto.Id,
-                Nome = produto.Nome,
+                Nome = nomeFinal,
                 Quantidade = itemDto.Quantidade,
-                PrecoUnitario = produto.Preco
+                PrecoUnitario = precoFinal,
+                EscolhasCombo = new List<ItemPedidoComboEscolha>()
             };
-            
+
+            // Se for combo e tiver escolhas
+            if (produto.Categoria == Domain.Enums.Categoria.Combo && itemDto.EscolhasCombo != null && itemDto.EscolhasCombo.Any())
+            {
+                foreach (var escolhaDto in itemDto.EscolhasCombo)
+                {
+                    var produtoEscolhido = await _produtoRepository.GetAsync(p => p.Id == escolhaDto.ProdutoEscolhidoId);
+                    if (produtoEscolhido != null)
+                    {
+                        var nomeEscolha = produtoEscolhido.Nome;
+
+                        // Se a escolha em si for meio a meio
+                        if (escolhaDto.ProdutoSecundarioId.HasValue)
+                        {
+                            var escolhaSecundaria = await _produtoRepository.GetAsync(p => p.Id == escolhaDto.ProdutoSecundarioId.Value);
+                            if (escolhaSecundaria != null)
+                            {
+                                nomeEscolha = $"{produtoEscolhido.Nome} / {escolhaSecundaria.Nome}";
+                            }
+                        }
+
+                        // Se a escolha tiver borda
+                        if (escolhaDto.BordaId.HasValue)
+                        {
+                            var bordaC = await _produtoRepository.GetAsync(p => p.Id == escolhaDto.BordaId.Value);
+                            if (bordaC != null)
+                            {
+                                nomeEscolha += $" (Borda: {bordaC.Nome})";
+                                // Add borda price to combo item total base price
+                                item.PrecoUnitario += bordaC.Preco;
+                            }
+                        }
+
+                        // Adiciona a string na descrição do Combo para a nota
+                        item.Nome += $" [+ {nomeEscolha}]";
+
+                        // Salva no BD a rastreabilidade
+                        item.EscolhasCombo.Add(new ItemPedidoComboEscolha
+                        {
+                            ComboItemTemplateId = escolhaDto.ComboItemTemplateId,
+                            ProdutoEscolhidoId = escolhaDto.ProdutoEscolhidoId,
+                            ProdutoSecundarioId = escolhaDto.ProdutoSecundarioId,
+                            BordaId = escolhaDto.BordaId
+                        });
+                    }
+                }
+            }
+
             pedido.Itens.Add(item);
         }
         

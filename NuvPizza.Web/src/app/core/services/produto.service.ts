@@ -32,6 +32,10 @@ export class ProdutoService {
     formData.append('tamanho', produto.tamanho.toString());
     formData.append('ativo', produto.ativo ? 'true' : 'false');
 
+    if (produto.categoria == 3 && produto.comboTemplates) {
+      formData.append('ComboTemplatesJson', JSON.stringify(produto.comboTemplates));
+    }
+
     // Se tiver imagem, adiciona
     if (arquivo) {
       formData.append('imagem', arquivo);
@@ -50,6 +54,10 @@ export class ProdutoService {
     formData.append('categoria', produto.categoria.toString());
     formData.append('tamanho', produto.tamanho.toString());
     formData.append('ativo', produto.ativo ? 'true' : 'false');
+
+    if (produto.categoria == 3 && produto.comboTemplates) {
+      formData.append('ComboTemplatesJson', JSON.stringify(produto.comboTemplates));
+    }
 
     if (arquivo) {
       formData.append('imagem', arquivo);

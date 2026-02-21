@@ -62,9 +62,48 @@
     <div *ngIf="produtoEmEdicao.categoria == 1">
       <label>Tamanho:</label>
       <select [(ngModel)]="produtoEmEdicao.tamanho" class="form-input">
-        <option *ngFor="let t of tamanhos" [ngValue]="t.id">{{ t.nome }}</option>
+        <option *ngFor="let t of tamanhosPizza" [ngValue]="t.id">{{ t.nome }}</option>
       </select>
     </div>
+
+    <!-- COMBO BUILDER -->
+    <div *ngIf="produtoEmEdicao.categoria == 3" class="combo-builder-section">
+      <h3>Itens do Combo (Obrigatório)</h3>
+      <p style="font-size: 0.85rem; color: #666; margin-bottom: 10px;">Defina os itens que o cliente deverá escolher
+        (Ex: 1 Pizza Grande, 1 Refrigerante)</p>
+
+      <div *ngFor="let template of produtoEmEdicao.comboTemplates; let i = index" class="combo-slot-card">
+        <div class="row">
+          <div style="flex: 0.3;">
+            <label>Qtd:</label>
+            <input type="number" [(ngModel)]="template.quantidade" class="form-input" min="1">
+          </div>
+          <div style="flex: 1;">
+            <label>Categoria Permitida:</label>
+            <select [(ngModel)]="template.categoriaPermitida" (change)="onComboSlotCategoriaChange(template)"
+              class="form-input">
+              <option *ngFor="let c of categoriasParaCombo" [ngValue]="c.id">{{ c.nome }}</option>
+            </select>
+          </div>
+          <div style="flex: 1;">
+            <label>Tamanho Obrigatório:</label>
+            <select [(ngModel)]="template.tamanhoObrigatorio" class="form-input">
+              <option *ngFor="let t of getTamanhosPorCategoria(template.categoriaPermitida)" [ngValue]="t.id">{{ t.nome
+                }}</option>
+            </select>
+          </div>
+          <div style="flex: 0.2; display: flex; align-items: center; justify-content: center; padding-top: 15px;">
+            <button (click)="removerItemCombo(i)" class="btn-remove-slot" title="Remover Regra">✖</button>
+          </div>
+        </div>
+      </div>
+
+      <button (click)="adicionarItemCombo()" class="btn-primary"
+        style="margin-top: 10px; font-size: 0.85rem; padding: 6px 12px; background-color: #4B6FA5;">
+        + Adicionar Item (Slot)
+      </button>
+    </div>
+    <!-- FIM COMBO BUILDER -->
 
     <div style="margin-top: 10px; margin-bottom: 10px;">
       <label>
