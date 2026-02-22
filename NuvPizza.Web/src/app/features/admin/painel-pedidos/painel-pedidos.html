@@ -42,8 +42,45 @@
       }
     </div>
 
+    <!-- Barra de Filtros -->
+    <div class="filtros-bar">
+      <div class="filtro-item busca">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Buscar por Nome, Nº do Pedido ou Valor..." [(ngModel)]="termoBusca">
+      </div>
+
+      <div class="filtro-item">
+        <label>Status:</label>
+        <select [(ngModel)]="statusFiltro">
+          <option value="TODOS">Todos os Pedidos</option>
+          <option value="PENDENTES">Apenas Pendentes</option>
+          <option value="FINALIZADOS">Apenas Finalizados</option>
+          <option value="CANCELADOS">Apenas Cancelados</option>
+        </select>
+      </div>
+
+      <div class="filtro-item">
+        <label>Data:</label>
+        <input type="date" [(ngModel)]="dataFiltro" (change)="carregarPedidos()">
+      </div>
+
+      <div class="filtro-acoes">
+        <button (click)="limparFiltros()" class="btn-limpar" title="Mostrar todos os pedidos">
+          <i class="bi bi-x-lg"></i> Limpar
+        </button>
+      </div>
+    </div>
+
+    <!-- Mensagem de Vazio se não houver pedidos no filtro -->
+    @if (pedidosFiltrados().length === 0) {
+    <div class="empty-state">
+      <i class="bi bi-inbox-fill"></i>
+      <p>Nenhum pedido encontrado para estes filtros.</p>
+    </div>
+    }
+
     <div class="grid-pedidos">
-      @for (pedido of pedidos(); track pedido.id) {
+      @for (pedido of pedidosFiltrados(); track pedido.id) {
       <div class="card" [ngClass]="getStatusClass(pedido.statusPedido)">
         <div class="card-header">
           <span class="pedido-id">#{{ pedido.id.substring(0,8).toUpperCase() }}</span>
@@ -94,6 +131,38 @@
       </div>
       }
     </div>
+
+    <!-- Paginação -->
+    @if (paginacaoMeta() && paginacaoMeta()!.totalPages > 1) {
+    <div class="paginacao-bar">
+      <span class="paginacao-info">
+        Página <strong>{{ paginaAtual() }}</strong> de <strong>{{ paginacaoMeta()!.totalPages }}</strong>
+        &nbsp;·&nbsp; {{ paginacaoMeta()!.totalCount }} pedidos no total
+      </span>
+      <div class="paginacao-btns">
+        <button class="pag-btn" [disabled]="!paginacaoMeta()!.hasPreviousPage" (click)="paginaAnterior()">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        @if (paginas()[0] > 1) {
+        <button class="pag-btn" (click)="irParaPagina(1)">1</button>
+        @if (paginas()[0] > 2) { <span class="pag-ellipsis">…</span> }
+        }
+        @for (p of paginas(); track p) {
+        <button class="pag-btn" [class.ativo]="p === paginaAtual()" (click)="irParaPagina(p)">{{ p }}</button>
+        }
+        @if (paginas()[paginas().length - 1] < paginacaoMeta()!.totalPages) { @if (paginas()[paginas().length - 1] <
+          paginacaoMeta()!.totalPages - 1) { <span class="pag-ellipsis">…</span>
+          }
+          <button class="pag-btn" (click)="irParaPagina(paginacaoMeta()!.totalPages)">{{ paginacaoMeta()!.totalPages
+            }}</button>
+          }
+          <button class="pag-btn" [disabled]="!paginacaoMeta()!.hasNextPage" (click)="proximaPagina()">
+            <i class="bi bi-chevron-right"></i>
+          </button>
+      </div>
+    </div>
+    }
+
   </div>
 </div>
 

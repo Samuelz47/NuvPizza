@@ -1,13 +1,14 @@
-import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { PedidoService } from '../../../core/services/pedido.service';
+import { FormsModule } from '@angular/forms';
+import { PedidoService, PaginacaoMeta } from '../../../core/services/pedido.service';
 import { NotificacaoService } from '../../../core/services/notificacao.service';
 import { LojaService } from '../../../core/services/loja.service';
 
 @Component({
   selector: 'app-painel-pedidos',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule],
   templateUrl: './painel-pedidos.html',
   styleUrls: ['./painel-pedidos.css']
 })
@@ -17,6 +18,62 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
   private lojaService = inject(LojaService);
 
   pedidos = signal<any[]>([]);
+
+  // Paginação
+  paginaAtual = signal(1);
+  readonly pageSize = 20;
+  paginacaoMeta = signal<PaginacaoMeta | null>(null);
+
+  // Array de números de página para o paginador
+  paginas = computed<number[]>(() => {
+    const total = this.paginacaoMeta()?.totalPages ?? 0;
+    const atual = this.paginaAtual();
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+    // Janela deslizante: mostra no max 5 páginas ao redor da atual
+    const inicio = Math.max(1, Math.min(atual - 2, total - 4));
+    return Array.from({ length: Math.min(5, total) }, (_, i) => inicio + i);
+  });
+
+  // Signals para Filtros
+  termoBusca = signal('');
+  statusFiltro = signal('TODOS');
+  dataFiltro = signal(''); // Inicia vazio para carregar todos os pedidos por padrão
+
+  // Computed: Pedidos filtrados a serem exibidos no HTML
+  pedidosFiltrados = computed(() => {
+    let lista = this.pedidos();
+    const busca = this.termoBusca().toLowerCase().trim();
+    const status = this.statusFiltro();
+
+    // 1. Aplicar Busca por Texto (Nome, ID, ou Valor)
+    if (busca) {
+      lista = lista.filter(p => {
+        const nome = p.nomeCliente?.toLowerCase() || '';
+        const id = p.id?.toLowerCase() || '';
+        const valor = p.valorTotal?.toString() || '';
+        const numero = p.numero?.toString() || '';
+
+        return nome.includes(busca) ||
+          id.includes(busca) ||
+          valor.includes(busca) ||
+          numero.includes(busca);
+      });
+    }
+
+    // 2. Aplicar Filtro de Status
+    if (status !== 'TODOS') {
+      if (status === 'PENDENTES') {
+        lista = lista.filter(p => p.statusPedido !== 5 && p.statusPedido !== 0);
+      } else if (status === 'FINALIZADOS') {
+        lista = lista.filter(p => p.statusPedido === 5);
+      } else if (status === 'CANCELADOS') {
+        lista = lista.filter(p => p.statusPedido === 0);
+      }
+    }
+
+    return lista;
+  });
+
   pedidoSelecionado: any = null;
   mostrarModal: boolean = false;
   toast = signal<{ mensagem: string, tipo: 'sucesso' | 'erro' | 'info', visivel: boolean }>({
@@ -131,17 +188,43 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
     });
   }
 
+  limparFiltros() {
+    this.termoBusca.set('');
+    this.statusFiltro.set('TODOS');
+    this.dataFiltro.set('');
+    this.paginaAtual.set(1);
+    this.carregarPedidos();
+  }
+
+  irParaPagina(pagina: number) {
+    const meta = this.paginacaoMeta();
+    if (pagina < 1 || (meta && pagina > meta.totalPages)) return;
+    this.paginaAtual.set(pagina);
+    this.carregarPedidos();
+  }
+
+  proximaPagina() {
+    if (this.paginacaoMeta()?.hasNextPage) this.irParaPagina(this.paginaAtual() + 1);
+  }
+
+  paginaAnterior() {
+    if (this.paginacaoMeta()?.hasPreviousPage) this.irParaPagina(this.paginaAtual() - 1);
+  }
+
   carregarPedidos() {
-    this.pedidoService.getPedidos().subscribe({
-      next: (dados: any) => {
-        const lista = dados.items || dados;
-        const listaTratada = lista.map((p: any) => ({
+    this.pedidoService.getPedidos(this.paginaAtual(), this.pageSize, this.dataFiltro()).subscribe({
+      next: ({ itens, paginacao }) => {
+        this.paginacaoMeta.set(paginacao);
+        const listaTratada = itens.map((p: any) => ({
           ...p,
           statusPedido: this.converterStatusParaNumero(p.statusPedido)
         }));
         this.ordenarLista(listaTratada);
       },
-      error: (err) => console.error('Erro ao carregar pedidos', err)
+      error: (err) => {
+        console.error('Erro ao carregar pedidos', err);
+        this.mostrarToast('Erro ao carregar pedidos do servidor.', 'erro');
+      }
     });
   }
 
@@ -275,7 +358,32 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
   }
 
   ordenarLista(lista: any[]) {
-    lista.sort((a, b) => (a.statusPedido === 5 || a.statusPedido === 0) ? 1 : -1);
+    // Ordenação Inteligente
+    // 1. Pendentes em cima, Finalizados em Baixo
+    // 2. Pendentes: Ordem Crescente de Data (Mais antigo primeiro - para a cozinha não atrasar)
+    // 3. Finalizados/Cancelados: Ordem Decrescente de Data (Mais novo primeiro)
+
+    lista.sort((a, b) => {
+      const aFinalizado = a.statusPedido === 5 || a.statusPedido === 0;
+      const bFinalizado = b.statusPedido === 5 || b.statusPedido === 0;
+
+      // Se um é Grupo Finalizado e outro é Grupo Pendente
+      if (aFinalizado && !bFinalizado) return 1;  // A vai pra baixo
+      if (!aFinalizado && bFinalizado) return -1; // B vai pra baixo
+
+      // Se ambos estão no mesmo grupo (Ambos Pendentes ou Ambos Finalizados)
+      const dataA = new Date(a.dataPedido).getTime();
+      const dataB = new Date(b.dataPedido).getTime();
+
+      if (aFinalizado) {
+        // Grupo Finalizados: Mais Recentes Primeiro (Decrescente)
+        return dataB - dataA;
+      } else {
+        // Grupo Pendentes (Cozinha): Mais Antigos Primeiro (Crescente)
+        return dataA - dataB;
+      }
+    });
+
     this.pedidos.set(lista);
   }
 

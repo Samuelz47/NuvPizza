@@ -166,6 +166,127 @@
 }
 
 /* =========================================
+   BARRA DE FILTROS BEM ORGANIZADA
+   ========================================= */
+.filtros-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 15px;
+  background: white;
+  padding: 18px 25px;
+  border-radius: 12px;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.filtro-item {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 200px;
+}
+
+.filtro-item label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #6c757d;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filtro-item input,
+.filtro-item select {
+  padding: 10px 14px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  color: #495057;
+  transition: all 0.2s;
+  background-color: #f8f9fa;
+  width: 100%;
+}
+
+.filtro-item input:focus,
+.filtro-item select:focus {
+  outline: none;
+  border-color: #0d6efd;
+  background-color: white;
+  box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+.filtro-item.busca {
+  flex: 2;
+  position: relative;
+  justify-content: flex-end;
+}
+
+.filtro-item.busca i {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  color: #adb5bd;
+}
+
+.filtro-item.busca input {
+  padding-left: 38px;
+}
+
+.filtro-acoes {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2px;
+}
+
+.btn-limpar {
+  background: white;
+  color: #dc3545;
+  border: 1px solid #f8d7da;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.btn-limpar:hover {
+  background: #dc3545;
+  color: white;
+  border-color: #dc3545;
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.2);
+}
+
+/* Estado Vazio */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: #6c757d;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+  border: 2px dashed #dee2e6;
+  margin-bottom: 30px;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  color: #ced4da;
+  display: block;
+  margin-bottom: 15px;
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+/* =========================================
    GRID DE PEDIDOS
    ========================================= */
 .grid-pedidos {
@@ -770,6 +891,76 @@
 }
 
 /* Animações */
+/* =========================================
+   PAGINAÇÃO
+   ========================================= */
+.paginacao-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  background: white;
+  padding: 16px 24px;
+  border-radius: 12px;
+  margin-top: 24px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.paginacao-info {
+  font-size: 0.9rem;
+  color: #6c757d;
+}
+
+.paginacao-btns {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pag-btn {
+  min-width: 38px;
+  height: 38px;
+  padding: 0 10px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  background: white;
+  color: #495057;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pag-btn:hover:not(:disabled) {
+  background: #f0f7ff;
+  border-color: #0d6efd;
+  color: #0d6efd;
+}
+
+.pag-btn.ativo {
+  background: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+  box-shadow: 0 3px 8px rgba(13, 110, 253, 0.3);
+}
+
+.pag-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.pag-ellipsis {
+  color: #adb5bd;
+  font-size: 1rem;
+  padding: 0 4px;
+  user-select: none;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;

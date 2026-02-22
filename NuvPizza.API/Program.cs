@@ -75,7 +75,8 @@ try
             policy.SetIsOriginAllowed(origin => true)
                 .AllowAnyMethod()
                 .AllowAnyHeader()
-                .AllowCredentials();
+                .AllowCredentials()
+                .WithExposedHeaders("X-Pagination"); // Permite que o JS leia o header de paginação
         });
     });
     
