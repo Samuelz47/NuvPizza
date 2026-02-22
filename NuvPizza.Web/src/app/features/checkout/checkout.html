@@ -1,30 +1,31 @@
 <div class="checkout-bg">
   <div class="checkout-container">
-    
+
     @if (carrinhoService.quantidadeTotal() === 0) {
-      <div class="text-center mb-4">
-        <button (click)="adicionarItemTeste()" class="btn btn-warning shadow-sm fw-bold">
-          🛠️ Adicionar Pizza de Teste
-        </button>
-      </div>
+    <div class="text-center mb-4">
+      <button (click)="adicionarItemTeste()" class="btn btn-warning shadow-sm fw-bold">
+        🛠️ Adicionar Pizza de Teste
+      </button>
+    </div>
     }
 
     <div class="row g-4">
-      
+
       <div class="col-lg-7">
         <div class="card-custom">
-          
+
           <div class="card-header-custom">
-             <h2><i class="bi bi-bag-check-fill me-2"></i>Finalizar Pedido</h2>
+            <h2><i class="bi bi-bag-check-fill me-2"></i>Finalizar Pedido</h2>
           </div>
-          
+
           <div class="card-body-custom">
-            
+
             <h3 class="section-title">1. Seus Dados</h3>
             <div class="row g-3 mb-4">
               <div class="col-12">
                 <label class="form-label">Nome Completo *</label>
-                <input type="text" [(ngModel)]="pedido.nomeCliente" class="form-control" placeholder="Quem vai receber?">
+                <input type="text" [(ngModel)]="pedido.nomeCliente" class="form-control"
+                  placeholder="Quem vai receber?">
               </div>
 
               <div class="col-md-6">
@@ -34,7 +35,8 @@
 
               <div class="col-md-6">
                 <label class="form-label">WhatsApp / Telefone *</label>
-                <input type="text" [(ngModel)]="pedido.telefoneCliente" class="form-control" placeholder="(00) 00000-0000">
+                <input type="text" [(ngModel)]="pedido.telefoneCliente" class="form-control"
+                  placeholder="(00) 00000-0000">
               </div>
             </div>
 
@@ -43,27 +45,23 @@
               <div class="col-md-4">
                 <label class="form-label">CEP *</label>
                 <div class="input-icon-group">
-                  <input type="text" 
-                         [(ngModel)]="pedido.cep" 
-                         (blur)="buscarCep()" 
-                         class="form-control" 
-                         placeholder="00000-000"
-                         maxlength="9"
-                         [disabled]="buscandoCep()">
-                  
+                  <input type="text" [(ngModel)]="pedido.cep" (blur)="buscarCep()" (input)="buscarCep()"
+                    class="form-control" placeholder="00000-000" maxlength="9" [disabled]="buscandoCep()">
+
                   <div class="input-icon-right">
                     @if (buscandoCep()) {
-                      <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
                     } @else if (pedido.logradouro) {
-                      <i class="bi bi-check-circle-fill text-success"></i>
+                    <i class="bi bi-check-circle-fill text-success"></i>
                     }
                   </div>
                 </div>
               </div>
-              
+
               <div class="col-md-8">
                 <label class="form-label">Rua / Logradouro</label>
-                <input type="text" [(ngModel)]="pedido.logradouro" class="form-control input-readonly" readonly tabindex="-1">
+                <input type="text" [(ngModel)]="pedido.logradouro" class="form-control input-readonly" readonly
+                  tabindex="-1">
               </div>
 
               <div class="col-md-4">
@@ -71,8 +69,9 @@
                 <input type="text" id="numeroInput" [(ngModel)]="pedido.numero" class="form-control" placeholder="Nº">
               </div>
               <div class="col-md-4">
-                 <label class="form-label">Bairro</label>
-                 <input type="text" [(ngModel)]="pedido.bairro" class="form-control input-readonly" readonly tabindex="-1">
+                <label class="form-label">Bairro</label>
+                <input type="text" [(ngModel)]="pedido.bairro" class="form-control input-readonly" readonly
+                  tabindex="-1">
               </div>
               <div class="col-md-4">
                 <label class="form-label">Complemento</label>
@@ -80,13 +79,30 @@
               </div>
             </div>
 
+            <!-- Aviso de frete dinâmico (aparece assim que o CEP é encontrado) -->
+            @if (carrinhoService.valorFrete() > 0) {
+            <div class="frete-info-callout mb-4">
+              <i class="bi bi-bicycle me-2"></i>
+              Taxa de entrega para o seu bairro: <strong>{{ freteLabel() }}</strong>
+            </div>
+            } @else if (bairroNaoAtendido()) {
+            <div class="frete-info-callout frete-nao-atendido mb-4">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              Infelizmente não entregamos neste bairro ainda.
+            </div>
+            } @else if (pedido.logradouro && !buscandoCep()) {
+            <div class="frete-info-callout frete-aguardando mb-4">
+              <i class="bi bi-hourglass-split me-2"></i>
+              Verificando se entregamos no seu bairro...
+            </div>
+            }
+
             <h3 class="section-title">3. Pagamento</h3>
-            
+
             <div class="row g-3">
               <div class="col-6">
-                <div class="payment-option text-center" 
-                     [class.selected]="tipoPagamento() === 'ONLINE'"
-                     (click)="selecionarTipoPagamento('ONLINE')">
+                <div class="payment-option text-center" [class.selected]="tipoPagamento() === 'ONLINE'"
+                  (click)="selecionarTipoPagamento('ONLINE')">
                   <i class="bi bi-phone-vibrate fs-2 text-primary mb-2 d-block"></i>
                   <div class="fw-bold">Pagar Agora</div>
                   <small class="text-muted">Pix ou Cartão (App)</small>
@@ -94,9 +110,8 @@
               </div>
 
               <div class="col-6">
-                <div class="payment-option text-center" 
-                     [class.selected]="tipoPagamento() === 'ENTREGA'"
-                     (click)="selecionarTipoPagamento('ENTREGA')">
+                <div class="payment-option text-center" [class.selected]="tipoPagamento() === 'ENTREGA'"
+                  (click)="selecionarTipoPagamento('ENTREGA')">
                   <i class="bi bi-bicycle fs-2 text-success mb-2 d-block"></i>
                   <div class="fw-bold">Na Entrega</div>
                   <small class="text-muted">Maquineta ou Dinheiro</small>
@@ -105,51 +120,53 @@
             </div>
 
             @if (tipoPagamento() === 'ENTREGA') {
-                <div class="payment-sub-options mt-3 animate__animated animate__fadeIn">
-                    <p class="mb-3 fw-bold text-secondary small text-uppercase">Como você vai pagar ao entregador?</p>
-                    
-                    <div class="form-check p-2 bg-white border rounded mb-2 option-item d-flex align-items-center">
-                        <input class="form-check-input ms-2" type="radio" name="pgEntrega" id="pgCredito" 
-                               (change)="selecionarOpcaoEntrega('Cartão de Crédito')">
-                        <label class="form-check-label w-100 ps-2 cursor-pointer py-2" for="pgCredito">
-                            💳 Cartão de Crédito
-                        </label>
-                    </div>
-                    
-                    <div class="form-check p-2 bg-white border rounded mb-2 option-item d-flex align-items-center">
-                        <input class="form-check-input ms-2" type="radio" name="pgEntrega" id="pgDebito" 
-                               (change)="selecionarOpcaoEntrega('Cartão de Débito')">
-                        <label class="form-check-label w-100 ps-2 cursor-pointer py-2" for="pgDebito">
-                            💳 Cartão de Débito
-                        </label>
-                    </div>
+            <div class="payment-sub-options mt-3 animate__animated animate__fadeIn">
+              <p class="mb-3 fw-bold text-secondary small text-uppercase">Como você vai pagar ao entregador?</p>
 
-                    <div class="form-check p-2 bg-white border rounded option-item d-flex flex-column align-items-start">
-                        <div class="d-flex align-items-center w-100">
-                            <input class="form-check-input ms-2" type="radio" name="pgEntrega" id="pgDinheiro" 
-                                   (change)="selecionarOpcaoEntrega('Dinheiro')">
-                            <label class="form-check-label w-100 ps-2 cursor-pointer py-2" for="pgDinheiro">
-                                💵 Dinheiro
-                            </label>
-                        </div>
-                        
-                        @if (opcaoEntregaSelecionada() === 'Dinheiro') {
-                            <div class="w-100 px-3 pb-3 animate__animated animate__fadeIn">
-                                <label class="small text-muted fw-bold mb-1">Precisa de troco para quanto?</label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text">R$</span>
-                                    <input type="text" [(ngModel)]="trocoPara" class="form-control" placeholder="Ex: 50,00">
-                                </div>
-                                <small class="text-muted" style="font-size: 0.7rem">Deixe vazio se não precisar de troco.</small>
-                            </div>
-                        }
-                    </div>
+              <div class="form-check p-2 bg-white border rounded mb-2 option-item d-flex align-items-center">
+                <input class="form-check-input ms-2" type="radio" name="pgEntrega" id="pgCredito"
+                  (change)="selecionarOpcaoEntrega('Cartão de Crédito')">
+                <label class="form-check-label w-100 ps-2 cursor-pointer py-2" for="pgCredito">
+                  💳 Cartão de Crédito
+                </label>
+              </div>
+
+              <div class="form-check p-2 bg-white border rounded mb-2 option-item d-flex align-items-center">
+                <input class="form-check-input ms-2" type="radio" name="pgEntrega" id="pgDebito"
+                  (change)="selecionarOpcaoEntrega('Cartão de Débito')">
+                <label class="form-check-label w-100 ps-2 cursor-pointer py-2" for="pgDebito">
+                  💳 Cartão de Débito
+                </label>
+              </div>
+
+              <div class="form-check p-2 bg-white border rounded option-item d-flex flex-column align-items-start">
+                <div class="d-flex align-items-center w-100">
+                  <input class="form-check-input ms-2" type="radio" name="pgEntrega" id="pgDinheiro"
+                    (change)="selecionarOpcaoEntrega('Dinheiro')">
+                  <label class="form-check-label w-100 ps-2 cursor-pointer py-2" for="pgDinheiro">
+                    💵 Dinheiro
+                  </label>
                 </div>
+
+                @if (opcaoEntregaSelecionada() === 'Dinheiro') {
+                <div class="w-100 px-3 pb-3 animate__animated animate__fadeIn">
+                  <label class="small text-muted fw-bold mb-1">Precisa de troco para quanto?</label>
+                  <div class="input-group input-group-sm">
+                    <span class="input-group-text">R$</span>
+                    <input type="text" [(ngModel)]="trocoPara" class="form-control" placeholder="Ex: 50,00">
+                  </div>
+                  <small class="text-muted" style="font-size: 0.7rem">Deixe vazio se não precisar de troco.</small>
+                </div>
+                }
+              </div>
+
+            </div>
             }
-            
+
             <div class="mt-4">
-               <label class="form-label">Observação</label>
-               <textarea [(ngModel)]="pedido.observacao" class="form-control" rows="2" placeholder="Ex: Sem cebola, campainha quebrada..."></textarea>
+              <label class="form-label">Observação</label>
+              <textarea [(ngModel)]="pedido.observacao" class="form-control" rows="2"
+                placeholder="Ex: Sem cebola, campainha quebrada..."></textarea>
             </div>
 
           </div>
@@ -160,66 +177,77 @@
         <div class="card-custom sticky-top" style="top: 20px;">
           <div class="card-body-custom bg-white">
             <h3 class="mb-4 fw-bold text-dark">Resumo do Pedido</h3>
-            
-            @if (carrinhoService.itens().length === 0) {
-              <div class="text-center py-5 text-muted">
-                  <i class="bi bi-cart-x fs-1 d-block mb-3 opacity-25"></i>
-                  <p>Seu carrinho está vazio.</p>
-              </div>
-            } @else {
-              <div class="mb-4">
-                @for (item of carrinhoService.itens(); track item.id) {
-                  <div class="summary-item">
-                     <div class="d-flex align-items-center">
-                        <span class="badge bg-light text-dark border me-3">{{ item.quantidade }}x</span>
-                        <span class="fw-semibold">{{ item.nome }}</span>
-                     </div>
-                     <div class="fw-bold">{{ (item.preco * item.quantidade) | currency:'BRL' }}</div>
-                  </div>
-                }
-              </div>
-              
-              <div class="summary-item border-0 pb-0">
-                <span>Subtotal</span>
-                <span>{{ carrinhoService.valorTotal() | currency:'BRL' }}</span>
-              </div>
-              <div class="summary-item border-0 pt-0">
-                <span>Entrega</span>
-                <span class="text-success fw-bold">Grátis</span>
-              </div>
 
-              <div class="total-row">
-                 <span>Total</span>
-                 <span>{{ carrinhoService.valorTotal() | currency:'BRL' }}</span>
+            @if (carrinhoService.itens().length === 0) {
+            <div class="text-center py-5 text-muted">
+              <i class="bi bi-cart-x fs-1 d-block mb-3 opacity-25"></i>
+              <p>Seu carrinho está vazio.</p>
+            </div>
+            } @else {
+            <div class="mb-4">
+              @for (item of carrinhoService.itens(); track item.id) {
+              <div class="summary-item">
+                <div class="d-flex align-items-center">
+                  <span class="badge bg-light text-dark border me-3">{{ item.quantidade }}x</span>
+                  <span class="fw-semibold">{{ item.nome }}</span>
+                </div>
+                <div class="fw-bold">{{ (item.precoBase * item.quantidade) | currency:'BRL' }}</div>
               </div>
+              @if (item.nomeBorda && item.precoBorda) {
+              <div class="summary-item ps-5" style="font-size: 0.88rem; color: #888;">
+                <span>↳ Borda: {{ item.nomeBorda }}</span>
+                <span>+ {{ (item.precoBorda * item.quantidade) | currency:'BRL' }}</span>
+              </div>
+              }
+              }
+            </div>
+
+            <div class="summary-item border-0 pb-0">
+              <span>Subtotal</span>
+              <span>{{ carrinhoService.valorTotal() | currency:'BRL' }}</span>
+            </div>
+            <div class="summary-item border-0 pt-0">
+              <span>Entrega</span>
+              @if (carrinhoService.valorFrete() > 0) {
+              <span class="fw-bold">{{ freteLabel() }}</span>
+              } @else if (bairroNaoAtendido()) {
+              <span class="text-danger fw-bold">Não atendemos</span>
+              } @else {
+              <span class="text-muted fst-italic">{{ freteLabel() }}</span>
+              }
+            </div>
+
+            <div class="total-row">
+              <span>Total</span>
+              <span>{{ carrinhoService.totalComFrete() | currency:'BRL' }}</span>
+            </div>
             }
 
             @if (errorMessage()) {
-              <div class="alert alert-danger mt-3 d-flex align-items-center small">
-                 <i class="bi bi-exclamation-triangle-fill me-2"></i> 
-                 <div>{{ errorMessage() }}</div>
-              </div>
+            <div class="alert alert-danger mt-3 d-flex align-items-center small">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>
+              <div>{{ errorMessage() }}</div>
+            </div>
             }
 
-            <button (click)="finalizarPedido()" 
-                    [disabled]="loading() || carrinhoService.quantidadeTotal() === 0" 
-                    class="btn-pagar">
+            <button (click)="finalizarPedido()" [disabled]="loading() || carrinhoService.quantidadeTotal() === 0"
+              class="btn-pagar">
               @if (loading()) {
-                <span class="spinner-border spinner-border-sm me-2"></span> Processando...
+              <span class="spinner-border spinner-border-sm me-2"></span> Processando...
               } @else {
-                 @if (tipoPagamento() === 'ONLINE') {
-                   Pagar {{ carrinhoService.valorTotal() | currency:'BRL' }}
-                 } @else {
-                   Finalizar Pedido
-                 }
+              @if (tipoPagamento() === 'ONLINE') {
+              Pagar {{ carrinhoService.totalComFrete() | currency:'BRL' }}
+              } @else {
+              Finalizar Pedido
+              }
               }
             </button>
-            
+
             <div class="text-center mt-3">
-               <small class="text-muted" style="font-size: 0.8rem;">
-                 <i class="bi bi-shield-lock-fill text-success me-1"></i> 
-                 Compra 100% Segura
-               </small>
+              <small class="text-muted" style="font-size: 0.8rem;">
+                <i class="bi bi-shield-lock-fill text-success me-1"></i>
+                Compra 100% Segura
+              </small>
             </div>
           </div>
         </div>

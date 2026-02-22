@@ -60,7 +60,7 @@ public class MercadoPagoService : IPagamentoService
                 
                 NotificationUrl = $"{baseUrl}/Pagamento/webhook",
                 BackUrls = backUrls,
-                AutoReturn = "approved",
+                //AutoReturn = "approved",
                 
                 // -------------------------------------------------------------
                 // AQUI ESTÁ A CORREÇÃO QUE VOCÊ QUER:

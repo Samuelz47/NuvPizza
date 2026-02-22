@@ -31,6 +31,46 @@
   font-weight: 500;
 }
 
+/* --- Status da Loja (Banner) --- */
+.loja-status-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 10px 20px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  margin: 0 auto 20px;
+  max-width: 600px;
+  text-align: center;
+  animation: slideDown 0.4s ease-out;
+}
+
+.loja-status-banner.aberta {
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  color: #2e7d32;
+}
+
+.loja-status-banner.fechada {
+  background: #fce4ec;
+  border: 1px solid #f48fb1;
+  color: #c62828;
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
 /* --- Abas (Tabs) --- */
 .tabs {
   display: flex;

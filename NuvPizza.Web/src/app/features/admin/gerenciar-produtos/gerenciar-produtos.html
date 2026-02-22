@@ -66,6 +66,14 @@
       </select>
     </div>
 
+    <div *ngIf="produtoEmEdicao.categoria != 1 && produtoEmEdicao.categoria != 3">
+      <label>Tamanho:</label>
+      <input type="text" value="Único" class="form-input" disabled
+        style="background:#f3f4f6; color:#888; cursor:not-allowed;">
+      <small style="color:#999; font-size:0.78rem;">Bebidas, sobremesas e acompanhamentos são sempre tamanho
+        Único.</small>
+    </div>
+
     <!-- COMBO BUILDER -->
     <div *ngIf="produtoEmEdicao.categoria == 3" class="combo-builder-section">
       <h3>Itens do Combo (Obrigatório)</h3>

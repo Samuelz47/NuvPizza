@@ -7,4 +7,5 @@ public interface IConfiguracaoService
     Task<bool> AberturaDeLojaAsync(AbrirLojaDTO abrirLojaDto);
     Task<bool> FecharLojaAsync();
     Task<bool> EstenderLojaAsync(EstenderLojaDTO estenderLojaDto);
+    Task<StatusLojaDTO> GetStatusLojaAsync();
 }

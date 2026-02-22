@@ -8,5 +8,5 @@ public class ItemPedidoForRegistrationDTO
     public int Quantidade { get; set; }
     
     // Escolhas se esse item for um combo
-    public List<ItemPedidoComboEscolhaForRegistrationDTO> EscolhasCombo { get; set; } = new List<ItemPedidoComboEscolhaForRegistrationDTO>();
+    public List<ItemPedidoComboEscolhaForRegistrationDTO>? EscolhasCombo { get; set; } = new List<ItemPedidoComboEscolhaForRegistrationDTO>();
 }

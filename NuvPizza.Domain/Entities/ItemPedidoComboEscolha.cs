@@ -8,8 +8,8 @@ namespace NuvPizza.Domain.Entities
         public int ItemPedidoId { get; set; }
         public ItemPedido ItemPedido { get; set; }
 
-        public int ComboItemTemplateId { get; set; }
-        public ComboItemTemplate ComboItemTemplate { get; set; }
+        public int? ComboItemTemplateId { get; set; }
+        public ComboItemTemplate? ComboItemTemplate { get; set; }
 
         public int ProdutoEscolhidoId { get; set; }
         public Produto ProdutoEscolhido { get; set; }

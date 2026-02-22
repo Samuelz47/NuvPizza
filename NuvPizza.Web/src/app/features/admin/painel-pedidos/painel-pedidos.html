@@ -18,6 +18,30 @@
       </div>
     </div>
 
+    <!-- Status & Contagem Regressiva -->
+    <div class="loja-status-bar" [class.aberta]="lojaAberta()" [class.fechada]="!lojaAberta()"
+      [class.alerta]="pertoDeFecahr()">
+      @if (lojaAberta()) {
+      <div class="loja-status-info">
+        <i class="bi bi-check-circle-fill"></i>
+        <span>Loja <strong>Aberta</strong></span>
+        @if (contagemRegressiva()) {
+        <span class="loja-timer">⏱️ Fecha em: <strong>{{ contagemRegressiva() }}</strong></span>
+        }
+      </div>
+      @if (pertoDeFecahr()) {
+      <button (click)="estenderHorario()" class="btn btn-estender">
+        <i class="bi bi-clock-history"></i> Estender Horário
+      </button>
+      }
+      } @else {
+      <div class="loja-status-info">
+        <i class="bi bi-moon-fill"></i>
+        <span>Loja <strong>Fechada</strong></span>
+      </div>
+      }
+    </div>
+
     <div class="grid-pedidos">
       @for (pedido of pedidos(); track pedido.id) {
       <div class="card" [ngClass]="getStatusClass(pedido.statusPedido)">

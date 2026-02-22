@@ -5,6 +5,19 @@
     <p>Escolha seus favoritos e monte seu pedido</p>
   </div>
 
+  <!-- Status da Loja -->
+  <div class="loja-status-banner" [class.aberta]="lojaAberta" [class.fechada]="!lojaAberta">
+    <ng-container *ngIf="lojaAberta">
+      <i class="bi bi-check-circle-fill me-2"></i>
+      <span>Estamos <strong>abertos</strong>!</span>
+      <span *ngIf="horaFechamento" class="ms-1">Pedidos até às <strong>{{ horaFechamento }}</strong></span>
+    </ng-container>
+    <ng-container *ngIf="!lojaAberta">
+      <i class="bi bi-moon-fill me-2"></i>
+      <span><strong>Estamos fechados</strong> no momento. Volte em breve!</span>
+    </ng-container>
+  </div>
+
   <!-- Abas de Categorias -->
   <div class="tabs">
     <button *ngFor="let cat of categorias" [class.active]="categoriaAtiva === cat.id" (click)="categoriaAtiva = cat.id">

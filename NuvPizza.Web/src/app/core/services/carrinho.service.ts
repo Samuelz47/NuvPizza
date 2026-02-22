@@ -6,10 +6,15 @@ export interface ItemCarrinho {
   produtoSecundarioId?: number;
   bordaId?: number;
   nome: string;
+  /** Preço do item SEM a borda */
+  precoBase: number;
+  /** Preço total (precoBase + precoBorda) */
   preco: number;
+  nomeBorda?: string;
+  precoBorda?: number;
   quantidade: number;
   imagem?: string;
-  observacao?: string; // Adicionei opcional caso queira salvar obs por item
+  observacao?: string;
   escolhasCombo?: any[];
 }
 
@@ -64,9 +69,12 @@ export class CarrinhoService {
         produtoSecundarioId: produto.produtoSecundarioId,
         bordaId: produto.bordaId,
         nome: produto.nome,
+        precoBase: produto.precoBase ?? produto.preco,
         preco: produto.preco,
+        nomeBorda: produto.nomeBorda,
+        precoBorda: produto.precoBorda,
         quantidade: 1,
-        imagem: produto.imagemUrl || produto.imagem, // Tenta pegar imagemUrl ou imagem
+        imagem: produto.imagemUrl || produto.imagem,
         observacao: produto.observacao || '',
         escolhasCombo: produto.escolhasCombo || undefined
       };
@@ -106,9 +114,12 @@ export class CarrinhoService {
   // --- PERSISTÊNCIA (LOCALSTORAGE) ---
 
   private carregarDoStorage(): ItemCarrinho[] {
-    if (typeof localStorage !== 'undefined') { // Verificação para evitar erro em SSR
+    if (typeof localStorage !== 'undefined') {
       const salvo = localStorage.getItem(this.key);
-      return salvo ? JSON.parse(salvo) : [];
+      if (!salvo) return [];
+      const itens: ItemCarrinho[] = JSON.parse(salvo);
+      // Retrocompatibilidade: itens salvos antes do campo precoBase não o terão
+      return itens.map(i => ({ ...i, precoBase: i.precoBase ?? i.preco }));
     }
     return [];
   }

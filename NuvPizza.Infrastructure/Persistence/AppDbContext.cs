@@ -60,7 +60,7 @@ namespace NuvPizza.Infrastructure.Persistence
                 e.HasOne(c => c.ComboItemTemplate)
                  .WithMany()
                  .HasForeignKey(c => c.ComboItemTemplateId)
-                 .OnDelete(DeleteBehavior.Restrict);
+                 .OnDelete(DeleteBehavior.SetNull);
 
                 e.HasOne(c => c.ProdutoEscolhido)
                  .WithMany()

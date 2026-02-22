@@ -159,10 +159,16 @@
 
 .painel-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
   padding: 13px 18px;
   border-bottom: 1px solid #f8f8f8;
+  gap: 4px;
+}
+
+.painel-item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 12px;
 }
 
@@ -192,6 +198,15 @@
   font-size: 0.8rem;
   color: #4B6FA5;
   font-weight: 700;
+}
+
+/* Linha de borda (detalhe extra) */
+.item-borda-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.76rem;
+  color: #a0a0a0;
+  padding-left: 2px;
 }
 
 /* Controles − N + estilo iFood */

@@ -84,6 +84,88 @@
 }
 
 /* =========================================
+   BARRA DE STATUS DA LOJA (COUNTDOWN)
+   ========================================= */
+.loja-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+  border-radius: 10px;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.loja-status-bar.aberta {
+  background: #e8f5e9;
+  border: 1px solid #a5d6a7;
+  color: #2e7d32;
+}
+
+.loja-status-bar.fechada {
+  background: #fce4ec;
+  border: 1px solid #f48fb1;
+  color: #c62828;
+}
+
+.loja-status-bar.alerta {
+  background: #fff8e1;
+  border: 1px solid #ffe082;
+  color: #e65100;
+  animation: pulseAlerta 1.5s ease-in-out infinite;
+}
+
+@keyframes pulseAlerta {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(230, 81, 0, 0);
+  }
+
+  50% {
+    box-shadow: 0 0 0 6px rgba(230, 81, 0, 0.15);
+  }
+}
+
+.loja-status-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.loja-timer {
+  background: rgba(255, 255, 255, 0.7);
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.btn-estender {
+  background: #e65100;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-estender:hover {
+  background: #bf360c;
+  transform: translateY(-1px);
+}
+
+/* =========================================
    GRID DE PEDIDOS
    ========================================= */
 .grid-pedidos {

@@ -161,6 +161,29 @@
   border-color: #81c784 !important;
 }
 
+/* Aviso de frete dinâmico */
+.frete-info-callout {
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 0.88rem;
+  color: #1565c0;
+  font-weight: 500;
+}
+
+.frete-info-callout.frete-nao-atendido {
+  background: #fce4ec;
+  border-color: #f48fb1;
+  color: #c62828;
+}
+
+.frete-info-callout.frete-aguardando {
+  background: #fff8e1;
+  border-color: #ffe082;
+  color: #f57f17;
+}
+
 /* --- RESUMO E TOTAIS --- */
 .summary-item {
   display: flex;

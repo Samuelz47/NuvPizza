@@ -12,18 +12,27 @@
   <ul class="painel-itens">
     @for (item of itens(); track item.id) {
     <li class="painel-item">
-      <!-- Nome e subtotal -->
-      <div class="item-info">
-        <span class="item-nome">{{ item.nome }}</span>
-        <span class="item-subtotal">{{ (item.preco * item.quantidade) | currency:'BRL' }}</span>
-      </div>
+      <div class="painel-item-row">
+        <!-- Nome e subtotal -->
+        <div class="item-info">
+          <span class="item-nome">{{ item.nome }}</span>
+          <span class="item-subtotal">{{ (item.preco * item.quantidade) | currency:'BRL' }}</span>
+        </div>
 
-      <!-- Controles estilo iFood -->
-      <div class="item-controles">
-        <button class="ctrl-btn minus" (click)="decrementar(item.id)" aria-label="Remover 1">−</button>
-        <span class="ctrl-qtd">{{ item.quantidade }}</span>
-        <button class="ctrl-btn plus" (click)="adicionarItem(item)" aria-label="Adicionar 1">+</button>
+        <!-- Controles estilo iFood -->
+        <div class="item-controles">
+          <button class="ctrl-btn minus" (click)="decrementar(item.id)" aria-label="Remover 1">−</button>
+          <span class="ctrl-qtd">{{ item.quantidade }}</span>
+          <button class="ctrl-btn plus" (click)="adicionarItem(item)" aria-label="Adicionar 1">+</button>
+        </div>
       </div>
+      @if (item.nomeBorda && item.precoBorda) {
+      <div class="item-borda-info">
+        <span>↳ Borda: {{ item.nomeBorda }}</span>
+        <span>+ {{ (item.precoBorda * item.quantidade) | currency:'BRL' }}</span>
+      </div>
+      }
+
     </li>
     }
   </ul>

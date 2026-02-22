@@ -17,6 +17,14 @@ public class LojaController : ControllerBase
         _configuracaoService = configuracaoService;
     }
 
+    [HttpGet("status")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetStatus()
+    {
+        var status = await _configuracaoService.GetStatusLojaAsync();
+        return Ok(status);
+    }
+
     [HttpPost("estender")]
     public async Task<IActionResult> Estender([FromBody] EstenderLojaDTO estenderLojaDto)
     {

@@ -62,4 +62,24 @@ public class ConfiguracaoService : IConfiguracaoService
         await _notificacaoService.NotificarAlteracaoStatusLoja(true, "Horário estendido!");
         return true;
     }
+
+    public async Task<StatusLojaDTO> GetStatusLojaAsync()
+    {
+        var config = await _configuracaoRepository.GetAsync(c => c.Id == 1);
+        
+        // Auto-fecha se passou do horário
+        if (config.EstaAberta && config.DataHoraFechamentoAtual.HasValue && DateTime.Now >= config.DataHoraFechamentoAtual.Value)
+        {
+            config.EstaAberta = false;
+            config.DataHoraFechamentoAtual = null;
+            _configuracaoRepository.Update(config);
+            await _uow.CommitAsync();
+        }
+
+        return new StatusLojaDTO
+        {
+            EstaAberta = config.EstaAberta,
+            DataHoraFechamento = config.DataHoraFechamentoAtual
+        };
+    }
 }

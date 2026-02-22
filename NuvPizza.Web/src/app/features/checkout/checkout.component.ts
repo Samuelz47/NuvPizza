@@ -5,6 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { PedidoService } from '../../core/services/pedido.service';
 import { CarrinhoService } from '../../core/services/carrinho.service';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-checkout',
@@ -23,6 +24,8 @@ export class CheckoutComponent {
   loading = signal<boolean>(false);
   errorMessage = signal<string>('');
   buscandoCep = signal<boolean>(false);
+  bairroNaoAtendido = signal<boolean>(false);
+  freteLabel = signal<string>('---');
 
   idPedidoCriado = signal<string | null>(null);
 
@@ -74,12 +77,35 @@ export class CheckoutComponent {
     if (cep?.length !== 8) return;
 
     this.buscandoCep.set(true);
+    this.bairroNaoAtendido.set(false);
+    this.freteLabel.set('---');
+    this.carrinhoService.valorFrete.set(0);
+
     this.http.get<any>(`https://viacep.com.br/ws/${cep}/json/`).subscribe({
       next: (dados) => {
         this.buscandoCep.set(false);
         if (!dados.erro) {
           this.pedido.logradouro = dados.logradouro;
           this.pedido.bairro = dados.bairro;
+
+          // Tenta encontrar o bairro na lista da API local para pegar o frete
+          this.http.get<any[]>(`${environment.apiUrl}/bairros`).subscribe({
+            next: (bairros) => {
+              const bairroNome = (dados.bairro || '').toLowerCase().trim();
+              const encontrado = bairros.find(
+                b => b.nome.toLowerCase().trim() === bairroNome
+              );
+              if (encontrado) {
+                this.carrinhoService.valorFrete.set(encontrado.valorFrete);
+                this.freteLabel.set(`R$ ${encontrado.valorFrete.toFixed(2).replace('.', ',')}`);
+                this.bairroNaoAtendido.set(false);
+              } else {
+                this.bairroNaoAtendido.set(true);
+                this.freteLabel.set('Não atendemos');
+              }
+            }
+          });
+
           setTimeout(() => document.getElementById('numeroInput')?.focus(), 100);
         } else {
           this.errorMessage.set('CEP não encontrado.');
@@ -138,7 +164,7 @@ export class CheckoutComponent {
       produtoSecundarioId: item.produtoSecundarioId || null,
       bordaId: item.bordaId || null,
       quantidade: item.quantidade,
-      escolhasCombo: item.escolhasCombo || null
+      escolhasCombo: item.escolhasCombo || []
     }));
 
     // --- LÓGICA DO TROCO ---

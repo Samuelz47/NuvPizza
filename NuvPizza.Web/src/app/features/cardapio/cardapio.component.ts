@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProdutoService } from '../../core/services/produto.service';
 import { CarrinhoService } from '../../core/services/carrinho.service';
+import { LojaService, StatusLoja } from '../../core/services/loja.service';
 import { Produto, CategoriaProduto, TamanhoProduto } from '../../core/models/produto.model';
 import { CarrinhoFloatComponent } from '../../shared/components/carrinho-float/carrinho-float.component';
 import { environment } from '../../environments/environment';
@@ -17,10 +18,15 @@ import { environment } from '../../environments/environment';
 export class CardapioComponent implements OnInit {
   private produtoService = inject(ProdutoService);
   private carrinhoService = inject(CarrinhoService);
+  private lojaService = inject(LojaService);
   private cdr = inject(ChangeDetectorRef);
 
   produtos: Produto[] = [];
   categoriaAtiva: CategoriaProduto = CategoriaProduto.Pizza;
+
+  // Status da Loja
+  lojaAberta = false;
+  horaFechamento: string | null = null;
 
   // Helpers para o HTML
   categorias = [
@@ -48,6 +54,22 @@ export class CardapioComponent implements OnInit {
 
   ngOnInit() {
     this.carregarProdutos();
+    this.carregarStatusLoja();
+  }
+
+  carregarStatusLoja() {
+    this.lojaService.getStatus().subscribe({
+      next: (status) => {
+        this.lojaAberta = status.estaAberta;
+        if (status.dataHoraFechamento) {
+          const dt = new Date(status.dataHoraFechamento);
+          this.horaFechamento = dt.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+        } else {
+          this.horaFechamento = null;
+        }
+        this.cdr.detectChanges();
+      }
+    });
   }
 
   carregarProdutos() {
@@ -162,11 +184,16 @@ export class CardapioComponent implements OnInit {
     }
 
     // Criar o payload complexo (String de representacao e o DTO pro carrinho)
+    let precoBase = this.comboSelecionado.preco;
+    let precoBordaTotal = 0;
+    let bordaNomes: string[] = [];
+
     let comboItem = {
       id: `combo_${this.comboSelecionado.id}_${new Date().getTime()}`,
       produtoId: this.comboSelecionado.id,
       nome: this.comboSelecionado.nome,
-      preco: this.comboSelecionado.preco, // preco base do combo
+      precoBase: precoBase,
+      preco: precoBase, // vai acumular bordas
       imagem: this.comboSelecionado.imagemUrl,
       quantidade: 1,
       escolhasCombo: [] as any[]
@@ -182,8 +209,9 @@ export class CardapioComponent implements OnInit {
       }
       if (e.borda) {
         strName += ` (Borda: ${e.borda.nome})`;
-        // Add borda price to combo final total
         comboItem.preco += e.borda.preco;
+        precoBordaTotal += e.borda.preco;
+        bordaNomes.push(e.borda.nome);
       }
 
       subDescricoes.push(`+ ${strName}`);
@@ -196,10 +224,16 @@ export class CardapioComponent implements OnInit {
       });
     });
 
-    // Anexar no nome
+    // Anexar no nome (sem a borda, ela fica no campo separado)
     comboItem.nome += ' - ' + subDescricoes.join(', ');
 
-    this.carrinhoService.adicionar(comboItem);
+    const comboItemFinal: any = {
+      ...comboItem,
+      nomeBorda: precoBordaTotal > 0 ? bordaNomes.join(' + ') : undefined,
+      precoBorda: precoBordaTotal > 0 ? precoBordaTotal : undefined,
+    };
+
+    this.carrinhoService.adicionar(comboItemFinal);
     this.modalComboAberto = false;
   }
   // ---------------------------------
@@ -253,7 +287,12 @@ export class CardapioComponent implements OnInit {
       produtoSecundarioId: meioAMeioSelecionado ? this.saborSecundario!.id : undefined,
       bordaId: borda ? borda.id : undefined,
       nome: nomeFinal,
+      precoBase: meioAMeioSelecionado
+        ? (this.saborPrincipal.preco + this.saborSecundario!.preco) / 2
+        : this.saborPrincipal.preco,
       preco: precoFinal,
+      nomeBorda: borda ? borda.nome : undefined,
+      precoBorda: borda ? borda.preco : undefined,
       imagem: imgFinal,
       quantidade: 1,
       observacao: meioAMeioSelecionado ? 'Meio a Meio' : ''

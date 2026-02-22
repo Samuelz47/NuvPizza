@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PedidoService } from '../../../core/services/pedido.service';
 import { NotificacaoService } from '../../../core/services/notificacao.service';
@@ -11,7 +11,7 @@ import { LojaService } from '../../../core/services/loja.service';
   templateUrl: './painel-pedidos.html',
   styleUrls: ['./painel-pedidos.css']
 })
-export class PainelPedidosComponent implements OnInit {
+export class PainelPedidosComponent implements OnInit, OnDestroy {
   private pedidoService = inject(PedidoService);
   private notificacaoService = inject(NotificacaoService);
   private lojaService = inject(LojaService);
@@ -23,20 +23,98 @@ export class PainelPedidosComponent implements OnInit {
     mensagem: '', tipo: 'info', visivel: false
   });
 
+  // Status & Countdown da Loja
+  lojaAberta = signal(false);
+  contagemRegressiva = signal<string | null>(null);
+  pertoDeFecahr = signal(false); // true se faltam < 30 min
+  private dataHoraFechamento: Date | null = null;
+  private timerInterval: any = null;
+
   ngOnInit() {
     this.carregarPedidos();
     this.ouvirNovosPedidos();
+    this.carregarStatusLoja();
+  }
+
+  ngOnDestroy() {
+    if (this.timerInterval) clearInterval(this.timerInterval);
+  }
+
+  carregarStatusLoja() {
+    this.lojaService.getStatus().subscribe({
+      next: (status) => {
+        this.lojaAberta.set(status.estaAberta);
+        if (status.estaAberta && status.dataHoraFechamento) {
+          this.dataHoraFechamento = new Date(status.dataHoraFechamento);
+          this.iniciarContagem();
+        } else {
+          this.dataHoraFechamento = null;
+          this.contagemRegressiva.set(null);
+          this.pertoDeFecahr.set(false);
+          if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
+        }
+      }
+    });
+  }
+
+  private iniciarContagem() {
+    if (this.timerInterval) clearInterval(this.timerInterval);
+    this.atualizarContagem();
+    this.timerInterval = setInterval(() => this.atualizarContagem(), 1000);
+  }
+
+  private atualizarContagem() {
+    if (!this.dataHoraFechamento) return;
+    const agora = new Date();
+    const diff = this.dataHoraFechamento.getTime() - agora.getTime();
+
+    if (diff <= 0) {
+      this.lojaAberta.set(false);
+      this.contagemRegressiva.set(null);
+      this.pertoDeFecahr.set(false);
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+      this.mostrarToast('A loja fechou automaticamente! 🛑', 'info');
+      return;
+    }
+
+    const horas = Math.floor(diff / 3600000);
+    const minutos = Math.floor((diff % 3600000) / 60000);
+    const segundos = Math.floor((diff % 60000) / 1000);
+
+    const partes: string[] = [];
+    if (horas > 0) partes.push(`${horas}h`);
+    partes.push(`${minutos.toString().padStart(2, '0')}min`);
+    partes.push(`${segundos.toString().padStart(2, '0')}s`);
+
+    this.contagemRegressiva.set(partes.join(' '));
+    this.pertoDeFecahr.set(diff < 30 * 60 * 1000); // < 30 min
+  }
+
+  estenderHorario() {
+    const minutos = prompt('Quantos minutos deseja estender?', '30');
+    if (!minutos) return;
+    const num = parseInt(minutos);
+    if (isNaN(num) || num <= 0) { this.mostrarToast('Valor inválido.', 'erro'); return; }
+
+    this.lojaService.estenderLoja(num).subscribe({
+      next: () => {
+        this.mostrarToast(`Horário estendido em ${num} minutos! ⏰`, 'sucesso');
+        this.carregarStatusLoja();
+      },
+      error: () => this.mostrarToast('Erro ao estender horário.', 'erro')
+    });
   }
 
   abrirLoja() {
     const hora = prompt("Qual será o horário de encerramento da loja hoje? (Ex: 23:59)");
     if (!hora) return;
 
-    // Adiciona :00 se o usuário só digitar HH:MM
-    const horaFormatada = hora.length === 5 ? `${hora}:00` : hora;
-
-    this.lojaService.abrirLoja(horaFormatada).subscribe({
-      next: () => this.mostrarToast(`Loja aberta até as ${hora}! 🍕`, 'sucesso'),
+    this.lojaService.abrirLoja(hora).subscribe({
+      next: () => {
+        this.mostrarToast(`Loja aberta até as ${hora}! 🍕`, 'sucesso');
+        this.carregarStatusLoja();
+      },
       error: () => this.mostrarToast('Erro ao abrir a loja. Verifique o horário.', 'erro')
     });
   }
@@ -45,7 +123,10 @@ export class PainelPedidosComponent implements OnInit {
     if (!confirm("Tem certeza que deseja FECHAR a loja agora? Os clientes não conseguirão fazer novos pedidos.")) return;
 
     this.lojaService.fecharLoja().subscribe({
-      next: () => this.mostrarToast('Loja fechada com sucesso. 🛑', 'sucesso'),
+      next: () => {
+        this.mostrarToast('Loja fechada com sucesso. 🛑', 'sucesso');
+        this.carregarStatusLoja();
+      },
       error: () => this.mostrarToast('Erro ao fechar a loja.', 'erro')
     });
   }
