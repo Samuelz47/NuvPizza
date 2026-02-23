@@ -229,7 +229,7 @@ export class CheckoutComponent {
   }
 
   validar(): boolean {
-    if (!this.pedido.nomeCliente || !this.pedido.emailCliente || !this.pedido.telefoneCliente ||
+    if (!this.pedido.nomeCliente || !this.pedido.telefoneCliente ||
       !this.pedido.cep || !this.pedido.numero || !this.pedido.logradouro) {
       this.errorMessage.set('Por favor, preencha todos os campos obrigatórios (*).');
       return false;

@@ -267,6 +267,34 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
     });
   }
 
+  avisarDespachoWhatsApp(pedido: any) {
+    let telefone = pedido.telefoneCliente || pedido.telefone;
+
+    // Fallback: se não achar telefone explícito, tenta extrair do linkWhatsapp que o backend costuma gerar
+    if (!telefone && pedido.linkWhatsapp) {
+      const match = pedido.linkWhatsapp.match(/wa\.me\/(\d+)/);
+      if (match && match[1]) {
+        telefone = match[1];
+      }
+    }
+
+    if (!telefone) {
+      this.mostrarToast('Cliente não possui telefone cadastrado.', 'erro');
+      return;
+    }
+
+    const numero = telefone.replace(/\D/g, '');
+    const ddi = numero.length === 10 || numero.length === 11 ? '55' : '';
+
+    const codigo = this.getCodigoPedido(pedido);
+    let mensagem = `Olá ${pedido.nomeCliente}, tudo bem? 🍕\n\n`;
+    mensagem += `Seu pedido *${codigo}* acabou de sair para entrega e está a caminho! 🛵💨\n\n`;
+    mensagem += `Agradecemos a preferência!`;
+
+    const url = `https://wa.me/${ddi}${numero}?text=${encodeURIComponent(mensagem)}`;
+    window.open(url, '_blank');
+  }
+
   cancelarPedido(pedido: any) {
     const codigo = this.getCodigoPedido(pedido);
     if (!confirm(`Tem certeza que deseja cancelar o pedido ${codigo}?`)) return;
