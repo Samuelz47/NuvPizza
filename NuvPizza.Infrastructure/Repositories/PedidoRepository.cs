@@ -1,8 +1,10 @@
 using Microsoft.EntityFrameworkCore;
 using NuvPizza.Domain.Entities;
+using NuvPizza.Domain.Enums;
 using NuvPizza.Domain.Pagination;
 using NuvPizza.Domain.Repositories;
 using NuvPizza.Infrastructure.Persistence;
+using Org.BouncyCastle.Asn1.Cmp;
 
 namespace NuvPizza.Infrastructure.Repositories;
 
@@ -51,5 +53,20 @@ public class PedidoRepository : Repository<Pedido>, IPedidoRepository
         return await _context.Pedidos
                                     .Include(p => p.Itens)
                                     .FirstOrDefaultAsync(p => p.Id == pedidoId);
+    }
+
+    public async Task<(decimal Total, decimal Frete, int Quantidade)> GetFaturamentoAsync(DateTime dataInicio, DateTime dataFim)
+    {
+        var inicio = dataInicio.Date;
+        var final = dataFim.Date.AddDays(1).AddTicks(-1);
+
+        var query = _context.Pedidos
+            .Where(p => p.StatusPedido == StatusPedido.Entrega)
+            .Where(p => p.DataPedido >= inicio && p.DataPedido <= final);
+
+        var totalFaturamento = await query.SumAsync(p => p.ValorTotal - p.ValorFrete);
+        var frete = await query.SumAsync(p => p.ValorFrete);
+        var quantidadePedidos = await query.CountAsync();
+        return (totalFaturamento, frete, quantidadePedidos);
     }
 }

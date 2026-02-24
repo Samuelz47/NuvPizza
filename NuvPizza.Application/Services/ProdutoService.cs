@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using NuvPizza.Application.Common;
 using NuvPizza.Application.DTOs;
 using NuvPizza.Application.Interfaces;
+using NuvPizza.Domain.Interfaces;
 using NuvPizza.Domain.Entities;
 using NuvPizza.Domain.Repositories;
 

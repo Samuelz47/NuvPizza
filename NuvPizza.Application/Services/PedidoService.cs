@@ -3,6 +3,7 @@ using Microsoft.Extensions.Configuration;
 using NuvPizza.Application.Common;
 using NuvPizza.Application.DTOs;
 using NuvPizza.Application.Interfaces;
+using NuvPizza.Domain.Interfaces;
 using NuvPizza.Domain.Entities;
 using NuvPizza.Domain.Repositories;
 using NuvPizza.Infrastructure.Services;
@@ -179,6 +180,23 @@ public class PedidoService : IPedidoService
         var pedidoDto = _mapper.Map<PedidoDTO>(pedido);
         pedidoDto.LinkWhatsapp = linkWpp;
         await _notificacaoService.NotificarNovoPedido(pedidoDto);
+
+        // Dispara o e-mail em background (Fire-and-Forget) para não travar a tela de Checkout do cliente
+        if (!string.IsNullOrEmpty(pedido.EmailCliente))
+        {
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await _emailService.EnviarEmailConfirmacao(pedido);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Email FireAndForget Error] {ex.Message}");
+                }
+            });
+        }
+
         return Result<PedidoDTO>.Success(pedidoDto);
     }
 

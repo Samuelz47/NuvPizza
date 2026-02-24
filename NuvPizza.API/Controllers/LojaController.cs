@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NuvPizza.Application.DTOs;
 using NuvPizza.Application.Interfaces;
+using NuvPizza.Domain.Interfaces;
 
 namespace NuvPizza.API.Controllers;
 

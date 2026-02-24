@@ -1,6 +1,6 @@
 using NuvPizza.Domain.Entities;
 
-namespace NuvPizza.Application.Interfaces;
+namespace NuvPizza.Domain.Interfaces;
 
 public interface IEmailService
 {

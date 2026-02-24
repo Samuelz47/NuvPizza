@@ -1,18 +1,86 @@
 <div class="admin-home-container">
-  <h1>Bem-vindo, Chefe! 🍕</h1>
-  <p>O que deseja gerenciar hoje?</p>
-
-  <div class="actions-grid">
-    <div class="card-action" (click)="navegarPara('pedidos')">
-      <i class="pi pi-shopping-cart"></i>
-      <h3>Painel de Pedidos</h3>
-      <p>Acompanhe e altere status em tempo real.</p>
-    </div>
-
-    <div class="card-action" (click)="navegarPara('produtos')">
-      <i class="pi pi-list"></i>
-      <h3>Gerenciar Cardápio</h3>
-      <p>Cadastre pizzas, bebidas e altere preços.</p>
-    </div>
+  <div class="welcome-header">
+    <h1>Bem-vindo, Chefe! 🍕</h1>
+    <p>Acompanhe seus resultados e gerencie a pizzaria.</p>
   </div>
+
+  <!-- SEÇÃO: DASHBOARD DE FATURAMENTO -->
+  <section class="dashboard-section">
+    <div class="dashboard-header">
+      <h2>Resumo Financeiro</h2>
+
+      <div class="filters-toolbar">
+        <div class="quick-filters">
+          <button [class.active]="filtroAtivo() === 'hoje'" (click)="filtrarHoje()">Hoje</button>
+          <button [class.active]="filtroAtivo() === 'semana'" (click)="filtrarSemana()">Semana</button>
+          <button [class.active]="filtroAtivo() === 'mes'" (click)="filtrarMes()">Mês</button>
+        </div>
+
+        <div class="custom-filters">
+          <input type="date" [ngModel]="dataInicial()" (ngModelChange)="dataInicial.set($event)" />
+          <span>Até</span>
+          <input type="date" [ngModel]="dataFinal()" (ngModelChange)="dataFinal.set($event)" />
+          <button class="btn-filtrar" (click)="aplicarFiltroCustomizado()">Filtrar</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CARREGANDO -->
+    <div *ngIf="carregando()" class="loading-dashboard">
+      <i class="pi pi-spin pi-spinner"></i> Carregando dados...
+    </div>
+
+    <!-- CARDS DE ESTATÍSTICA -->
+    <div *ngIf="!carregando() && dadosFaturamento()" class="stats-grid">
+      <div class="stat-card primary">
+        <div class="stat-icon"><i class="pi pi-dollar"></i></div>
+        <div class="stat-info">
+          <span class="stat-label">Faturamento (Produtos)</span>
+          <h3 class="stat-value">{{ dadosFaturamento()?.faturamento | currency:'BRL' }}</h3>
+        </div>
+      </div>
+
+      <div class="stat-card secondary">
+        <div class="stat-icon"><i class="pi pi-car"></i></div>
+        <div class="stat-info">
+          <span class="stat-label">Total Gasto em Frete</span>
+          <h3 class="stat-value">{{ dadosFaturamento()?.frete | currency:'BRL' }}</h3>
+        </div>
+      </div>
+
+      <div class="stat-card warning">
+        <div class="stat-icon"><i class="pi pi-chart-line"></i></div>
+        <div class="stat-info">
+          <span class="stat-label">Ticket Médio</span>
+          <h3 class="stat-value">{{ dadosFaturamento()?.ticktedMedio | currency:'BRL' }}</h3>
+        </div>
+      </div>
+
+      <div class="stat-card info">
+        <div class="stat-icon"><i class="pi pi-shopping-bag"></i></div>
+        <div class="stat-info">
+          <span class="stat-label">Qtd. Pedidos</span>
+          <h3 class="stat-value">{{ dadosFaturamento()?.qunatidadePedido }}</h3>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEÇÃO: AÇÕES RÁPIDAS -->
+  <section class="actions-section">
+    <h2>Acesso Rápido</h2>
+    <div class="actions-grid">
+      <div class="card-action" (click)="navegarPara('pedidos')">
+        <i class="pi pi-shopping-cart"></i>
+        <h3>Painel de Pedidos</h3>
+        <p>Acompanhe e altere status em tempo real.</p>
+      </div>
+
+      <div class="card-action" (click)="navegarPara('produtos')">
+        <i class="pi pi-list"></i>
+        <h3>Gerenciar Cardápio</h3>
+        <p>Cadastre pizzas, bebidas e altere preços.</p>
+      </div>
+    </div>
+  </section>
 </div>

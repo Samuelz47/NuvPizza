@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 using NuvPizza.API.Hubs;
 using NuvPizza.Application.DTOs;
 using NuvPizza.Application.Interfaces;
+using NuvPizza.Domain.Interfaces;
 
 namespace NuvPizza.API.Services;
 

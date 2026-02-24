@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using NuvPizza.Application.DTOs;
 using NuvPizza.Application.Interfaces;
+using NuvPizza.Domain.Interfaces;
 using NuvPizza.Domain.Enums;
 
 namespace NuvPizza.API.Controllers;

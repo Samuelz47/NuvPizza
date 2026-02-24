@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using NuvPizza.API.Hubs;
 using NuvPizza.Application.Interfaces;
+using NuvPizza.Domain.Interfaces;
 using NuvPizza.Infrastructure.Persistence;
 
 namespace NuvPizza.API.Workers;

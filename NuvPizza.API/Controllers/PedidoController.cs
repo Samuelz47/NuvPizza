@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using NuvPizza.Application.DTOs;
 using NuvPizza.Application.Interfaces;
+using NuvPizza.Domain.Interfaces;
 using NuvPizza.Application.Services;
 using NuvPizza.Domain.Pagination;
 using System.Text.Json;

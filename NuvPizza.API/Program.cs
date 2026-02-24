@@ -13,6 +13,7 @@ using NuvPizza.API.Middlewares;
 using NuvPizza.API.Services;
 using NuvPizza.API.Workers;
 using NuvPizza.Application.Interfaces;
+using NuvPizza.Domain.Interfaces;
 using NuvPizza.Application.Mappings;
 using NuvPizza.Application.Services;
 using NuvPizza.Application.Validator;
@@ -130,8 +131,9 @@ try
     builder.Services.AddScoped<IConfiguracaoService, ConfiguracaoService>();
     builder.Services.AddScoped<INotificacaoService, NotificacaoService>();
     builder.Services.AddScoped<IPagamentoService, MercadoPagoService>();
-    builder.Services.AddScoped<IEmailService, EmailDummyService>();
+    builder.Services.AddScoped<IEmailService, GmailService>();
     builder.Services.AddScoped<IViaCepService, ViaCepService>();
+    builder.Services.AddScoped<IFaturamentoService, FaturamentoService>();
     builder.Services.AddScoped<TokenService>();
 
     var app = builder.Build();

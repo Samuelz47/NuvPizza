@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using NuvPizza.Application.Common;
 using NuvPizza.Application.DTOs;
 using NuvPizza.Application.Interfaces;
+using NuvPizza.Domain.Interfaces;
 
 namespace NuvPizza.Application.Services;
 

@@ -1,6 +1,7 @@
 using NuvPizza.Application.Common;
 using NuvPizza.Application.DTOs;
 using NuvPizza.Application.Interfaces;
+using NuvPizza.Domain.Interfaces;
 using NuvPizza.Domain.Repositories;
 
 namespace NuvPizza.Application.Services;
