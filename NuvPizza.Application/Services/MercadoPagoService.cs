@@ -29,9 +29,8 @@ public class MercadoPagoService : IPagamentoService
 
             // Mantenha a URL do Ngrok se estiver usando, ou localhost se for só teste local
             // Se estiver usando Ngrok, substitua a linha abaixo
-            //string baseUrl = "https://coralliferous-gloatingly-song.ngrok-free.dev"; 
-            string baseUrl = "http://localhost:4200"; 
-        
+            string baseUrl = "https://nuvpizza.com.br"; 
+            string apiBaseUrl = "https://api.nuvpizza.com.br";        
             var backUrls = new PreferenceBackUrlsRequest
             {
                 Success = $"{baseUrl}/sucesso",
@@ -59,7 +58,7 @@ public class MercadoPagoService : IPagamentoService
                         : $"cliente_anonimo_{Guid.NewGuid().ToString().Substring(0,4)}@nuvpizza.com"
                 },
                 
-                NotificationUrl = $"{baseUrl}/Pagamento/webhook",
+                NotificationUrl = $"{apiBaseUrl}/Pagamento/webhook",
                 BackUrls = backUrls,
                 //AutoReturn = "approved",
                 

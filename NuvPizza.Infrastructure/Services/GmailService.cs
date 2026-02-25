@@ -109,7 +109,7 @@ public class GmailService : IEmailService
                 <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;'>
                     <h3 style='margin-top: 0;'>Acompanhe em Tempo Real</h3>
                     <p>Você pode acompanhar o status da sua entrega através do nosso painel interativo:</p>
-                    <a href='http://localhost:4200/acompanhar/{pedido.Id}' style='display: inline-block; background-color: #ff4757; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-weight: bold;'>
+                    <a href='https://nuvpizza.com.br/acompanhar/{pedido.Id}' style='display: inline-block; background-color: #ff4757; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-weight: bold;'>
                         Acompanhar Meu Pedido
                     </a>
                 </div>
