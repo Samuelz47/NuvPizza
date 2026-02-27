@@ -50,6 +50,20 @@
 
   <!-- Pizzas agrupadas por tamanho -->
   <ng-container *ngIf="categoriaAtiva === 1">
+
+    <!-- DESTAQUE VÍDEO -->
+    <div *ngIf="videoDestaqueUrl" class="video-destaque-container">
+      <div class="video-wrapper" *ngIf="videoDestaqueTipo === 'youtube'">
+        <iframe [src]="videoDestaqueUrl" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+      </div>
+      <div class="video-wrapper" *ngIf="videoDestaqueTipo === 'instagram'">
+        <iframe [src]="videoDestaqueUrl" frameborder="0" scrolling="no" allowtransparency="true"
+          allowfullscreen></iframe>
+      </div>
+      <div class="video-wrapper" *ngIf="videoDestaqueTipo === 'mp4'">
+        <video [src]="videoDestaqueUrl" autoplay loop muted playsinline></video>
+      </div>
+    </div>
     <div *ngIf="pizzasPorTamanho.length === 0" class="produtos-grid">
       <div class="vazio">
         <p>😕 Nenhuma pizza disponível no momento.</p>

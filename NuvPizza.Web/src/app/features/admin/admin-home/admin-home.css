@@ -272,6 +272,136 @@
   margin: 0;
 }
 
+/* --- CONFIG SECTION --- */
+.settings-section {
+  width: 100%;
+  max-width: 1000px;
+  margin-bottom: 50px;
+}
+
+.settings-section h2 {
+  color: #2c3e50;
+  margin-bottom: 25px;
+  font-size: 1.8rem;
+  text-align: left;
+}
+
+.config-card {
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.config-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.config-header i {
+  font-size: 2rem;
+  color: #e74c3c;
+}
+
+.config-header h3 {
+  margin: 0;
+  color: #2c3e50;
+  font-size: 1.2rem;
+}
+
+.config-header p {
+  margin: 5px 0 0 0;
+  color: #7f8c8d;
+  font-size: 0.9rem;
+}
+
+.config-action {
+  display: flex;
+  gap: 10px;
+  flex: 1;
+  min-width: 300px;
+  justify-content: flex-end;
+}
+
+.config-action input {
+  flex: 1;
+  max-width: 400px;
+  padding: 10px 15px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  outline: none;
+}
+
+.config-action input:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 5px rgba(52, 152, 219, 0.3);
+}
+
+.btn-salvar {
+  padding: 10px 20px;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: 0.2s;
+  white-space: nowrap;
+}
+
+.btn-salvar:hover:not([disabled]) {
+  background: #2980b9;
+}
+
+.btn-salvar[disabled] {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* --- TOAST --- */
+.toast-custom {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  padding: 15px 25px;
+  border-radius: 8px;
+  color: white;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  animation: slideIn 0.3s ease-out forwards;
+}
+
+.toast-custom.sucesso {
+  background-color: #2ecc71;
+}
+
+.toast-custom.erro {
+  background-color: #e74c3c;
+}
+
+.toast-custom.info {
+  background-color: #3498db;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
 /* Responsividade Mínima */
 @media (max-width: 768px) {
   .filters-toolbar {

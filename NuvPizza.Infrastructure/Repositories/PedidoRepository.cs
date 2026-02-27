@@ -64,9 +64,16 @@ public class PedidoRepository : Repository<Pedido>, IPedidoRepository
             .Where(p => p.StatusPedido == StatusPedido.Entrega)
             .Where(p => p.DataPedido >= inicio && p.DataPedido <= final);
 
-        var totalFaturamento = await query.SumAsync(p => p.ValorTotal - p.ValorFrete);
-        var frete = await query.SumAsync(p => p.ValorFrete);
-        var quantidadePedidos = await query.CountAsync();
+        // SQLite não suporta SumAsync em decimal diretamente no banco via EF Core
+        // Buscamos apenas os campos necessários e somamos em memória
+        var dados = await query
+            .Select(p => new { p.ValorTotal, p.ValorFrete })
+            .ToListAsync();
+
+        var totalFaturamento = dados.Sum(p => p.ValorTotal - p.ValorFrete);
+        var frete = dados.Sum(p => p.ValorFrete);
+        var quantidadePedidos = dados.Count;
+        
         return (totalFaturamento, frete, quantidadePedidos);
     }
 }

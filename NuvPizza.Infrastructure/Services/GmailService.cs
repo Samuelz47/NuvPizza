@@ -100,7 +100,7 @@ public class GmailService : IEmailService
 
         return $@"
         <div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; color: #333;'>
-            <div style='background-color: #ff4757; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;'>
+            <div style='background-color: #4B6FA5; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0;'>
                 <h1>NuvPizza 🍕</h1>
                 <p>Obrigado pelo seu pedido, {pedido.NomeCliente}!</p>
             </div>
@@ -109,7 +109,7 @@ public class GmailService : IEmailService
                 <div style='background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;'>
                     <h3 style='margin-top: 0;'>Acompanhe em Tempo Real</h3>
                     <p>Você pode acompanhar o status da sua entrega através do nosso painel interativo:</p>
-                    <a href='https://nuvpizza.com.br/acompanhar/{pedido.Id}' style='display: inline-block; background-color: #ff4757; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-weight: bold;'>
+                    <a href='https://nuvpizza.com.br/acompanhar/{pedido.Id}' style='display: inline-block; background-color: #4B6FA5; color: white; text-decoration: none; padding: 10px 20px; border-radius: 5px; font-weight: bold;'>
                         Acompanhar Meu Pedido
                     </a>
                 </div>
@@ -122,8 +122,8 @@ public class GmailService : IEmailService
                         <td style='padding: 10px; font-weight: bold; text-align: right;'>R$ {pedido.ValorFrete.ToString("F2")}</td>
                     </tr>
                     <tr>
-                        <td style='padding: 10px; font-size: 1.2em; font-weight: bold; color: #ff4757;'>Total</td>
-                        <td style='padding: 10px; font-size: 1.2em; font-weight: bold; color: #ff4757; text-align: right;'>R$ {pedido.ValorTotal.ToString("F2")}</td>
+                        <td style='padding: 10px; font-size: 1.2em; font-weight: bold; color: #4B6FA5;'>Total</td>
+                        <td style='padding: 10px; font-size: 1.2em; font-weight: bold; color: #4B6FA5; text-align: right;'>R$ {pedido.ValorTotal.ToString("F2")}</td>
                     </tr>
                 </table>
                 <br>

@@ -22,18 +22,18 @@ public class FaturamentoService : IFaturamentoService
             
             var resultado = await _pedidoRepository.GetFaturamentoAsync(dataInicial, dataFinal);
 
-            decimal ticktetMedio = 0;
+            decimal ticketMedio = 0;
             if (resultado.Quantidade > 0)
             {
-                ticktetMedio = resultado.Total /  resultado.Quantidade;
+                ticketMedio = resultado.Total /  resultado.Quantidade;
             }
 
             var dto = new FaturamentoDTO
             {
                 Faturamento = resultado.Total,
                 Frete = resultado.Frete,
-                QunatidadePedido = resultado.Quantidade,
-                TicktedMedio = ticktetMedio
+                QuantidadePedidos = resultado.Quantidade,
+                TicketMedio = ticketMedio
             };
             
             return Result<FaturamentoDTO>.Success(dto);

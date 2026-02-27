@@ -48,4 +48,11 @@ public class LojaController : ControllerBase
         await _configuracaoService.AberturaDeLojaAsync(abrirLojaDto);
         return Ok();
     }
+
+    [HttpPut("video-destaque")]
+    public async Task<IActionResult> AtualizarVideoDestaque([FromBody] AtualizarVideoDestaqueDTO dto)
+    {
+        await _configuracaoService.AtualizarVideoDestaqueAsync(dto);
+        return Ok();
+    }
 }

@@ -66,6 +66,27 @@
     </div>
   </section>
 
+  <!-- SEÇÃO: CONFIGURAÇÕES DA LOJA -->
+  <section class="settings-section">
+    <h2>Configurações Adicionais</h2>
+    <div class="config-card">
+      <div class="config-header">
+        <i class="pi pi-video"></i>
+        <div>
+          <h3>Vídeo Destaque (Cardápio)</h3>
+          <p>Insira um link de Youtube (embed), Shorts ou MP4 para rodar na tela de Pizzas.</p>
+        </div>
+      </div>
+      <div class="config-action">
+        <input type="text" placeholder="https://..." [ngModel]="videoDestaqueInput()"
+          (ngModelChange)="videoDestaqueInput.set($event)" />
+        <button class="btn-salvar" (click)="salvarVideoDestaque()" [disabled]="salvandoVideo()">
+          <i class="pi" [ngClass]="salvandoVideo() ? 'pi-spin pi-spinner' : 'pi-save'"></i> Salvar
+        </button>
+      </div>
+    </div>
+  </section>
+
   <!-- SEÇÃO: AÇÕES RÁPIDAS -->
   <section class="actions-section">
     <h2>Acesso Rápido</h2>
@@ -83,4 +104,9 @@
       </div>
     </div>
   </section>
+
+  <!-- TOAST NOTIFICATION -->
+  <div *ngIf="toast().visivel" class="toast-custom" [ngClass]="toast().tipo">
+    {{ toast().mensagem }}
+  </div>
 </div>

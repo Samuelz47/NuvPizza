@@ -80,7 +80,16 @@ public class ConfiguracaoService : IConfiguracaoService
         return new StatusLojaDTO
         {
             EstaAberta = config.EstaAberta,
-            DataHoraFechamento = config.DataHoraFechamentoAtual
+            DataHoraFechamento = config.DataHoraFechamentoAtual,
+            VideoDestaqueUrl = config.VideoDestaqueUrl
         };
+    }
+
+    public async Task AtualizarVideoDestaqueAsync(AtualizarVideoDestaqueDTO dto)
+    {
+        var config = await _configuracaoRepository.GetAsync(c => c.Id == 1);
+        config.VideoDestaqueUrl = dto.VideoDestaqueUrl;
+        _configuracaoRepository.Update(config);
+        await _uow.CommitAsync();
     }
 }

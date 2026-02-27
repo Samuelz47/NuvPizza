@@ -1,4 +1,5 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ProdutoService } from '../../core/services/produto.service';
@@ -27,6 +28,8 @@ export class CardapioComponent implements OnInit {
   // Status da Loja
   lojaAberta = false;
   horaFechamento: string | null = null;
+  videoDestaqueUrl: SafeResourceUrl | null = null;
+  videoDestaqueTipo: 'youtube' | 'instagram' | 'mp4' | null = null;
 
   // Helpers para o HTML
   categorias = [
@@ -52,6 +55,8 @@ export class CardapioComponent implements OnInit {
   // Opcoes para cada slot para preencher os selects
   opcoesCombo: { [index: number]: Produto[] } = {};
 
+  private sanitizer = inject(DomSanitizer);
+
   ngOnInit() {
     this.carregarProdutos();
     this.carregarStatusLoja();
@@ -67,9 +72,45 @@ export class CardapioComponent implements OnInit {
         } else {
           this.horaFechamento = null;
         }
+        this.processarVideoDestaque(status.videoDestaqueUrl);
         this.cdr.detectChanges();
       }
     });
+  }
+
+  processarVideoDestaque(url: string | null | undefined) {
+    if (!url) {
+      this.videoDestaqueUrl = null;
+      this.videoDestaqueTipo = null;
+      return;
+    }
+
+    // Identificador genérico para YouTube
+    const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/|youtube\.com\/shorts\/)([^"&?\/\s]{11})/i;
+    const ytMatch = url.match(ytRegex);
+
+    // Identificador para Instagram Reels ou Post
+    const igRegex = /(?:instagram\.com|instagr\.am)\/(?:p|reel|tv)\/([a-zA-Z0-9_-]+)/i;
+    const igMatch = url.match(igRegex);
+
+    if (ytMatch && ytMatch[1]) {
+      const videoId = ytMatch[1];
+      const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1&mute=1&loop=1&playlist=${videoId}&controls=0&playsinline=1`;
+      this.videoDestaqueUrl = this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+      this.videoDestaqueTipo = 'youtube';
+    }
+    else if (igMatch && igMatch[1]) {
+      const igId = igMatch[1];
+      // O embed do instagram usa o caminho /embed no final
+      const embedUrl = `https://www.instagram.com/reel/${igId}/embed/`;
+      this.videoDestaqueUrl = this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+      this.videoDestaqueTipo = 'instagram';
+    }
+    else {
+      // Arquivo direto (mp4, etc)
+      this.videoDestaqueUrl = this.sanitizer.bypassSecurityTrustResourceUrl(url);
+      this.videoDestaqueTipo = 'mp4';
+    }
   }
 
   carregarProdutos() {

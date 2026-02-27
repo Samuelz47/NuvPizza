@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
 export interface StatusLoja {
     estaAberta: boolean;
     dataHoraFechamento: string | null;
+    videoDestaqueUrl?: string | null;
 }
 
 @Injectable({
@@ -29,5 +30,9 @@ export class LojaService {
 
     estenderLoja(minutosExtras: number): Observable<any> {
         return this.http.post(`${environment.apiUrl}/loja/estender`, { minutosExtras });
+    }
+
+    atualizarVideoDestaque(url: string | null): Observable<any> {
+        return this.http.put(`${environment.apiUrl}/loja/video-destaque`, { videoDestaqueUrl: url });
     }
 }

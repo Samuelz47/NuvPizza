@@ -8,4 +8,5 @@ public interface IConfiguracaoService
     Task<bool> FecharLojaAsync();
     Task<bool> EstenderLojaAsync(EstenderLojaDTO estenderLojaDto);
     Task<StatusLojaDTO> GetStatusLojaAsync();
+    Task AtualizarVideoDestaqueAsync(AtualizarVideoDestaqueDTO dto);
 }
