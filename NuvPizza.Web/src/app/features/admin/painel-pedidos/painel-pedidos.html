@@ -11,8 +11,9 @@
     <div class="header">
       <h2>Painel de Pedidos (Cozinha)</h2>
       <div class="header-actions">
-        <button (click)="abrirLoja()" class="btn btn-abrir"><i class="bi bi-door-open-fill"></i> Abrir Loja</button>
-        <button (click)="fecharLoja()" class="btn btn-fechar"><i class="bi bi-door-closed-fill"></i> Fechar
+        <button (click)="abrirLoja($event)" class="btn btn-abrir"><i class="bi bi-door-open-fill"></i> Abrir
+          Loja</button>
+        <button (click)="fecharLoja($event)" class="btn btn-fechar"><i class="bi bi-door-closed-fill"></i> Fechar
           Loja</button>
         <button (click)="carregarPedidos()" class="btn btn-atualizar">↻ Atualizar</button>
       </div>
@@ -237,6 +238,45 @@
       </div>
     </div>
 
+  </div>
+</div>
+}
+
+@if (mostrarModalLoja()) {
+<div class="modal-overlay" (click)="fecharModalLoja()">
+  <div class="modal-content-small" (click)="$event.stopPropagation()">
+    <div class="modal-custom-header" [class.status-preparo]="modalLojaTipo() === 'estender'"
+      [class.status-finalizado]="modalLojaTipo() === 'abrir'" [class.status-cancelado]="modalLojaTipo() === 'fechar'">
+      <h5>
+        @if (modalLojaTipo() === 'abrir') { <i class="bi bi-door-open-fill"></i> Abrir Loja }
+        @if (modalLojaTipo() === 'fechar') { <i class="bi bi-door-closed-fill"></i> Fechar Loja }
+        @if (modalLojaTipo() === 'estender') { <i class="bi bi-clock-history"></i> Estender Horário }
+      </h5>
+      <button class="btn-close-custom" (click)="fecharModalLoja()">✖</button>
+    </div>
+
+    <div class="modal-custom-body-p">
+      @if (modalLojaTipo() === 'fechar') {
+      <p class="text-center p-3">Tem certeza que deseja <strong>FECHAR</strong> a loja agora? <br> Os clientes não
+        conseguirão fazer novos pedidos.</p>
+      } @else {
+      <div class="form-grupo-modal">
+        <label>
+          @if (modalLojaTipo() === 'abrir') { Horário de encerramento (Ex: 23:59) }
+          @else { Minutos para estender }
+        </label>
+        <input type="text" [(ngModel)]="modalLojaValor" class="input-modal-loja" placeholder="Ex: 23:59" autofocus>
+      </div>
+      }
+
+      <div class="modal-acoes-loja">
+        <button class="btn-cancelar-modal" (click)="fecharModalLoja()">Cancelar</button>
+        <button class="btn-confirmar-modal" [class.btn-fechar]="modalLojaTipo() === 'fechar'"
+          (click)="confirmarAcaoLoja()">
+          Confirmar
+        </button>
+      </div>
+    </div>
   </div>
 </div>
 }

@@ -5,9 +5,9 @@ import { Observable } from 'rxjs';
 
 export interface FaturamentoDTO {
     faturamento: number;
-    qunatidadePedido: number; // mantendo o typo do backend no DTO C#
+    quantidadePedidos: number;
     frete: number;
-    ticktedMedio: number; // mantendo o typo do backend no DTO C#
+    ticketMedio: number;
 }
 
 @Injectable({

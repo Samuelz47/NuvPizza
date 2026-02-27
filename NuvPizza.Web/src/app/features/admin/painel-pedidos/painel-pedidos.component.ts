@@ -87,6 +87,11 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
   private dataHoraFechamento: Date | null = null;
   private timerInterval: any = null;
 
+  // Modal de Controle da Loja
+  mostrarModalLoja = signal(false);
+  modalLojaTipo = signal<'abrir' | 'fechar' | 'estender'>('abrir');
+  modalLojaValor = signal('');
+
   ngOnInit() {
     this.carregarPedidos();
     this.ouvirNovosPedidos();
@@ -149,43 +154,71 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
   }
 
   estenderHorario() {
-    const minutos = prompt('Quantos minutos deseja estender?', '30');
-    if (!minutos) return;
-    const num = parseInt(minutos);
-    if (isNaN(num) || num <= 0) { this.mostrarToast('Valor inválido.', 'erro'); return; }
-
-    this.lojaService.estenderLoja(num).subscribe({
-      next: () => {
-        this.mostrarToast(`Horário estendido em ${num} minutos! ⏰`, 'sucesso');
-        this.carregarStatusLoja();
-      },
-      error: () => this.mostrarToast('Erro ao estender horário.', 'erro')
-    });
+    this.modalLojaTipo.set('estender');
+    this.modalLojaValor.set('30');
+    this.mostrarModalLoja.set(true);
   }
 
-  abrirLoja() {
-    const hora = prompt("Qual será o horário de encerramento da loja hoje? (Ex: 23:59)");
-    if (!hora) return;
-
-    this.lojaService.abrirLoja(hora).subscribe({
-      next: () => {
-        this.mostrarToast(`Loja aberta até as ${hora}! 🍕`, 'sucesso');
-        this.carregarStatusLoja();
-      },
-      error: () => this.mostrarToast('Erro ao abrir a loja. Verifique o horário.', 'erro')
-    });
+  abrirLoja(event?: Event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.modalLojaTipo.set('abrir');
+    this.modalLojaValor.set('23:59');
+    this.mostrarModalLoja.set(true);
   }
 
-  fecharLoja() {
-    if (!confirm("Tem certeza que deseja FECHAR a loja agora? Os clientes não conseguirão fazer novos pedidos.")) return;
+  fecharLoja(event?: Event) {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    }
+    this.modalLojaTipo.set('fechar');
+    this.mostrarModalLoja.set(true);
+  }
 
-    this.lojaService.fecharLoja().subscribe({
-      next: () => {
-        this.mostrarToast('Loja fechada com sucesso. 🛑', 'sucesso');
-        this.carregarStatusLoja();
-      },
-      error: () => this.mostrarToast('Erro ao fechar a loja.', 'erro')
-    });
+  confirmarAcaoLoja() {
+    const tipo = this.modalLojaTipo();
+    const valor = this.modalLojaValor();
+
+    if (tipo === 'abrir') {
+      this.lojaService.abrirLoja(valor).subscribe({
+        next: () => {
+          this.mostrarToast(`Loja aberta até as ${valor}! 🍕`, 'sucesso');
+          this.mostrarModalLoja.set(false);
+          this.carregarStatusLoja();
+        },
+        error: () => this.mostrarToast('Erro ao abrir a loja. Verifique o horário.', 'erro')
+      });
+    } else if (tipo === 'fechar') {
+      this.lojaService.fecharLoja().subscribe({
+        next: () => {
+          this.mostrarToast('Loja fechada com sucesso. 🛑', 'sucesso');
+          this.mostrarModalLoja.set(false);
+          this.carregarStatusLoja();
+        },
+        error: () => this.mostrarToast('Erro ao fechar a loja.', 'erro')
+      });
+    } else if (tipo === 'estender') {
+      const num = parseInt(valor);
+      if (isNaN(num) || num <= 0) {
+        this.mostrarToast('Valor inválido.', 'erro');
+        return;
+      }
+      this.lojaService.estenderLoja(num).subscribe({
+        next: () => {
+          this.mostrarToast(`Horário estendido em ${num} minutos! ⏰`, 'sucesso');
+          this.mostrarModalLoja.set(false);
+          this.carregarStatusLoja();
+        },
+        error: () => this.mostrarToast('Erro ao estender horário.', 'erro')
+      });
+    }
+  }
+
+  fecharModalLoja() {
+    this.mostrarModalLoja.set(false);
   }
 
   limparFiltros() {
@@ -287,9 +320,9 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
     const ddi = numero.length === 10 || numero.length === 11 ? '55' : '';
 
     const codigo = this.getCodigoPedido(pedido);
-    let mensagem = `Olá ${pedido.nomeCliente}, tudo bem? 🍕\n\n`;
-    mensagem += `Seu pedido *${codigo}* acabou de sair para entrega e está a caminho! 🛵💨\n\n`;
-    mensagem += `Agradecemos a preferência!`;
+    let mensagem = `Ola ${pedido.nomeCliente}, tudo bem?\n\n`;
+    mensagem += `Seu pedido *${codigo}* saiu para entrega!\n\n`;
+    mensagem += `Agradecemos a preferencia!`;
 
     const url = `https://wa.me/${ddi}${numero}?text=${encodeURIComponent(mensagem)}`;
     window.open(url, '_blank');
@@ -311,7 +344,7 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
 
   imprimirComanda(pedido: any) {
     const dataHora = new Date(pedido.dataPedido).toLocaleString('pt-BR');
-    const telefone = pedido.telefone || pedido.linkWhatsapp || 'Não informado';
+    const telefone = pedido.telefoneCliente || pedido.telefone || 'Não informado';
     const codigo = this.getCodigoPedido(pedido);
 
     const totalItens = pedido.itens.reduce((acc: number, item: any) => acc + (item.total || (item.preco * item.quantidade)), 0);
