@@ -13,6 +13,8 @@ rm -rf ./NuvPizza.API/publish
 echo "[2/4] Gerando nova versão (Build/Publish)..."
 cd NuvPizza.API
 dotnet publish -c Release -o ./publish
+# Remove o banco de dados local da pasta publish para não sobrescrever o bd de produção!
+rm -f ./publish/*.db ./publish/*.db-shm ./publish/*.db-wal
 cd ..
 
 echo "[3/4] Enviando arquivos para o servidor VPS via SCP..."

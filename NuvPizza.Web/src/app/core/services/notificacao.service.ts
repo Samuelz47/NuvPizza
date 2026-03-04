@@ -9,10 +9,8 @@ import { Subject, Observable } from 'rxjs';
 export class NotificacaoService {
   private hubConnection!: HubConnection;
 
-  // --- 1. AJUSTE DE URL ---
-  // O Hub fica na raiz (ex: localhost:5269/notificacao), e não dentro de /api.
-  // Removemos o "/api" do environment se ele estiver lá.
-  private hubUrl = environment.apiUrl.replace('/api', '') + '/notificacao';
+  // O Hub fica na mesma URL base da API (ex: api.nuvpizza.com.br/notificacao)
+  private hubUrl = environment.apiUrl + '/notificacao';
 
   // Subjects privados (quem emite os dados)
   private novoPedidoSource = new Subject<any>();
@@ -45,13 +43,13 @@ export class NotificacaoService {
     // O Backend manda: "StatusPedidoAtualizado", payload: guid, int
     this.hubConnection.on('StatusPedidoAtualizado', (pedidoId: string, novoStatus: number) => {
       console.log(`🔄 Status mudou! ID: ${pedidoId} -> Status: ${novoStatus}`);
-      
+
       // Emitimos um objeto único para facilitar pro componente ler
       this.statusAtualizadoSource.next({ pedidoId, novoStatus });
-      
+
       // Só toca som se for status de "Pago" (1) ou "Pronto" (3), por exemplo
-      if(novoStatus === 1 || novoStatus === 2 || novoStatus === 3) {
-          this.tocarSom();
+      if (novoStatus === 1 || novoStatus === 2 || novoStatus === 3) {
+        this.tocarSom();
       }
     });
   }

@@ -36,7 +36,7 @@ public class TokenService
                 new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
                 new Claim(ClaimTypes.Name, usuario.Email)
             }),
-            Expires = DateTime.UtcNow.AddHours(2), // O token vale por 2 horas
+            Expires = DateTime.UtcNow.AddHours(8), // O token vale por 8 horas (um turno de trabalho)
             SigningCredentials = new SigningCredentials(
                 new SymmetricSecurityKey(key), 
                 SecurityAlgorithms.HmacSha256Signature)

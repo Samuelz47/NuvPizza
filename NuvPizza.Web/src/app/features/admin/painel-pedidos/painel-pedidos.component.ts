@@ -115,6 +115,10 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
           this.pertoDeFecahr.set(false);
           if (this.timerInterval) { clearInterval(this.timerInterval); this.timerInterval = null; }
         }
+      },
+      error: (err) => {
+        console.error('Erro ao carregar status da loja', err);
+        this.mostrarToast('Erro ao carregar status da loja.', 'erro');
       }
     });
   }

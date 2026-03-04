@@ -10,17 +10,16 @@ import { tap } from 'rxjs/operators';
 export class AuthService {
   private http = inject(HttpClient);
   private router = inject(Router);
-  private apiUrl = `${environment.apiUrl}/Auth`; // Certifique-se que a rota é essa
+  private apiUrl = `${environment.apiUrl}/Auth`;
 
-  // Sinal para saber se está logado (reativo)
-  isAuthenticated = signal<boolean>(!!localStorage.getItem('token'));
+  // Verifica se o token existe E está válido (não expirado)
+  isAuthenticated = signal<boolean>(this.isTokenValid());
 
   login(email: string, password: string) {
     return this.http.post<any>(`${this.apiUrl}/login`, { email, password }).pipe(
       tap(response => {
-        // Supondo que o backend retorna { accessToken: "...", ... } ou { token: "..." }
         const token = response.accessToken || response.token;
-        
+
         if (token) {
           localStorage.setItem('token', token);
           this.isAuthenticated.set(true);
@@ -37,5 +36,23 @@ export class AuthService {
 
   getToken() {
     return localStorage.getItem('token');
+  }
+
+  private isTokenValid(): boolean {
+    const token = localStorage.getItem('token');
+    if (!token) return false;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expirado = payload.exp * 1000 < Date.now();
+      if (expirado) {
+        localStorage.removeItem('token');
+        return false;
+      }
+      return true;
+    } catch {
+      localStorage.removeItem('token');
+      return false;
+    }
   }
 }

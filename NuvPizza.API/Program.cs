@@ -145,6 +145,10 @@ try
         var services = scope.ServiceProvider;
         try
         {
+            var context = services.GetRequiredService<AppDbContext>();
+            // Aplica as migrações automaticamente no banco de dados (Hostinger)
+            context.Database.Migrate();
+
             var userManager = services.GetRequiredService<UserManager<Usuario>>();
             var configuration = services.GetRequiredService<IConfiguration>();
 
