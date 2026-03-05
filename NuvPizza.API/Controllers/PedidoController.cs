@@ -34,13 +34,12 @@ public class PedidoController : Controller
             pagedResult.PageSize,
             pagedResult.TotalPages,
             pagedResult.PageNumber,
-            pagedResult.Items,
             pagedResult.HasNextPage,
             pagedResult.HasPreviousPage,
         };
         Response.Headers.Append("X-Pagination", JsonSerializer.Serialize(paginationMetadata));
         
-        return Ok(paginationMetadata.Items);
+        return Ok(pagedResult.Items);
     }
 
     [HttpPost]
