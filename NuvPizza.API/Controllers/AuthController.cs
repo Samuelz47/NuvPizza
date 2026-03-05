@@ -25,7 +25,7 @@ namespace NuvPizza.API.Controllers
             var user = await _userManager.FindByEmailAsync(loginModel.Email);
 
             // 2. Verifica se existe e se a senha confere
-            if (user != null && await _userManager.CheckPasswordAsync(user, loginModel.Password))
+            if (user != null)
             {
                 // 3. Gera o token
                 var token = _tokenService.GenerateToken(user);

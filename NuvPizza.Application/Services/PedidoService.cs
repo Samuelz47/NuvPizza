@@ -64,7 +64,7 @@ public class PedidoService : IPedidoService
         }
         
         var pedido =  _mapper.Map<Pedido>(pedidoRegister);
-        pedido.DataPedido = DateTime.Now;
+        pedido.DataPedido = DateTime.UtcNow.AddHours(-3);
         pedido.Itens = new List<ItemPedido>();
         pedido.ValorFrete = bairro.ValorFrete;
         pedido.BairroId = bairro.Id;
@@ -293,7 +293,7 @@ public class PedidoService : IPedidoService
 
         if (!config.EstaAberta) return false;
 
-        if (config.DataHoraFechamentoAtual.HasValue && DateTime.Now > config.DataHoraFechamentoAtual.Value)
+        if (config.DataHoraFechamentoAtual.HasValue && DateTime.UtcNow.AddHours(-3) > config.DataHoraFechamentoAtual.Value)
         {
             return false;
         }

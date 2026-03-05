@@ -72,7 +72,7 @@ public class LojaWorkers : BackgroundService
                 return;
             }
 
-            var agora = DateTime.Now;
+            var agora = DateTime.UtcNow.AddHours(-3);
             var horarioFechamento = config.DataHoraFechamentoAtual.Value;
             var tempoRestante = horarioFechamento - agora;
 

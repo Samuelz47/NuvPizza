@@ -44,8 +44,8 @@ public class MercadoPagoService : IPagamentoService
                 {
                     new PreferenceItemRequest
                     {
-                        // Adicione DateTime.Now no título para obrigar gerar um link novo
-                        Title = $"{dto.Titulo} ({DateTime.Now:HH:mm:ss})",
+                        // Adicione DateTime.UtcNow no título para obrigar gerar um link novo
+                        Title = $"{dto.Titulo} ({DateTime.UtcNow.AddHours(-3):HH:mm:ss})",
                         Quantity = dto.Quantidade,
                         CurrencyId = "BRL",
                         UnitPrice = dto.PrecoUnitario,

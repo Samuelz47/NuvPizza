@@ -138,6 +138,11 @@ try
 
     var app = builder.Build();
 
+    // CORS deve ser o PRIMEIRO middleware para garantir que TODAS as respostas
+    // (incluindo erros 401, 500, etc.) tenham os headers CORS.
+    // Sem isso, o browser bloqueia respostas de erro e mostra "No Access-Control-Allow-Origin".
+    app.UseCors("DevelopmentCors");
+
     app.UseMiddleware<ExceptionHandlingMiddleware>();
 
     using (var scope = app.Services.CreateScope())
@@ -166,8 +171,6 @@ try
         app.UseSwagger();
         app.UseSwaggerUI(c => { c.SwaggerEndpoint("/swagger/v1/swagger.json", "NuvPizza.API v1"); });
     }
-
-    app.UseCors("DevelopmentCors");
 
     //app.UseHttpsRedirection();
     

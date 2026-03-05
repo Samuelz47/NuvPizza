@@ -23,7 +23,7 @@ public class ConfiguracaoService : IConfiguracaoService
     {
         var config = await _configuracaoRepository.GetAsync(c => c.Id == 1);
 
-        var agora = DateTime.Now;
+        var agora = DateTime.UtcNow.AddHours(-3);
         var dataDeFechamento = agora.Date + abrirLojaDto.HoraDeEncerramento;
         
         if(dataDeFechamento <= agora) { dataDeFechamento = dataDeFechamento.AddDays(1); }
@@ -69,7 +69,7 @@ public class ConfiguracaoService : IConfiguracaoService
         var config = await _configuracaoRepository.GetAsync(c => c.Id == 1);
         
         // Auto-fecha se passou do horário
-        if (config.EstaAberta && config.DataHoraFechamentoAtual.HasValue && DateTime.Now >= config.DataHoraFechamentoAtual.Value)
+        if (config.EstaAberta && config.DataHoraFechamentoAtual.HasValue && DateTime.UtcNow.AddHours(-3) >= config.DataHoraFechamentoAtual.Value)
         {
             config.EstaAberta = false;
             config.DataHoraFechamentoAtual = null;

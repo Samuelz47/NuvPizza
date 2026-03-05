@@ -20,10 +20,10 @@ public class FaturamentoController : ControllerBase
     public async Task<IActionResult> ObterFaturamento([FromQuery] DateTime inicial, [FromQuery] DateTime final)
     {
         if (inicial == default) 
-            inicial = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
+            inicial = new DateTime(DateTime.UtcNow.AddHours(-3).Year, DateTime.UtcNow.AddHours(-3).Month, 1);
             
         if (final == default) 
-            final = new DateTime(DateTime.Today.Year, DateTime.Today.Month, DateTime.DaysInMonth(DateTime.Today.Year, DateTime.Today.Month));
+            final = new DateTime(DateTime.UtcNow.AddHours(-3).Year, DateTime.UtcNow.AddHours(-3).Month, DateTime.DaysInMonth(DateTime.UtcNow.AddHours(-3).Year, DateTime.UtcNow.AddHours(-3).Month));
         
         var resultado = await _faturamentoService.ObterFaturamentoAsync(inicial, final);
         if (!resultado.IsSuccess) return BadRequest(new { message = resultado.Message });
