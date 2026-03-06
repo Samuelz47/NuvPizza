@@ -24,6 +24,12 @@ export class CardapioComponent implements OnInit {
 
   produtos: Produto[] = [];
   categoriaAtiva: CategoriaProduto = CategoriaProduto.Pizza;
+  tamanhoPizzaSelecionado: number | null = null; // null = tela de seleção de tamanho
+
+  selecionarCategoria(catId: CategoriaProduto) {
+    this.categoriaAtiva = catId;
+    this.tamanhoPizzaSelecionado = null; // reseta ao trocar de categoria
+  }
 
   // Status da Loja
   lojaAberta = false;
@@ -123,6 +129,46 @@ export class CardapioComponent implements OnInit {
   // Filtra na tela para não ficar fazendo request toda hora
   get produtosFiltrados() {
     return this.produtos.filter(p => p.ativo && p.categoria === this.categoriaAtiva);
+  }
+
+  // Tamanhos disponíveis de pizza (para mostrar as opções de subdivisão)
+  get tamanhosDisponiveis(): { tamanho: number; nome: string; emoji: string; descricao: string; pizzas: Produto[] }[] {
+    const pizzasAtivas = this.produtos.filter(
+      p => p.categoria === CategoriaProduto.Pizza && p.ativo
+    );
+    const mapa = new Map<number, Produto[]>();
+    for (const pizza of pizzasAtivas) {
+      if (!mapa.has(pizza.tamanho)) mapa.set(pizza.tamanho, []);
+      mapa.get(pizza.tamanho)!.push(pizza);
+    }
+    const descricoes: Record<string, { emoji: string; descricao: string }> = {
+      'Pequena': { emoji: '🍕', descricao: 'Perfeita para 1 pessoa' },
+      'Media': { emoji: '🍕🍕', descricao: '6 fatias — ideal para 2 pessoas' },
+      'Grande': { emoji: '🍕🍕🍕', descricao: '8 fatias — ideal para 3 ou mais' },
+    };
+    return Array.from(mapa.entries())
+      .sort(([a], [b]) => a - b)
+      .map(([tamanho, pizzas]) => {
+        const nome = this.getNomeTamanho(tamanho);
+        const info = descricoes[nome] || { emoji: '🍕', descricao: '' };
+        return { tamanho, nome, emoji: info.emoji, descricao: info.descricao, pizzas };
+      });
+  }
+
+  // Pizzas do tamanho selecionado (para exibição após escolha)
+  get pizzasTamanhoSelecionado(): Produto[] {
+    if (this.tamanhoPizzaSelecionado === null) return [];
+    return this.produtos.filter(
+      p => p.categoria === CategoriaProduto.Pizza && p.ativo && p.tamanho === this.tamanhoPizzaSelecionado
+    );
+  }
+
+  selecionarTamanhoPizza(tamanho: number) {
+    this.tamanhoPizzaSelecionado = tamanho;
+  }
+
+  voltarSelecaoTamanho() {
+    this.tamanhoPizzaSelecionado = null;
   }
 
   // Lista de bordas para o modal da pizza (todos os acompanhamentos ativos)

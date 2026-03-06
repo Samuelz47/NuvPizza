@@ -5,6 +5,7 @@ import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { PedidoService } from '../../core/services/pedido.service';
 import { CarrinhoService } from '../../core/services/carrinho.service';
+import { LojaService } from '../../core/services/loja.service';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -17,6 +18,7 @@ import { environment } from '../../environments/environment';
 export class CheckoutComponent {
   private pedidoService = inject(PedidoService);
   public carrinhoService = inject(CarrinhoService);
+  private lojaService = inject(LojaService);
   private router = inject(Router);
   private http = inject(HttpClient);
 
@@ -26,6 +28,7 @@ export class CheckoutComponent {
   buscandoCep = signal<boolean>(false);
   bairroNaoAtendido = signal<boolean>(false);
   freteLabel = signal<string>('---');
+  lojaAberta = signal<boolean>(true);
 
   idPedidoCriado = signal<string | null>(null);
 
@@ -61,6 +64,14 @@ export class CheckoutComponent {
 
   constructor() {
     this.selecionarTipoPagamento('ONLINE');
+  }
+
+  ngOnInit() {
+    this.lojaService.getStatus().subscribe({
+      next: (status) => {
+        this.lojaAberta.set(status.estaAberta);
+      }
+    });
   }
 
   adicionarItemTeste() {
@@ -174,10 +185,15 @@ export class CheckoutComponent {
       obsFinal += ` | (Precisa de troco para: R$ ${this.trocoPara()})`;
     }
 
+    // Tenta converter o número para int, se não for número válido manda 0 para evitar quebra no C#
+    const numeroStr = this.pedido.numero?.toString() || '0';
+    const numeroInt = parseInt(numeroStr, 10);
+    const numeroFinal = isNaN(numeroInt) ? 0 : numeroInt;
+
     const payload = {
       ...this.pedido,
       observacao: obsFinal,
-      numero: this.pedido.numero.toString(),
+      numero: numeroFinal,
       valorFrete: this.carrinhoService.valorFrete(),
       valorTotal: this.carrinhoService.totalComFrete(),
       itens: itensReais
@@ -212,7 +228,8 @@ export class CheckoutComponent {
         }
       },
       error: (err: any) => {
-        console.error('Erro Backend:', err);
+        console.error('Erro Backend RAW:', err);
+        console.error('Erro Backend Body:', JSON.stringify(err.error, null, 2));
         this.loading.set(false);
 
         if (err.error?.errors) {

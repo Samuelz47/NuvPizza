@@ -21,6 +21,9 @@ public class PedidoRepository : Repository<Pedido>, IPedidoRepository
 
         if (pedidoParameters.Status != null && pedidoParameters.Status.Any())
             query = query.Where(p => pedidoParameters.Status.Contains(p.StatusPedido));
+        
+        // Esconde pedidos inacabados/abandonados do MercadoPago
+        query = query.Where(p => !(p.StatusPedido == StatusPedido.Criado && p.FormaPagamento == FormaPagamento.MercadoPago));
 
 
         if (pedidoParameters.DataInicio.HasValue)

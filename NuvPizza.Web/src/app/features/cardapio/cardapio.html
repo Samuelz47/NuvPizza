@@ -20,7 +20,8 @@
 
   <!-- Abas de Categorias -->
   <div class="tabs">
-    <button *ngFor="let cat of categorias" [class.active]="categoriaAtiva === cat.id" (click)="categoriaAtiva = cat.id">
+    <button *ngFor="let cat of categorias" [class.active]="categoriaAtiva === cat.id"
+      (click)="selecionarCategoria(cat.id)">
       {{ cat.nome }}
     </button>
   </div>
@@ -48,35 +49,68 @@
     </div>
   </ng-container>
 
-  <!-- Pizzas agrupadas por tamanho -->
+  <!-- ===== PIZZAS ===== -->
   <ng-container *ngIf="categoriaAtiva === 1">
 
-    <!-- DESTAQUE VÍDEO -->
-    <div *ngIf="videoDestaqueUrl" class="video-destaque-container">
-      <div class="video-wrapper" *ngIf="videoDestaqueTipo === 'youtube'">
-        <iframe [src]="videoDestaqueUrl" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    <!-- TELA DE SELEÇÃO DE TAMANHO (enquanto nenhum tamanho foi escolhido) -->
+    <ng-container *ngIf="tamanhoPizzaSelecionado === null">
+      <div class="tamanho-selecao-titulo">
+        <h2>Qual o tamanho da sua pizza?</h2>
+        <p>Escolha o tamanho antes de ver os sabores disponíveis</p>
       </div>
-      <div class="video-wrapper" *ngIf="videoDestaqueTipo === 'instagram'">
-        <iframe [src]="videoDestaqueUrl" frameborder="0" scrolling="no" allowtransparency="true"
-          allowfullscreen></iframe>
-      </div>
-      <div class="video-wrapper" *ngIf="videoDestaqueTipo === 'mp4'">
-        <video [src]="videoDestaqueUrl" autoplay loop muted playsinline></video>
-      </div>
-    </div>
-    <div *ngIf="pizzasPorTamanho.length === 0" class="produtos-grid">
-      <div class="vazio">
+
+      <div *ngIf="tamanhosDisponiveis.length === 0" class="vazio-pizza">
         <p>😕 Nenhuma pizza disponível no momento.</p>
       </div>
-    </div>
 
-    <div *ngFor="let grupo of pizzasPorTamanho" class="tamanho-secao">
-      <div class="tamanho-header">
-        <span class="tamanho-badge">{{ grupo.nome }}</span>
-        <span class="tamanho-divider"></span>
+      <div class="tamanho-selecao-grid">
+        <div class="tamanho-card" *ngFor="let grupo of tamanhosDisponiveis"
+          (click)="selecionarTamanhoPizza(grupo.tamanho)">
+          <div class="tamanho-card-emoji">{{ grupo.emoji }}</div>
+          <div class="tamanho-card-info">
+            <span class="tamanho-card-nome">
+              {{ grupo.nome === 'Pequena' ? 'Brotinho' : grupo.nome === 'Media' ? 'Média' : grupo.nome }}
+            </span>
+            <span class="tamanho-card-desc">{{ grupo.descricao }}</span>
+            <span class="tamanho-card-count">{{ grupo.pizzas.length }} sabores</span>
+          </div>
+          <span class="tamanho-card-arrow">›</span>
+        </div>
       </div>
+    </ng-container>
+
+    <!-- TELA DE PIZZAS DO TAMANHO SELECIONADO -->
+    <ng-container *ngIf="tamanhoPizzaSelecionado !== null">
+
+      <!-- Botão Voltar -->
+      <div class="voltar-tamanho">
+        <button class="btn-voltar" (click)="voltarSelecaoTamanho()">
+          ← Voltar ao tamanho
+        </button>
+        <span class="tamanho-badge-titulo">
+          {{ getNomeTamanho(tamanhoPizzaSelecionado) === 'Pequena' ? '🍕 Brotinho'
+          : getNomeTamanho(tamanhoPizzaSelecionado) === 'Media' ? '🍕🍕 Média (6 fatias)'
+          : '🍕🍕🍕 Grande (8 fatias)' }}
+        </span>
+      </div>
+
+      <!-- DESTAQUE VÍDEO -->
+      <div *ngIf="videoDestaqueUrl" class="video-destaque-container">
+        <div class="video-wrapper" *ngIf="videoDestaqueTipo === 'youtube'">
+          <iframe [src]="videoDestaqueUrl" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+        </div>
+        <div class="video-wrapper" *ngIf="videoDestaqueTipo === 'instagram'">
+          <iframe [src]="videoDestaqueUrl" frameborder="0" scrolling="no" allowtransparency="true"
+            allowfullscreen></iframe>
+        </div>
+        <div class="video-wrapper" *ngIf="videoDestaqueTipo === 'mp4'">
+          <video [src]="videoDestaqueUrl" autoplay loop muted playsinline></video>
+        </div>
+      </div>
+
+      <!-- Grid de Pizzas -->
       <div class="produtos-grid">
-        <div class="produto-card" *ngFor="let prod of grupo.pizzas" (click)="selecionarProduto(prod)">
+        <div class="produto-card" *ngFor="let prod of pizzasTamanhoSelecionado" (click)="selecionarProduto(prod)">
           <div class="produto-img-wrap">
             <img [src]="getImagemUrl(prod.imagemUrl)" alt="{{ prod.nome }}">
           </div>
@@ -89,8 +123,13 @@
             </div>
           </div>
         </div>
+        <div class="vazio" *ngIf="pizzasTamanhoSelecionado.length === 0">
+          <p>😕 Nenhuma pizza disponível nesse tamanho.</p>
+        </div>
       </div>
-    </div>
+
+    </ng-container>
+
   </ng-container>
 
 </div>

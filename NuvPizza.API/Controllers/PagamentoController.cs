@@ -84,9 +84,7 @@ public class PagamentoController : ControllerBase
 
                     if (resultado.IsSuccess)
                     {
-                        // Notifica o painel em tempo real
-                        await _notificacaoService.NotificarAtualizacaoStatus(pedidoId, (int)StatusPedido.Confirmado);
-                        _logger.LogInformation($"✅ Pedido atualizado para {formaReal} e Confirmado!");
+                        _logger.LogInformation($"✅ Pedido atualizado para {formaReal} e Confirmado! (SignalR disparado do Service)");
                     }
                 }
             }

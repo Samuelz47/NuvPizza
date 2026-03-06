@@ -179,22 +179,26 @@ public class PedidoService : IPedidoService
         
         var pedidoDto = _mapper.Map<PedidoDTO>(pedido);
         pedidoDto.LinkWhatsapp = linkWpp;
-        await _notificacaoService.NotificarNovoPedido(pedidoDto);
-
-        // Dispara o e-mail em background (Fire-and-Forget) para não travar a tela de Checkout do cliente
-        if (!string.IsNullOrEmpty(pedido.EmailCliente))
+        
+        if (formaPagamentoEnum != FormaPagamento.MercadoPago)
         {
-            _ = Task.Run(async () =>
+            await _notificacaoService.NotificarNovoPedido(pedidoDto);
+
+            // Dispara o e-mail em background (Fire-and-Forget) para não travar a tela de Checkout do cliente
+            if (!string.IsNullOrEmpty(pedido.EmailCliente))
             {
-                try
+                _ = Task.Run(async () =>
                 {
-                    await _emailService.EnviarEmailConfirmacao(pedido);
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[Email FireAndForget Error] {ex.Message}");
-                }
-            });
+                    try
+                    {
+                        await _emailService.EnviarEmailConfirmacao(pedido);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[Email FireAndForget Error] {ex.Message}");
+                    }
+                });
+            }
         }
 
         return Result<PedidoDTO>.Success(pedidoDto);
@@ -279,6 +283,27 @@ public class PedidoService : IPedidoService
         {
             await _uow.CommitAsync();
             var pedidoDto = _mapper.Map<PedidoDTO>(pedido);
+            pedidoDto.LinkWhatsapp = _whatsappService.GerarLinkPedido(pedido);
+            
+            // Dispara para o painel como um NOVO pedido apenas agora que foi pago
+            await _notificacaoService.NotificarNovoPedido(pedidoDto);
+            
+            // Dispara o e-mail de confirmação ao cliente
+            if (!string.IsNullOrEmpty(pedido.EmailCliente))
+            {
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await _emailService.EnviarEmailConfirmacao(pedido);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[Email FireAndForget Error] {ex.Message}");
+                    }
+                });
+            }
+
             return Result<PedidoDTO>.Success(pedidoDto);
         }
         catch (Exception ex)
