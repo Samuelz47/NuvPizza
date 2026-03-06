@@ -219,8 +219,8 @@ export class CheckoutComponent {
           if (url && typeof url === 'string' && url.startsWith('http')) {
             window.location.href = url;
           } else {
-            // Se não gerou link, vai pra sucesso com o ID
-            this.router.navigate(['/sucesso'], { state: { id: idGerado } });
+            // Se não gerou link (Erro de token do Mercado Pago, etc)
+            this.errorMessage.set('Ops! Ocorreu um erro ao gerar o link de pagamento do Mercado Pago. Verifique as credenciais da loja.');
           }
         } else {
           // Pagamento na Entrega: Vai pra sucesso com o ID
