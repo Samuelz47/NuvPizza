@@ -34,8 +34,8 @@ public class MercadoPagoService : IPagamentoService
             var backUrls = new PreferenceBackUrlsRequest
             {
                 Success = $"{baseUrl}/sucesso",
-                Failure = $"{baseUrl}/checkout",
-                Pending = $"{baseUrl}/checkout"
+                Failure = $"{baseUrl}/cardapio",
+                Pending = $"{baseUrl}/cardapio"
             };
 
             var request = new PreferenceRequest
@@ -60,7 +60,7 @@ public class MercadoPagoService : IPagamentoService
                 
                 NotificationUrl = $"{apiBaseUrl}/Pagamento/webhook",
                 BackUrls = backUrls,
-                //AutoReturn = "approved",
+                AutoReturn = "approved",
                 
                 // -------------------------------------------------------------
                 // AQUI ESTÁ A CORREÇÃO QUE VOCÊ QUER:

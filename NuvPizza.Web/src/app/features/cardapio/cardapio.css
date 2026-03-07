@@ -31,6 +31,25 @@
   font-weight: 500;
 }
 
+/* --- Horário de Funcionamento --- */
+.horario-funcionamento {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 8px 20px;
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 500;
+  color: #4B6FA5;
+  background: #EEF2F9;
+  border: 1px solid rgba(75, 111, 165, 0.15);
+  margin: 0 auto 10px;
+  max-width: 600px;
+  text-align: center;
+  animation: slideDown 0.35s ease-out;
+}
+
 /* --- Status da Loja (Banner) --- */
 .loja-status-banner {
   display: flex;

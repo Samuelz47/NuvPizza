@@ -262,10 +262,10 @@
       } @else {
       <div class="form-grupo-modal">
         <label>
-          @if (modalLojaTipo() === 'abrir') { Horário de encerramento (Ex: 23:59) }
+          @if (modalLojaTipo() === 'abrir') { Horário de encerramento (Ex: 22:30) }
           @else { Minutos para estender }
         </label>
-        <input type="text" [(ngModel)]="modalLojaValor" class="input-modal-loja" placeholder="Ex: 23:59" autofocus>
+        <input type="text" [(ngModel)]="modalLojaValor" class="input-modal-loja" placeholder="Ex: 22:30" autofocus>
       </div>
       }
 

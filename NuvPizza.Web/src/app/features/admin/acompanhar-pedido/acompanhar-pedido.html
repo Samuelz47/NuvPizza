@@ -81,8 +81,7 @@
         </div>
     </div>
 
-    <a href="https://wa.me/5584991922799?text=Olá, preciso de ajuda com meu pedido #{{pedido().id.substring(0,8).toUpperCase()}}"
-        target="_blank" class="btn-whatsapp">
+    <a [href]="getWhatsAppLink()" target="_blank" class="btn-whatsapp">
         <i class="bi bi-whatsapp"></i> Preciso de Ajuda
     </a>
 

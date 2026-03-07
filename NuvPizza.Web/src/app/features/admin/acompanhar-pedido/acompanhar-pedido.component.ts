@@ -95,4 +95,12 @@ export class AcompanharPedidoComponent implements OnInit, OnDestroy {
   isCurrentStep(stepStatus: number): boolean {
     return this.pedido()?.statusPedido === stepStatus;
   }
+
+  getWhatsAppLink(): string {
+    const p = this.pedido();
+    if (!p) return 'https://wa.me/5584991922799';
+    const idCurto = p.id.substring(0, 8).toUpperCase();
+    const mensagem = `Olá, preciso de ajuda com meu pedido #${idCurto}`;
+    return `https://wa.me/5584991922799?text=${encodeURIComponent(mensagem)}`;
+  }
 }

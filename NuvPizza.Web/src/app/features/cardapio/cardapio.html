@@ -5,6 +5,12 @@
     <p>Escolha seus favoritos e monte seu pedido</p>
   </div>
 
+  <!-- Horário de Funcionamento -->
+  <div class="horario-funcionamento">
+    <i class="bi bi-clock me-1"></i>
+    <span>Funcionamento: <strong>Terça a Domingo</strong> — 18h às 22h30</span>
+  </div>
+
   <!-- Status da Loja -->
   <div class="loja-status-banner" [class.aberta]="lojaAberta" [class.fechada]="!lojaAberta">
     <ng-container *ngIf="lojaAberta">

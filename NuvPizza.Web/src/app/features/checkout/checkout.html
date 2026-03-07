@@ -7,15 +7,6 @@
       <p>Preencha seus dados para concluir a compra</p>
     </div>
 
-    @if (carrinhoService.quantidadeTotal() === 0) {
-    <div class="text-center mb-4">
-      <button (click)="adicionarItemTeste()"
-        style="background:#4B6FA5;color:white;border:none;padding:10px 22px;border-radius:30px;font-weight:700;cursor:pointer;">
-        🛠️ Adicionar Pizza de Teste
-      </button>
-    </div>
-    }
-
     <div class="row g-4">
 
       <!-- Coluna esquerda: formulário -->
