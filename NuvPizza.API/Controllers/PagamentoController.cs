@@ -70,14 +70,9 @@ public class PagamentoController : ControllerBase
                 {
                     _logger.LogInformation($"🔔 Webhook: Pagamento aprovado para Pedido {pedidoId}. Tipo: {dadosPagamento.TipoPagamento}");
 
-                    // 3. Traduz MP -> Enum NuvPizza
-                    FormaPagamento formaReal = dadosPagamento.TipoPagamento switch
-                    {
-                        "credit_card" => FormaPagamento.CartaoCredito,
-                        "debit_card" => FormaPagamento.CartaoDebito,
-                        "bank_transfer" or "ticket" => FormaPagamento.Pix,
-                        _ => FormaPagamento.MercadoPago // Fallback
-                    };
+                    // 3. Força o Enum MercadoPago para que o Painel exiba "Online (MP)"
+                    // e o entregador saiba que não precisa cobrar na entrega.
+                    FormaPagamento formaReal = FormaPagamento.MercadoPago;
 
                     // 4. Chama o novo método do Service que atualiza Status E Pagamento
                     var resultado = await _pedidoService.ConfirmarPagamentoAsync(pedidoId, formaReal);
