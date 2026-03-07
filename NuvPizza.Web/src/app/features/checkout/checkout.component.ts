@@ -74,15 +74,6 @@ export class CheckoutComponent {
     });
   }
 
-  adicionarItemTeste() {
-    this.carrinhoService.adicionar({
-      id: 1,
-      nome: 'Pizza de Teste (Calabresa)',
-      preco: 45.90,
-      imagemUrl: ''
-    });
-  }
-
   buscarCep() {
     const cep = this.pedido.cep?.replace(/\D/g, '');
     if (cep?.length !== 8) return;

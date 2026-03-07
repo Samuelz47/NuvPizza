@@ -169,7 +169,7 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
       event.stopPropagation();
     }
     this.modalLojaTipo.set('abrir');
-    this.modalLojaValor.set('23:59');
+    this.modalLojaValor.set('22:30');
     this.mostrarModalLoja.set(true);
   }
 
