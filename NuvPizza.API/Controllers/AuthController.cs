@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using NuvPizza.Domain.Entities;
 using NuvPizza.Infrastructure.Services; 
 
@@ -19,6 +20,7 @@ namespace NuvPizza.API.Controllers
         }
 
         [HttpPost("login")]
+        [EnableRateLimiting("LoginLimit")]
         public async Task<IActionResult> Login([FromBody] LoginModel loginModel)
         {
             // 1. Busca o usuário pelo email

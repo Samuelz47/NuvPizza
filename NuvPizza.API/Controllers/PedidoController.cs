@@ -6,6 +6,7 @@ using NuvPizza.Application.Services;
 using NuvPizza.Domain.Pagination;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace NuvPizza.API.Controllers;
 [Route("[controller]")]
@@ -43,6 +44,7 @@ public class PedidoController : Controller
     }
 
     [HttpPost]
+    [EnableRateLimiting("CheckoutLimit")]
     public async Task<ActionResult<PedidoDTO>> Create([FromBody] PedidoForRegistrationDTO PedidoDto)
     {
         var pedidoResult = await _pedidoService.CreatePedidoAsync(PedidoDto);

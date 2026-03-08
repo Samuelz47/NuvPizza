@@ -1,10 +1,12 @@
 using System.Collections.Immutable;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -32,9 +34,9 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
-    
+
     builder.Host.UseSerilog();
-    
+
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseSqlite(connectionString));
@@ -80,7 +82,7 @@ try
                 .WithExposedHeaders("X-Pagination"); // Permite que o JS leia o header de paginação
         });
     });
-    
+
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(c =>
     {
@@ -110,8 +112,62 @@ try
             }
         });
     });
+    builder.Services.AddRateLimiter(rateLimitOptions =>
+    {
+        rateLimitOptions.AddPolicy("CheckoutLimit", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 3,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                }));
 
-    builder.Services.AddHttpClient<ViaCepService>(client => { client.Timeout = TimeSpan.FromSeconds(5); });
+        rateLimitOptions.AddPolicy("LoginLimit", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 5,
+                    Window = TimeSpan.FromMinutes(5),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                }));
+        
+        rateLimitOptions.AddPolicy("PublicApiLimit", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 30,
+                    Window = TimeSpan.FromMinutes(1),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                }));
+        
+        rateLimitOptions.OnRejected = async (context, token) =>
+        {
+            context.HttpContext.Response.StatusCode = StatusCodes.Status429TooManyRequests;
+            var caminhoRequisicao = context.HttpContext.Request.Path.Value?.ToLower() ?? "";
+
+            if (caminhoRequisicao.Contains("/login") || caminhoRequisicao.Contains("auth"))
+            {
+                await context.HttpContext.Response.WriteAsync("Muitas tentativas de login. Aguarde 5 minutos.");
+            }
+            else if (caminhoRequisicao.Contains("/pedido"))
+            {
+                await context.HttpContext.Response.WriteAsync("Muitos pedidos foram feitos. Tente novamente em 1 minuto.");
+            }
+            else
+            {
+                await context.HttpContext.Response.WriteAsync("Muitas requisições. Tente novamente mais tarde.");
+            }
+        };
+    });
+
+builder.Services.AddHttpClient<ViaCepService>(client => { client.Timeout = TimeSpan.FromSeconds(5); });
 
     builder.Services.AddAutoMapper(typeof(ProdutoMappingProfile).Assembly);
     builder.Services.AddFluentValidationAutoValidation();
@@ -142,6 +198,9 @@ try
     // (incluindo erros 401, 500, etc.) tenham os headers CORS.
     // Sem isso, o browser bloqueia respostas de erro e mostra "No Access-Control-Allow-Origin".
     app.UseCors("DevelopmentCors");
+
+    app.UseRouting();
+    app.UseRateLimiter();
 
     app.UseMiddleware<ExceptionHandlingMiddleware>();
 

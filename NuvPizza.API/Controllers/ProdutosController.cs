@@ -4,6 +4,7 @@ using NuvPizza.Application.DTOs;
 using NuvPizza.Application.Interfaces;
 using NuvPizza.Domain.Interfaces;
 using NuvPizza.Domain.Entities;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace NuvPizza.API.Controllers;
 [Route("[controller]")]
@@ -46,6 +47,7 @@ public class ProdutosController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [EnableRateLimiting("PublicApiLimit")]
     public async Task<IActionResult> GetProdutos(int id)
     {
         var produtoDto = await _produtoService.GetProdutoAsync(id);
@@ -56,6 +58,7 @@ public class ProdutosController : ControllerBase
     }
 
     [HttpGet]
+    [EnableRateLimiting("PublicApiLimit")]
     public async Task<ActionResult> GetAllProdutos()
     {
         var produtosDto = await _produtoService.GetAllProdutosAsync();

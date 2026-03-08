@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using NuvPizza.Domain.Entities;
 using NuvPizza.Domain.Repositories;
 
@@ -17,6 +18,7 @@ public class BairrosController : ControllerBase
     }
 
     [HttpGet]
+    [EnableRateLimiting("PublicApiLimit")]
     public async Task<ActionResult> GetAll()
     {
         return Ok(await _bairroRepository.GetAllAsync());
