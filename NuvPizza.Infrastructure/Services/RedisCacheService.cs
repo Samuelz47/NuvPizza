@@ -49,12 +49,16 @@ namespace NuvPizza.Infrastructure.Services
         public async Task RemoveByPrefixAsync(string prefixKey)
         {
             var endPoints = _connectionMultiplexer.GetEndPoints();
+            
+            // IDistributedCache adds "NuvPizza_" suffix by default in Program.cs
+            var fullPattern = $"NuvPizza_{prefixKey}*";
+
             foreach (var endPoint in endPoints)
             {
                 var server = _connectionMultiplexer.GetServer(endPoint);
                 if (!server.IsConnected) continue;
                 
-                var keys = server.Keys(pattern: prefixKey + "*");
+                var keys = server.Keys(pattern: fullPattern);
                 var db = _connectionMultiplexer.GetDatabase();
 
                 var redisKeys = System.Linq.Enumerable.ToArray(keys);
