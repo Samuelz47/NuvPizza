@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.Globalization;
 using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
@@ -35,6 +36,11 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
+
+    // Garante que o parsing de decimais SEMPRE use ponto como separador,
+    // independente do idioma/cultura do servidor (Linux, Mac, Windows)
+    CultureInfo.DefaultThreadCurrentCulture = CultureInfo.InvariantCulture;
+    CultureInfo.DefaultThreadCurrentUICulture = CultureInfo.InvariantCulture;
 
     builder.Host.UseSerilog();
 

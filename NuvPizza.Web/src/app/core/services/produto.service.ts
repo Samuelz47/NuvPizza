@@ -26,8 +26,8 @@ export class ProdutoService {
     // Adiciona os campos de texto
     formData.append('nome', produto.nome);
     formData.append('descricao', produto.descricao);
-    // Garante formato com vírgula para backends PT-BR
-    formData.append('preco', produto.preco.toString().replace('.', ','));
+    // Envia sempre com ponto decimal (formato invariante/universal)
+    formData.append('preco', produto.preco.toString());
     formData.append('categoria', produto.categoria.toString());
     formData.append('tamanho', produto.tamanho.toString());
     formData.append('ativo', produto.ativo ? 'true' : 'false');
@@ -49,8 +49,8 @@ export class ProdutoService {
     formData.append('id', id.toString());
     formData.append('nome', produto.nome);
     formData.append('descricao', produto.descricao);
-    // Garante formato com vírgula para backends PT-BR
-    formData.append('preco', produto.preco.toString().replace('.', ','));
+    // Envia sempre com ponto decimal (formato invariante/universal)
+    formData.append('preco', produto.preco.toString());
     formData.append('categoria', produto.categoria.toString());
     formData.append('tamanho', produto.tamanho.toString());
     formData.append('ativo', produto.ativo ? 'true' : 'false');
