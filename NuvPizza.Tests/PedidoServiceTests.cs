@@ -8,6 +8,7 @@ using NuvPizza.Application.Services;
 using NuvPizza.Domain.Entities;
 using NuvPizza.Domain.Repositories;
 using NuvPizza.Infrastructure.Services;
+using NuvPizza.Domain.Interfaces;
 
 namespace NuvPizza.Tests;
 

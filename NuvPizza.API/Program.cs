@@ -25,6 +25,7 @@ using NuvPizza.Infrastructure.Persistence;
 using NuvPizza.Infrastructure.Repositories;
 using NuvPizza.Infrastructure.Services;
 using Serilog;
+using StackExchange.Redis;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -40,6 +41,20 @@ try
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseSqlite(connectionString));
+
+    // Redis Cache Configuration
+    var redisConnectionString = builder.Configuration.GetConnectionString("RedisConnection");
+    
+    // Configura o IDistributedCache para usar Redis
+    builder.Services.AddStackExchangeRedisCache(options =>
+    {
+        options.Configuration = redisConnectionString;
+        options.InstanceName = "NuvPizza_";
+    });
+
+    // Registra o ConnectionMultiplexer como Singleton para podermos rodar comandos raw do Redis (ex: apagar por prefixo)
+    builder.Services.AddSingleton<IConnectionMultiplexer>(sp => 
+        ConnectionMultiplexer.Connect(redisConnectionString));
 
     builder.Services.AddIdentity<Usuario, IdentityRole>()
         .AddEntityFrameworkStores<AppDbContext>()
@@ -190,6 +205,7 @@ builder.Services.AddHttpClient<ViaCepService>(client => { client.Timeout = TimeS
     builder.Services.AddScoped<IEmailService, GmailService>();
     builder.Services.AddScoped<IViaCepService, ViaCepService>();
     builder.Services.AddScoped<IFaturamentoService, FaturamentoService>();
+    builder.Services.AddScoped<ICacheService, RedisCacheService>();
     builder.Services.AddScoped<TokenService>();
 
     var app = builder.Build();
