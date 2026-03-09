@@ -39,7 +39,7 @@
     <h2>{{ produtoEmEdicao.id ? 'Editar' : 'Novo' }} Produto</h2>
 
     <label>Nome:</label>
-    <input [(ngModel)]="produtoEmEdicao.nome" [disabled]="produtoEmEdicao.id" type="text" class="form-input">
+    <input [(ngModel)]="produtoEmEdicao.nome" type="text" class="form-input">
 
     <label>Descrição:</label>
     <textarea [(ngModel)]="produtoEmEdicao.descricao" class="form-input"></textarea>
@@ -52,8 +52,7 @@
       </div>
       <div>
         <label>Categoria:</label>
-        <select [(ngModel)]="produtoEmEdicao.categoria" (change)="onCategoriaChange()" [disabled]="produtoEmEdicao.id"
-          class="form-input">
+        <select [(ngModel)]="produtoEmEdicao.categoria" (change)="onCategoriaChange()" class="form-input">
           <option *ngFor="let c of categorias" [ngValue]="c.id">{{ c.nome }}</option>
         </select>
       </div>

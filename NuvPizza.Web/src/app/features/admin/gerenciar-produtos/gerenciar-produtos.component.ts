@@ -80,6 +80,7 @@ export class GerenciarProdutosComponent implements OnInit {
       // Garante que sejam números e não nulos
       categoria: prod.categoria !== undefined && prod.categoria !== null ? Number(prod.categoria) : 1,
       tamanho: prod.tamanho !== undefined && prod.tamanho !== null ? Number(prod.tamanho) : 0,
+      preco: prod.preco !== undefined && prod.preco !== null ? Number(prod.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '',
       comboTemplates: prod.comboTemplates ? [...prod.comboTemplates] : []
     };
     this.arquivoSelecionado = null;
