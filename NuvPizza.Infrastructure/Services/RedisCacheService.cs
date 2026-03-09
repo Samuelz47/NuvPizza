@@ -48,16 +48,19 @@ namespace NuvPizza.Infrastructure.Services
 
         public async Task RemoveByPrefixAsync(string prefixKey)
         {
-            foreach (var endPoint in _connectionMultiplexer.GetEndPoints())
+            var endPoints = _connectionMultiplexer.GetEndPoints();
+            foreach (var endPoint in endPoints)
             {
                 var server = _connectionMultiplexer.GetServer(endPoint);
-                var keys = server.Keys(pattern: prefixKey + "*");
+                if (!server.IsConnected) continue;
                 
+                var keys = server.Keys(pattern: prefixKey + "*");
                 var db = _connectionMultiplexer.GetDatabase();
 
-                foreach (var key in keys)
+                var redisKeys = System.Linq.Enumerable.ToArray(keys);
+                if (redisKeys.Length > 0)
                 {
-                    await db.KeyDeleteAsync(key);
+                    await db.KeyDeleteAsync(redisKeys);
                 }
             }
         }
