@@ -92,11 +92,13 @@ try
     builder.Services.AddControllers()
         .AddJsonOptions(options => { options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
+    var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+
     builder.Services.AddCors(options =>
     {
         options.AddPolicy("DevelopmentCors", policy =>
         {
-            policy.SetIsOriginAllowed(origin => true)
+            policy.WithOrigins(allowedOrigins)
                 .AllowAnyMethod()
                 .AllowAnyHeader()
                 .AllowCredentials()
@@ -216,9 +218,25 @@ builder.Services.AddHttpClient<ViaCepService>(client => { client.Timeout = TimeS
 
     var app = builder.Build();
 
-    // CORS deve ser o PRIMEIRO middleware para garantir que TODAS as respostas
-    // (incluindo erros 401, 500, etc.) tenham os headers CORS.
-    // Sem isso, o browser bloqueia respostas de erro e mostra "No Access-Control-Allow-Origin".
+    // Security Headers Middleware (adicionado antes de qualquer roteamento ou CORS)
+    app.Use(async (context, next) =>
+    {
+        context.Response.Headers.Append("X-Frame-Options", "DENY");
+        context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
+        context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
+        context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+        
+        // HSTS somente em Produção (HTTPs)
+        if (!app.Environment.IsDevelopment())
+        {
+            context.Response.Headers.Append("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+        }
+
+        await next();
+    });
+
+    // CORS deve ser o PRIMEIRO middleware de controle de fluxo para garantir que TODAS as respostas
+    // (incluindo erros 401, 500, etc.) tenham os headers CORS válidos.
     app.UseCors("DevelopmentCors");
 
     app.UseRouting();

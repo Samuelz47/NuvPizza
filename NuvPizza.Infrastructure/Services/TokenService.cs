@@ -28,6 +28,9 @@ public class TokenService
         var key = Encoding.ASCII.GetBytes(keyString);
 
         // 2. Define o que vai escrito no "Crachá" (Claims)
+        var expireHoursString = _configuration["Jwt:ExpireHours"];
+        var expireHours = int.TryParse(expireHoursString, out var parsed) ? parsed : 24;
+        
         var tokenConfig = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(new[]
@@ -36,7 +39,7 @@ public class TokenService
                 new Claim(ClaimTypes.NameIdentifier, usuario.Id.ToString()),
                 new Claim(ClaimTypes.Name, usuario.Email)
             }),
-            Expires = DateTime.UtcNow.AddHours(8), // O token vale por 8 horas (um turno de trabalho)
+            Expires = DateTime.UtcNow.AddHours(expireHours), // Tempo flexível configurado (ex: 24 horas)
             SigningCredentials = new SigningCredentials(
                 new SymmetricSecurityKey(key), 
                 SecurityAlgorithms.HmacSha256Signature)
