@@ -6,11 +6,14 @@ using System.Threading.RateLimiting;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Newtonsoft.Json;
+using NuvPizza.API.HealthChecks;
 using NuvPizza.API.Hubs;
 using NuvPizza.API.Middlewares;
 using NuvPizza.API.Services;
@@ -27,6 +30,7 @@ using NuvPizza.Infrastructure.Repositories;
 using NuvPizza.Infrastructure.Services;
 using Serilog;
 using StackExchange.Redis;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -66,9 +70,16 @@ try
         .AddEntityFrameworkStores<AppDbContext>()
         .AddDefaultTokenProviders();
 
+    
     builder.Services.AddSignalR();
     builder.Services.AddHostedService<LojaWorkers>();
 
+    builder.Services.AddHealthChecks()
+        .AddRedis(name: "Redis", redisConnectionString: redisConnectionString)
+        .AddSqlite(name: "Sql", connectionString: connectionString)
+        .AddCheck<ViaCepHealthCheck>("ViaCep")
+        .AddCheck<MercadoPagoHealthCheck>("MercadoPago");
+    
     var key = Encoding.ASCII.GetBytes(builder.Configuration["Jwt:Key"]);
 
     builder.Services.AddAuthentication(x =>
@@ -281,6 +292,26 @@ builder.Services.AddHttpClient<ViaCepService>(client => { client.Timeout = TimeS
     app.MapHub<NotificacaoHub>("/notificacao");
     
     app.MapControllers();
+    app.UseHealthChecks("/health/details", new HealthCheckOptions
+    {
+        ResponseWriter = async (httpContext, report) =>
+        {
+            httpContext.Response.ContentType = "application/json";
+            var json = JsonSerializer.Serialize(new
+            {
+                status = report.Status.ToString(),
+                totalDuration = report.TotalDuration,
+                components = report.Entries.Select(entry => new
+                {
+                    name = entry.Key,
+                    duration = entry.Value.Duration,
+                    status = entry.Value.Status.ToString(),
+                    exception = entry.Value.Exception?.Message
+                })
+            });
+            await httpContext.Response.WriteAsync(json);
+        }
+    });
     app.MapFallbackToFile("index.html");
     app.Run();
 }
