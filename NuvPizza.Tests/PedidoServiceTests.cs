@@ -61,7 +61,7 @@ public class PedidoServiceTests
     public async Task CreatePedidoAsync_DeveRetornarFalha_QuandoLojaEstiverFechada()
     {
         // Arrange
-        var pedidoDto = new PedidoForRegistrationDTO();
+        var pedidoDto = new PedidoForRegistrationDTO { FormaPagamento = "Pix" };
     
         _configRepoMock.Setup(x => x.GetAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Configuracao, bool>>>()))
             .ReturnsAsync(new Configuracao { EstaAberta = false });
@@ -80,7 +80,7 @@ public class PedidoServiceTests
     public async Task CreatePedidoAsync_DeveRetornarFalha_QuandoCepForInvalido()
     {
         // Arrange
-        var pedidoDto = new PedidoForRegistrationDTO { Cep = "00000-000" };
+        var pedidoDto = new PedidoForRegistrationDTO { Cep = "00000-000", FormaPagamento = "Pix" };
 
         _configRepoMock.Setup(x => x.GetAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Configuracao, bool>>>()))
             .ReturnsAsync(new Configuracao { EstaAberta = true });
@@ -103,6 +103,7 @@ public class PedidoServiceTests
         var pedidoDto = new PedidoForRegistrationDTO 
         { 
             Cep = "59000-000",
+            FormaPagamento = "Pix",
             Itens = new List<ItemPedidoForRegistrationDTO> 
             { 
                 new ItemPedidoForRegistrationDTO { ProdutoId = 1, Quantidade = 2 } 
@@ -141,7 +142,7 @@ public class PedidoServiceTests
     public async Task CreatePedidoAsync_DeveFalhar_QuandoBairroNaoForAtendido()
     {
         // Arrange
-        var pedidoDto = new PedidoForRegistrationDTO { Cep = "59000-000" };
+        var pedidoDto = new PedidoForRegistrationDTO { Cep = "59000-000", FormaPagamento = "Pix" };
         
         _configRepoMock.Setup(c => c.GetAsync(It.IsAny<Expression<Func<Configuracao, bool>>>()))
             .ReturnsAsync(new Configuracao { EstaAberta = true });
@@ -167,6 +168,7 @@ public class PedidoServiceTests
         var pedidoDto = new PedidoForRegistrationDTO
         {
             Cep = "59000-000",
+            FormaPagamento = "Pix",
             Itens = new List<ItemPedidoForRegistrationDTO>
             {
                 new ItemPedidoForRegistrationDTO { ProdutoId = 999, Quantidade = 1 } // ID 999 não existe
@@ -199,6 +201,7 @@ public class PedidoServiceTests
         var pedidoDto = new PedidoForRegistrationDTO
         {
             Cep = "59000-000",
+            FormaPagamento = "Pix",
             Itens = new List<ItemPedidoForRegistrationDTO>
             {
                 new ItemPedidoForRegistrationDTO { ProdutoId = 1, Quantidade = 0 } // ERRO AQUI
@@ -226,6 +229,7 @@ public class PedidoServiceTests
         var pedidoDto = new PedidoForRegistrationDTO
         {
             Cep = "59000-000",
+            FormaPagamento = "Pix",
             Itens = new List<ItemPedidoForRegistrationDTO>
             {
                 new ItemPedidoForRegistrationDTO { ProdutoId = 1, Quantidade = 2 }
@@ -255,6 +259,154 @@ public class PedidoServiceTests
         _pedidoRepoMock.Verify(x => x.Create(It.Is<Pedido>(p => 
             p.ValorTotal == totalEsperado && // Valida se o total gravado é 110.00
             p.ValorFrete == valorFrete
+        )), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreatePedidoAsync_DeveCalcularValorMeioAMeioCorretamente()
+    {
+        // Arrange
+        var pedidoDto = new PedidoForRegistrationDTO
+        {
+            Cep = "59000-000",
+            FormaPagamento = "Pix",
+            Itens = new List<ItemPedidoForRegistrationDTO>
+            {
+                new ItemPedidoForRegistrationDTO 
+                { 
+                    ProdutoId = 1, // Sabor 1
+                    ProdutoSecundarioId = 2, // Sabor 2
+                    Quantidade = 1 
+                }
+            }
+        };
+
+        decimal precoSabor1 = 50.00m;
+        decimal precoSabor2 = 60.00m;
+        decimal valorFrete = 10.00m;
+        decimal precoMeioAMeio = (precoSabor1 + precoSabor2) / 2; // 55.00
+        decimal totalEsperado = precoMeioAMeio + valorFrete; // 65.00
+
+        _configRepoMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<Configuracao, bool>>>())).ReturnsAsync(new Configuracao { EstaAberta = true });
+        _viaCepMock.Setup(v => v.CheckAsync(It.IsAny<string>())).ReturnsAsync(new ViaCepResponse { Bairro = "Centro" });
+        _bairroRepoMock.Setup(b => b.GetAsync(It.IsAny<Expression<Func<Bairro, bool>>>())).ReturnsAsync(new Bairro { ValorFrete = valorFrete, Nome = "Centro" });
+
+        _produtoRepoMock.Setup(p => p.GetAsync(It.Is<Expression<Func<Produto, bool>>>(e => e.Compile()(new Produto { Id = 1 }))))
+            .ReturnsAsync(new Produto { Id = 1, Preco = precoSabor1, Nome = "Sabor 1" });
+        _produtoRepoMock.Setup(p => p.GetAsync(It.Is<Expression<Func<Produto, bool>>>(e => e.Compile()(new Produto { Id = 2 }))))
+            .ReturnsAsync(new Produto { Id = 2, Preco = precoSabor2, Nome = "Sabor 2" });
+
+        _mapperMock.Setup(m => m.Map<Pedido>(pedidoDto)).Returns(new Pedido());
+        _mapperMock.Setup(m => m.Map<PedidoDTO>(It.IsAny<Pedido>())).Returns(new PedidoDTO());
+
+        // Act
+        await _sut.CreatePedidoAsync(pedidoDto);
+
+        // Assert
+        _pedidoRepoMock.Verify(x => x.Create(It.Is<Pedido>(p => 
+            p.ValorTotal == totalEsperado &&
+            p.Itens.First().PrecoUnitario == precoMeioAMeio
+        )), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreatePedidoAsync_DeveAdicionarPrecoBordaCorretamente()
+    {
+        // Arrange
+        var pedidoDto = new PedidoForRegistrationDTO
+        {
+            Cep = "59000-000",
+            FormaPagamento = "Pix",
+            Itens = new List<ItemPedidoForRegistrationDTO>
+            {
+                new ItemPedidoForRegistrationDTO 
+                { 
+                    ProdutoId = 1, 
+                    BordaId = 3, 
+                    Quantidade = 1 
+                }
+            }
+        };
+
+        decimal precoProduto = 50.00m;
+        decimal precoBorda = 15.00m;
+        decimal valorFrete = 10.00m;
+        decimal totalEsperado = precoProduto + precoBorda + valorFrete; // 75.00
+
+        _configRepoMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<Configuracao, bool>>>())).ReturnsAsync(new Configuracao { EstaAberta = true });
+        _viaCepMock.Setup(v => v.CheckAsync(It.IsAny<string>())).ReturnsAsync(new ViaCepResponse { Bairro = "Centro" });
+        _bairroRepoMock.Setup(b => b.GetAsync(It.IsAny<Expression<Func<Bairro, bool>>>())).ReturnsAsync(new Bairro { ValorFrete = valorFrete, Nome = "Centro" });
+
+        _produtoRepoMock.Setup(p => p.GetAsync(It.Is<Expression<Func<Produto, bool>>>(e => e.Compile()(new Produto { Id = 1 }))))
+            .ReturnsAsync(new Produto { Id = 1, Preco = precoProduto, Nome = "Pizza" });
+        _produtoRepoMock.Setup(p => p.GetAsync(It.Is<Expression<Func<Produto, bool>>>(e => e.Compile()(new Produto { Id = 3 }))))
+            .ReturnsAsync(new Produto { Id = 3, Preco = precoBorda, Nome = "Borda Catupiry" });
+
+        _mapperMock.Setup(m => m.Map<Pedido>(pedidoDto)).Returns(new Pedido());
+        _mapperMock.Setup(m => m.Map<PedidoDTO>(It.IsAny<Pedido>())).Returns(new PedidoDTO());
+
+        // Act
+        await _sut.CreatePedidoAsync(pedidoDto);
+
+        // Assert
+        _pedidoRepoMock.Verify(x => x.Create(It.Is<Pedido>(p => 
+            p.ValorTotal == totalEsperado &&
+            p.Itens.First().PrecoUnitario == (precoProduto + precoBorda)
+        )), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreatePedidoAsync_DeveProcessarComboComEscolhasCorretamente()
+    {
+        // Arrange
+        var comboId = 10;
+        var escolha1ProdutoId = 11;
+        var escolha2ProdutoId = 12;
+        var precoCombo = 100.00m;
+        var valorFrete = 10.00m;
+
+        var pedidoDto = new PedidoForRegistrationDTO
+        {
+            Cep = "59000-000",
+            FormaPagamento = "Pix",
+            Itens = new List<ItemPedidoForRegistrationDTO>
+            {
+                new ItemPedidoForRegistrationDTO 
+                { 
+                    ProdutoId = comboId, 
+                    Quantidade = 1,
+                    EscolhasCombo = new List<ItemPedidoComboEscolhaForRegistrationDTO>
+                    {
+                        new ItemPedidoComboEscolhaForRegistrationDTO { ProdutoEscolhidoId = escolha1ProdutoId, ComboItemTemplateId = 1 },
+                        new ItemPedidoComboEscolhaForRegistrationDTO { ProdutoEscolhidoId = escolha2ProdutoId, ComboItemTemplateId = 2 }
+                    }
+                }
+            }
+        };
+
+        _configRepoMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<Configuracao, bool>>>())).ReturnsAsync(new Configuracao { EstaAberta = true });
+        _viaCepMock.Setup(v => v.CheckAsync(It.IsAny<string>())).ReturnsAsync(new ViaCepResponse { Bairro = "Centro" });
+        _bairroRepoMock.Setup(b => b.GetAsync(It.IsAny<Expression<Func<Bairro, bool>>>())).ReturnsAsync(new Bairro { ValorFrete = valorFrete, Nome = "Centro" });
+
+        _produtoRepoMock.Setup(p => p.GetAsync(It.Is<Expression<Func<Produto, bool>>>(e => e.Compile()(new Produto { Id = comboId }))))
+            .ReturnsAsync(new Produto { Id = comboId, Preco = precoCombo, Nome = "Combo", Categoria = Domain.Enums.Categoria.Combo });
+        
+        _produtoRepoMock.Setup(p => p.GetAsync(It.Is<Expression<Func<Produto, bool>>>(e => e.Compile()(new Produto { Id = escolha1ProdutoId }))))
+            .ReturnsAsync(new Produto { Id = escolha1ProdutoId, Nome = "Escolha 1" });
+
+        _produtoRepoMock.Setup(p => p.GetAsync(It.Is<Expression<Func<Produto, bool>>>(e => e.Compile()(new Produto { Id = escolha2ProdutoId }))))
+            .ReturnsAsync(new Produto { Id = escolha2ProdutoId, Nome = "Escolha 2" });
+
+        _mapperMock.Setup(m => m.Map<Pedido>(pedidoDto)).Returns(new Pedido());
+        _mapperMock.Setup(m => m.Map<PedidoDTO>(It.IsAny<Pedido>())).Returns(new PedidoDTO());
+
+        // Act
+        await _sut.CreatePedidoAsync(pedidoDto);
+
+        // Assert
+        _pedidoRepoMock.Verify(x => x.Create(It.Is<Pedido>(p => 
+            p.ValorTotal == (precoCombo + valorFrete) &&
+            p.Itens.First().EscolhasCombo.Count == 2
         )), Times.Once);
     }
 }
