@@ -79,6 +79,8 @@ jobs:
           Environment="MercadoPago__UseSandbox=false"
           Environment="AdminSettings__Email=${{ secrets.ADMIN_EMAIL }}"
           Environment="AdminSettings__Password=${{ secrets.ADMIN_PASSWORD }}"
+          Environment="EmailSettings__Email=${{ secrets.EMAIL_USER }}"
+          Environment="EmailSettings__Password=${{ secrets.EMAIL_PASSWORD }}"
           EOF
             systemctl daemon-reload
             systemctl restart nuvpizza && systemctl status nuvpizza --no-pager

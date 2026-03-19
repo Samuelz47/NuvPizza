@@ -27,6 +27,7 @@ export class CheckoutComponent {
   errorMessage = signal<string>('');
   buscandoCep = signal<boolean>(false);
   bairroNaoAtendido = signal<boolean>(false);
+  bairroEncontrado = signal<boolean>(false);
   freteLabel = signal<string>('---');
   lojaAberta = signal<boolean>(true);
 
@@ -80,6 +81,7 @@ export class CheckoutComponent {
 
     this.buscandoCep.set(true);
     this.bairroNaoAtendido.set(false);
+    this.bairroEncontrado.set(false);
     this.freteLabel.set('---');
     this.carrinhoService.valorFrete.set(0);
 
@@ -99,9 +101,15 @@ export class CheckoutComponent {
               );
               if (encontrado) {
                 this.carrinhoService.valorFrete.set(encontrado.valorFrete);
-                this.freteLabel.set(`R$ ${encontrado.valorFrete.toFixed(2).replace('.', ',')}`);
+                this.bairroEncontrado.set(true);
                 this.bairroNaoAtendido.set(false);
+                if (encontrado.valorFrete === 0) {
+                  this.freteLabel.set('Grátis 🎉');
+                } else {
+                  this.freteLabel.set(`R$ ${encontrado.valorFrete.toFixed(2).replace('.', ',')}`);
+                }
               } else {
+                this.bairroEncontrado.set(false);
                 this.bairroNaoAtendido.set(true);
                 this.freteLabel.set('Não atendemos');
               }

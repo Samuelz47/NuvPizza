@@ -1,91 +1,67 @@
-using System.Net.Mail;
-using Google.Apis.Auth.OAuth2;
-using Google.Apis.Gmail.v1;
-using Google.Apis.Gmail.v1.Data;
-using Google.Apis.Services;
-using Google.Apis.Util.Store;
+using MailKit.Net.Smtp;
+using MailKit.Security;
+using MimeKit;
+using Microsoft.Extensions.Configuration;
 using NuvPizza.Domain.Interfaces;
 using NuvPizza.Domain.Entities;
-using MimeKit;
 
 namespace NuvPizza.Infrastructure.Services;
 
 public class GmailService : IEmailService
 {
-    private readonly string[] Scopes = { Google.Apis.Gmail.v1.GmailService.Scope.GmailSend };
-    private readonly string ApplicationName = "NuvPizza API";
-    private readonly string CredentialsFilePath = "credentials.json";
-    private readonly string TokenDirectoryPath = "tokens";
+    private readonly IConfiguration _configuration;
+
+    public GmailService(IConfiguration configuration)
+    {
+        _configuration = configuration;
+    }
 
     public async Task EnviarEmailConfirmacao(Pedido pedido)
     {
         if (string.IsNullOrWhiteSpace(pedido.EmailCliente))
         {
-            // Cliente não informou e-mail no checkout
             return;
         }
 
         try
         {
-            var service = await InitializeGmailServiceAsync();
+            var email = new MimeMessage();
+            var fromEmail = _configuration["EmailSettings:Email"];
+            var appPassword = _configuration["EmailSettings:Password"];
 
-            var message = CreateEmailMessage(pedido);
+            if (string.IsNullOrEmpty(fromEmail) || string.IsNullOrEmpty(appPassword))
+            {
+                Console.WriteLine("[Gmail Error] Configurações de e-mail (EmailSettings:Email ou EmailSettings:Password) não encontradas.");
+                return;
+            }
 
-            await service.Users.Messages.Send(message, "me").ExecuteAsync();
-            Console.WriteLine($"[Gmail] E-mail de confirmação enviado para {pedido.EmailCliente}");
+            email.From.Add(new MailboxAddress("NuvPizza Delivery", fromEmail));
+            email.To.Add(new MailboxAddress(pedido.NomeCliente, pedido.EmailCliente));
+            email.Subject = $"Oba! Seu pedido #{pedido.Id.ToString().Substring(0, 8).ToUpper()} foi recebido! 🍕";
+
+            var bodyBuilder = new BodyBuilder
+            {
+                HtmlBody = GerarTemplateHtml(pedido)
+            };
+            email.Body = bodyBuilder.ToMessageBody();
+
+            using (var client = new SmtpClient())
+            {
+                // Conecta ao SMTP do Gmail
+                await client.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
+
+                // Autentica com o e-mail e a senha de aplicativo
+                await client.AuthenticateAsync(adminEmail, appPassword);
+
+                await client.SendAsync(email);
+                await client.DisconnectAsync(true);
+            }
+
+            Console.WriteLine($"[Gmail] E-mail de confirmação enviado via SMTP para {pedido.EmailCliente}");
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"[Gmail Error] Falha ao enviar e-mail: {ex.Message}");
-            // Logar silenciosamente para não quebrar o fluxo de pedido
-        }
-    }
-
-    private async Task<Google.Apis.Gmail.v1.GmailService> InitializeGmailServiceAsync()
-    {
-        UserCredential credential;
-
-        using (var stream = new FileStream(CredentialsFilePath, FileMode.Open, FileAccess.Read))
-        {
-            credential = await GoogleWebAuthorizationBroker.AuthorizeAsync(
-                GoogleClientSecrets.FromStream(stream).Secrets,
-                Scopes,
-                "user",
-                CancellationToken.None,
-                new FileDataStore(TokenDirectoryPath, true));
-        }
-
-        return new Google.Apis.Gmail.v1.GmailService(new BaseClientService.Initializer()
-        {
-            HttpClientInitializer = credential,
-            ApplicationName = ApplicationName,
-        });
-    }
-
-    private Message CreateEmailMessage(Pedido pedido)
-    {
-        var message = new MimeMessage();
-        message.To.Add(new MailboxAddress(pedido.NomeCliente, pedido.EmailCliente));
-        // O "From" será automaticamente o e-mail autenticado no credentials.json
-        message.From.Add(new MailboxAddress("NuvPizza Delivery", "nao-responda@nuvpizza.com")); 
-        message.Subject = $"Oba! Seu pedido #{pedido.Id.ToString().Substring(0, 8).ToUpper()} foi recebido! 🍕";
-
-        var bodyBuilder = new BodyBuilder
-        {
-            HtmlBody = GerarTemplateHtml(pedido)
-        };
-        message.Body = bodyBuilder.ToMessageBody();
-
-        // Converter MimeMessage em Raw (Base64UrlEncoded) que a API do Gmail exige
-        using (var memoryStream = new MemoryStream())
-        {
-            message.WriteTo(memoryStream);
-            var base64UrlEncoded = Convert.ToBase64String(memoryStream.ToArray())
-                .Replace('+', '-')
-                .Replace('/', '_')
-                .Replace("=", "");
-
-            return new Message { Raw = base64UrlEncoded };
+            Console.WriteLine($"[Gmail Error] Falha ao enviar e-mail via SMTP: {ex.Message}");
         }
     }
 
