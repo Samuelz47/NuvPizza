@@ -3,7 +3,8 @@ export interface Produto {
   nome: string;
   descricao: string;
   preco: number;
-  imagemUrl?: string;
+  precoPromocional?: number;
+  imagemUrl: string;
   categoria: CategoriaProduto;
   tamanho: TamanhoProduto;
   ativo: boolean;

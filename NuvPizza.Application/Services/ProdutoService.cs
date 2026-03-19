@@ -33,6 +33,11 @@ public class ProdutoService : IProdutoService
         {
             return Result<ProdutoDTO>.Failure("Preço inválido");
         }
+
+        if (produtoForRegister.PrecoPromocional.HasValue && produtoForRegister.PrecoPromocional.Value >= produtoForRegister.Preco)
+        {
+            return Result<ProdutoDTO>.Failure("O preço promocional deve ser menor que o preço original");
+        }
         
         var produto = _mapper.Map<Produto>(produtoForRegister);
 
@@ -108,9 +113,15 @@ public class ProdutoService : IProdutoService
         }
 
         // Atualiza campos básicos
+        if (produtoDto.PrecoPromocional.HasValue && produtoDto.PrecoPromocional.Value >= produtoDto.Preco)
+        {
+            return Result<ProdutoDTO>.Failure("O preço promocional deve ser menor que o preço original");
+        }
+
         produto.Nome = produtoDto.Nome;
         produto.Descricao = produtoDto.Descricao;
         produto.Preco = produtoDto.Preco;
+        produto.PrecoPromocional = produtoDto.PrecoPromocional;
         produto.Categoria = produtoDto.Categoria;
         produto.Ativo = produtoDto.Ativo;
 

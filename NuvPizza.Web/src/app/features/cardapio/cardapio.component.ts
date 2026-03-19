@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ProdutoService } from '../../core/services/produto.service';
 import { CarrinhoService } from '../../core/services/carrinho.service';
 import { LojaService, StatusLoja } from '../../core/services/loja.service';
+import { NotificacaoService } from '../../core/services/notificacao.service';
 import { Produto, CategoriaProduto, TamanhoProduto } from '../../core/models/produto.model';
 import { CarrinhoFloatComponent } from '../../shared/components/carrinho-float/carrinho-float.component';
 import { environment } from '../../environments/environment';
@@ -20,6 +21,7 @@ export class CardapioComponent implements OnInit {
   private produtoService = inject(ProdutoService);
   private carrinhoService = inject(CarrinhoService);
   private lojaService = inject(LojaService);
+  private notificacaoService = inject(NotificacaoService);
   private cdr = inject(ChangeDetectorRef);
 
   produtos: Produto[] = [];
@@ -66,6 +68,17 @@ export class CardapioComponent implements OnInit {
   ngOnInit() {
     this.carregarProdutos();
     this.carregarStatusLoja();
+
+    // Ouvinte em tempo real para abertura/fechamento da loja
+    this.notificacaoService.ouvirStatusLoja().subscribe({
+      next: (status: { estaAberta: boolean, mensagem: string }) => {
+        this.lojaAberta = status.estaAberta;
+        // Se a loja abriu, recarregamos o status completo para pegar o horário de fechamento
+        if (status.estaAberta) {
+          this.carregarStatusLoja();
+        }
+      }
+    });
   }
 
   carregarStatusLoja() {
@@ -142,7 +155,7 @@ export class CardapioComponent implements OnInit {
       mapa.get(pizza.tamanho)!.push(pizza);
     }
     const descricoes: Record<string, { emoji: string; descricao: string }> = {
-      'Pequena': { emoji: '🍕', descricao: 'Perfeita para 1 pessoa' },
+      'Pequena': { emoji: '🍕', descricao: '4 fatias — ideal para 1 pessoa' },
       'Media': { emoji: '🍕🍕', descricao: '6 fatias — ideal para 2 pessoas' },
       'Grande': { emoji: '🍕🍕🍕', descricao: '8 fatias — ideal para 3 ou mais' },
     };
@@ -177,6 +190,16 @@ export class CardapioComponent implements OnInit {
       p.categoria === CategoriaProduto.Acompanhamento &&
       p.ativo
     );
+  }
+
+  getPrecoEfetivo(prod: Produto | null): number {
+    if (!prod) return 0;
+    return prod.precoPromocional && prod.precoPromocional > 0 ? prod.precoPromocional : prod.preco;
+  }
+
+  getDiscountPercentage(prod: Produto): number {
+    if (!prod.precoPromocional || prod.precoPromocional >= prod.preco) return 0;
+    return Math.round(((prod.preco - prod.precoPromocional) / prod.preco) * 100);
   }
 
   // Agrupa pizzas ativas por tamanho (ordem crescente de tamanho)
@@ -271,7 +294,7 @@ export class CardapioComponent implements OnInit {
     }
 
     // Criar o payload complexo (String de representacao e o DTO pro carrinho)
-    let precoBase = this.comboSelecionado.preco;
+    let precoBase = this.getPrecoEfetivo(this.comboSelecionado);
     let precoBordaTotal = 0;
     let bordaNomes: string[] = [];
 
@@ -346,7 +369,8 @@ export class CardapioComponent implements OnInit {
     if (!this.saborPrincipal) return;
 
     let nomeFinal = `Pizza ${this.getNomeTamanho(this.saborPrincipal.tamanho)}: ${this.saborPrincipal.nome}`;
-    let precoFinal = this.saborPrincipal.preco;
+    let precoPrincipal = this.getPrecoEfetivo(this.saborPrincipal);
+    let precoFinal = precoPrincipal;
     let imgFinal = this.saborPrincipal.imagemUrl;
 
     const meioAMeioSelecionado = this.modoMeioAMeio && this.saborSecundario;
@@ -354,8 +378,9 @@ export class CardapioComponent implements OnInit {
 
     if (meioAMeioSelecionado) {
       nomeFinal += ` / ${this.saborSecundario!.nome}`;
-      // Regra: Soma dos dois sabores dividido por 2
-      precoFinal = (this.saborPrincipal.preco + this.saborSecundario!.preco) / 2;
+      // Regra: Soma dos dois sabores (preço efetivo) dividido por 2
+      const precoSecundario = this.getPrecoEfetivo(this.saborSecundario);
+      precoFinal = (precoPrincipal + precoSecundario) / 2;
     }
 
     if (borda) {
@@ -375,8 +400,8 @@ export class CardapioComponent implements OnInit {
       bordaId: borda ? borda.id : undefined,
       nome: nomeFinal,
       precoBase: meioAMeioSelecionado
-        ? (this.saborPrincipal.preco + this.saborSecundario!.preco) / 2
-        : this.saborPrincipal.preco,
+        ? (precoPrincipal + this.getPrecoEfetivo(this.saborSecundario)) / 2
+        : precoPrincipal,
       preco: precoFinal,
       nomeBorda: borda ? borda.nome : undefined,
       precoBorda: borda ? borda.preco : undefined,

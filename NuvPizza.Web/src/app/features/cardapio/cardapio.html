@@ -40,10 +40,18 @@
           <img [src]="getImagemUrl(prod.imagemUrl)" alt="{{ prod.nome }}">
         </div>
         <div class="info">
-          <h3>{{ prod.nome }}</h3>
+          <div class="sabor-header">
+            <h3>{{ prod.nome }}</h3>
+            <span class="discount-badge" *ngIf="prod.precoPromocional">
+              {{ getDiscountPercentage(prod) }}% OFF
+            </span>
+          </div>
           <p class="desc">{{ prod.descricao }}</p>
           <div class="price-row">
-            <span class="preco">{{ prod.preco | currency:'BRL' }}</span>
+            <div class="price-stack">
+              <span class="old-price" *ngIf="prod.precoPromocional">{{ prod.preco | currency:'BRL' }}</span>
+              <span class="preco">{{ getPrecoEfetivo(prod) | currency:'BRL' }}</span>
+            </div>
             <button class="add-btn" aria-label="Adicionar {{ prod.nome }}">+</button>
           </div>
         </div>
@@ -121,10 +129,18 @@
             <img [src]="getImagemUrl(prod.imagemUrl)" alt="{{ prod.nome }}">
           </div>
           <div class="info">
-            <h3>{{ prod.nome }}</h3>
+            <div class="sabor-header">
+              <h3>{{ prod.nome }}</h3>
+              <span class="discount-badge" *ngIf="prod.precoPromocional">
+                {{ getDiscountPercentage(prod) }}% OFF
+              </span>
+            </div>
             <p class="desc">{{ prod.descricao }}</p>
             <div class="price-row">
-              <span class="preco">{{ prod.preco | currency:'BRL' }}</span>
+              <div class="price-stack">
+                <span class="old-price" *ngIf="prod.precoPromocional">{{ prod.preco | currency:'BRL' }}</span>
+                <span class="preco">{{ getPrecoEfetivo(prod) | currency:'BRL' }}</span>
+              </div>
               <button class="add-btn" aria-label="Adicionar {{ prod.nome }}">+</button>
             </div>
           </div>
@@ -152,7 +168,11 @@
     <div class="sabor-principal">
       <span class="label-tag">Sabor escolhido</span>
       <p class="sabor-nome">{{ saborPrincipal?.nome }}</p>
-      <p class="sabor-preco">{{ saborPrincipal?.preco | currency:'BRL' }}</p>
+      <div class="price-stack" style="align-items: center;">
+        <span class="old-price" *ngIf="saborPrincipal?.precoPromocional">{{ saborPrincipal?.preco | currency:'BRL'
+          }}</span>
+        <p class="sabor-preco">{{ getPrecoEfetivo(saborPrincipal) | currency:'BRL' }}</p>
+      </div>
     </div>
 
     <div class="opcoes-pizza">
@@ -179,7 +199,8 @@
       </select>
       <p class="meio-info" *ngIf="saborSecundario">
         ℹ️ O preço do meio a meio é a média dos dois sabores. Preço final:
-        <strong>{{ ((saborSecundario.preco + (saborPrincipal?.preco || 0)) / 2) | currency:'BRL' }}</strong>
+        <strong>{{ ((getPrecoEfetivo(saborSecundario) + getPrecoEfetivo(saborPrincipal)) / 2) | currency:'BRL'
+          }}</strong>
       </p>
     </div>
 
@@ -210,9 +231,18 @@
     <div class="modal-header">
       <img [src]="getImagemUrl(comboSelecionado?.imagemUrl)" class="modal-img">
       <div class="modal-title-group">
-        <h2>{{ comboSelecionado?.nome }}</h2>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <h2>{{ comboSelecionado?.nome }}</h2>
+          <span class="discount-badge" *ngIf="comboSelecionado?.precoPromocional" style="margin: 0; padding: 2px 6px;">
+            {{ getDiscountPercentage(comboSelecionado!) }}% OFF
+          </span>
+        </div>
         <p class="modal-desc">{{ comboSelecionado?.descricao }}</p>
-        <span class="modal-price">{{ comboSelecionado?.preco | currency:'BRL' }}</span>
+        <div class="price-stack">
+          <span class="old-price" style="font-size: 0.9rem;" *ngIf="comboSelecionado?.precoPromocional">{{
+            comboSelecionado?.preco | currency:'BRL' }}</span>
+          <span class="modal-price">{{ getPrecoEfetivo(comboSelecionado) | currency:'BRL' }}</span>
+        </div>
       </div>
     </div>
 

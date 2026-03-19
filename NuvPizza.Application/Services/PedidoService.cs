@@ -86,7 +86,9 @@ public class PedidoService : IPedidoService
             if (produto is null) { return Result<PedidoDTO>.Failure("Produto não encontrado"); }
             if (itemDto.Quantidade <= 0) { return Result<PedidoDTO>.Failure("Quantidade precisa ser maior que 0"); }
 
-            var precoFinal = produto.Preco;
+            var precoFinal = produto.PrecoPromocional.HasValue && produto.PrecoPromocional.Value > 0 
+                ? produto.PrecoPromocional.Value 
+                : produto.Preco;
             var nomeFinal = produto.Nome;
 
             // Se for meio a meio
@@ -96,8 +98,17 @@ public class PedidoService : IPedidoService
                 if (produtoSecundario != null)
                 {
                     nomeFinal = $"{produto.Nome} / {produtoSecundario.Nome}";
-                    // Regra: Soma dos dois sabores dividido por 2
-                    precoFinal = (produto.Preco + produtoSecundario.Preco) / 2;
+                    
+                    var precoSabor1 = produto.PrecoPromocional.HasValue && produto.PrecoPromocional.Value > 0 
+                        ? produto.PrecoPromocional.Value 
+                        : produto.Preco;
+                        
+                    var precoSabor2 = produtoSecundario.PrecoPromocional.HasValue && produtoSecundario.PrecoPromocional.Value > 0 
+                        ? produtoSecundario.PrecoPromocional.Value 
+                        : produtoSecundario.Preco;
+
+                    // Regra: Soma dos dois sabores (promocionais se houver) dividido por 2
+                    precoFinal = (precoSabor1 + precoSabor2) / 2;
                 }
             }
 
@@ -108,6 +119,7 @@ public class PedidoService : IPedidoService
                 if (borda != null)
                 {
                     nomeFinal += $" (Borda: {borda.Nome})";
+                    // Borda usually doesn't have promotional price, but we use the regular one as before
                     precoFinal += borda.Preco;
                 }
             }

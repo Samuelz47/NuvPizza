@@ -28,6 +28,9 @@ export class ProdutoService {
     formData.append('descricao', produto.descricao);
     // Envia sempre com ponto decimal (formato invariante/universal)
     formData.append('preco', produto.preco.toString());
+    if (produto.precoPromocional !== null && produto.precoPromocional !== undefined) {
+      formData.append('precoPromocional', produto.precoPromocional.toString());
+    }
     formData.append('categoria', produto.categoria.toString());
     formData.append('tamanho', produto.tamanho.toString());
     formData.append('ativo', produto.ativo ? 'true' : 'false');
@@ -51,6 +54,9 @@ export class ProdutoService {
     formData.append('descricao', produto.descricao);
     // Envia sempre com ponto decimal (formato invariante/universal)
     formData.append('preco', produto.preco.toString());
+    if (produto.precoPromocional !== null && produto.precoPromocional !== undefined) {
+      formData.append('precoPromocional', produto.precoPromocional.toString());
+    }
     formData.append('categoria', produto.categoria.toString());
     formData.append('tamanho', produto.tamanho.toString());
     formData.append('ativo', produto.ativo ? 'true' : 'false');

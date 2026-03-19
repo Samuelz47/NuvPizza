@@ -89,8 +89,8 @@ public class MercadoPagoService : IPagamentoService
 
             Preference preference = await client.CreateAsync(request);
 
-            // Retorna o link de SANDBOX
-            return Result<string>.Success(preference.SandboxInitPoint);
+            // Retorna o link de PRODUÇÃO (InitPoint)
+            return Result<string>.Success(preference.InitPoint);
         }
         catch (Exception ex)
         {

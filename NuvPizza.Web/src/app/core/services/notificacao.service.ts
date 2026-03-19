@@ -15,6 +15,7 @@ export class NotificacaoService {
   // Subjects privados (quem emite os dados)
   private novoPedidoSource = new Subject<any>();
   private statusAtualizadoSource = new Subject<any>();
+  private lojaStatusSource = new Subject<any>();
 
   constructor() {
     this.iniciarConexao();
@@ -52,6 +53,12 @@ export class NotificacaoService {
         this.tocarSom();
       }
     });
+
+    // O Backend manda: "LojaStatusAlterado", payload: bool, string
+    this.hubConnection.on('LojaStatusAlterado', (estaAberta: boolean, mensagem: string) => {
+      console.log(`🏪 Loja Status mudou! Aberta: ${estaAberta} - ${mensagem}`);
+      this.lojaStatusSource.next({ estaAberta, mensagem });
+    });
   }
 
   // --- 3. MÉTODOS PÚBLICOS (Para os Componentes) ---
@@ -64,6 +71,10 @@ export class NotificacaoService {
   // A Tela de Sucesso chama este:
   ouvirAtualizacaoStatus(): Observable<any> {
     return this.statusAtualizadoSource.asObservable();
+  }
+
+  ouvirStatusLoja(): Observable<any> {
+    return this.lojaStatusSource.asObservable();
   }
 
   private tocarSom() {
