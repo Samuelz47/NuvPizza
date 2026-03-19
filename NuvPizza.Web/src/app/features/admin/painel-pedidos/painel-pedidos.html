@@ -215,7 +215,11 @@
 
         <div class="cliente-info">
           <p class="nome-cliente">{{ pedidoSelecionado.nomeCliente }}</p>
-          <p class="tel-cliente">{{ pedidoSelecionado.telefone || 'Sem telefone' }}</p>
+          <p class="tel-cliente"><i class="bi bi-whatsapp"></i> {{ pedidoSelecionado.telefoneCliente || 'Sem telefone'
+            }}</p>
+          @if (pedidoSelecionado.emailCliente) {
+          <p class="email-cliente"><i class="bi bi-envelope-at"></i> {{ pedidoSelecionado.emailCliente }}</p>
+          }
         </div>
 
         <div class="endereco-box">
