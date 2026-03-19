@@ -431,12 +431,12 @@ export class CardapioComponent implements OnInit {
   }
 
   getImagemUrl(imagemUrl: string | undefined): string {
-    if (!imagemUrl) return 'assets/logo.png';
+    if (!imagemUrl) return `assets/logo.png?v=${new Date().getTime()}`;
     if (imagemUrl.startsWith('http')) return imagemUrl;
 
     // Se for da pasta assets (local), não usa o apiUrl do backend
     if (imagemUrl.startsWith('assets/')) {
-      return imagemUrl; // Removida a barra do início para não quebrar a rota no Angular
+      return `${imagemUrl}?v=${new Date().getTime()}`; // Evitar cache agressivo do navegador
     }
 
     const cleanUrl = imagemUrl.startsWith('/') ? imagemUrl.substring(1) : imagemUrl;
