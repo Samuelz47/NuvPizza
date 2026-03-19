@@ -1,5 +1,5 @@
 export const environment = {
     production: true,
     apiUrl: 'https://api.nuvpizza.com.br',
-    mercadoPagoPublicKey: 'TEST-fc5ca3e2-654f-4d11-b021-8fc09a21c53d'
+    mercadoPagoPublicKey: 'APP_USR-80e3b9c5-bf95-482d-84ad-7b04b9738c33'
 };
