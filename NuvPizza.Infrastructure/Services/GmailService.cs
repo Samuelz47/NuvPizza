@@ -51,7 +51,7 @@ public class GmailService : IEmailService
                 await client.ConnectAsync("smtp.gmail.com", 587, SecureSocketOptions.StartTls);
 
                 // Autentica com o e-mail e a senha de aplicativo
-                await client.AuthenticateAsync(adminEmail, appPassword);
+                await client.AuthenticateAsync(fromEmail, appPassword);
 
                 await client.SendAsync(email);
                 await client.DisconnectAsync(true);
