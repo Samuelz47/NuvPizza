@@ -436,7 +436,7 @@ export class CardapioComponent implements OnInit {
 
     // Se for da pasta assets (local), não usa o apiUrl do backend
     if (imagemUrl.startsWith('assets/')) {
-      return imagemUrl; // Removida a barra do início para não quebrar a rota no Angular
+      return imagemUrl;
     }
 
     const cleanUrl = imagemUrl.startsWith('/') ? imagemUrl.substring(1) : imagemUrl;
