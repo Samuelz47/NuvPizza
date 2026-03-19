@@ -65,6 +65,7 @@ export class GerenciarProdutosComponent implements OnInit {
       categoria: 1,
       tamanho: 3, // Default para Grande em Pizza
       preco: '',
+      precoPromocional: '',
       ativo: true,
       nome: '',
       descricao: '',
@@ -81,6 +82,7 @@ export class GerenciarProdutosComponent implements OnInit {
       categoria: prod.categoria !== undefined && prod.categoria !== null ? Number(prod.categoria) : 1,
       tamanho: prod.tamanho !== undefined && prod.tamanho !== null ? Number(prod.tamanho) : 0,
       preco: prod.preco !== undefined && prod.preco !== null ? Number(prod.preco).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '',
+      precoPromocional: prod.precoPromocional !== undefined && prod.precoPromocional !== null ? Number(prod.precoPromocional).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '',
       comboTemplates: prod.comboTemplates ? [...prod.comboTemplates] : []
     };
     this.arquivoSelecionado = null;
@@ -143,9 +145,17 @@ export class GerenciarProdutosComponent implements OnInit {
   }
 
   onPrecoBlur() {
-    if (!this.produtoEmEdicao.preco) return;
+    this.produtoEmEdicao.preco = this.formatarPreco(this.produtoEmEdicao.preco);
+  }
 
-    let valor = this.produtoEmEdicao.preco.toString();
+  onPrecoPromocionalBlur() {
+    this.produtoEmEdicao.precoPromocional = this.formatarPreco(this.produtoEmEdicao.precoPromocional);
+  }
+
+  private formatarPreco(valorInput: any): string {
+    if (!valorInput) return '';
+
+    let valor = valorInput.toString();
 
     // Se já tiver vírgula, respeita o que foi digitado (apenas ajustando pontos de milhar)
     if (valor.includes(',')) {
@@ -157,16 +167,20 @@ export class GerenciarProdutosComponent implements OnInit {
       let decimais = partes[1].substring(0, 2); // limita a 2 casas
 
       // Formata a parte inteira com pontos de milhar
-      inteiros = parseInt(inteiros).toLocaleString('pt-BR');
+      if (inteiros) {
+        inteiros = parseInt(inteiros).toLocaleString('pt-BR');
+      } else {
+        inteiros = '0';
+      }
 
       // Reconstrói
-      this.produtoEmEdicao.preco = `${inteiros},${decimais}`;
+      return `${inteiros},${decimais}`;
     }
     else {
       // Se não tiver vírgula, assume que é inteiro e coloca ,00
       let numero = parseFloat(valor.replace(/\D/g, ''));
-      if (isNaN(numero)) return;
-      this.produtoEmEdicao.preco = numero.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      if (isNaN(numero)) return '';
+      return numero.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
   }
 
@@ -182,10 +196,27 @@ export class GerenciarProdutosComponent implements OnInit {
     this.isLoading = true;
 
     // Converte "1.234,56" para number 1234.56 antes de enviar
-    if (typeof this.produtoEmEdicao.preco === 'string') {
+    if (typeof this.produtoEmEdicao.preco === 'string' && this.produtoEmEdicao.preco) {
       let precoLimpo = this.produtoEmEdicao.preco.replace(/\./g, '').replace(',', '.');
       this.produtoEmEdicao.preco = parseFloat(precoLimpo);
     }
+
+    if (typeof this.produtoEmEdicao.precoPromocional === 'string' && this.produtoEmEdicao.precoPromocional) {
+      let precoLimpo = this.produtoEmEdicao.precoPromocional.replace(/\./g, '').replace(',', '.');
+      this.produtoEmEdicao.precoPromocional = parseFloat(precoLimpo);
+    } else if (!this.produtoEmEdicao.precoPromocional) {
+      this.produtoEmEdicao.precoPromocional = null;
+    }
+
+    const preco = parseFloat(this.produtoEmEdicao.preco?.toString().replace(',', '.') || '0');
+    const precoPromocional = this.produtoEmEdicao.precoPromocional ? parseFloat(this.produtoEmEdicao.precoPromocional.toString().replace(',', '.')) : null;
+
+    if (precoPromocional !== null && precoPromocional >= preco) {
+      alert('O preço promocional deve ser MENOR que o preço original.');
+      return;
+    }
+
+    this.isLoading = true;
 
     if (this.produtoEmEdicao.id) {
       // Edição

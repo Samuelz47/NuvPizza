@@ -30,6 +30,7 @@ namespace NuvPizza.Infrastructure.Persistence
                 e.Property(p => p.Nome).IsRequired().HasMaxLength(100);
                 e.Property(p => p.Descricao).HasMaxLength(250);
                 e.Property(p => p.Preco).HasColumnType("decimal(10,2)"); 
+                e.Property(p => p.PrecoPromocional).HasColumnType("decimal(10,2)"); 
                 e.Property(p => p.Tamanho).HasMaxLength(50);
             });
 

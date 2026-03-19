@@ -9,6 +9,7 @@
       <tr>
         <th>Img</th>
         <th>Nome</th>
+        <th>Status</th>
         <th>Categoria</th>
         <th>Preço</th>
         <th>Ações</th>
@@ -24,7 +25,18 @@
           </span>
         </td>
         <td>{{ getDescricaoCategoria(prod.categoria) }}</td>
-        <td>{{ prod.preco | currency:'BRL' }}</td>
+        <td>
+          <div style="display: flex; flex-direction: row; align-items: baseline; gap: 8px; line-height: 1.2;">
+            <ng-container *ngIf="prod.precoPromocional">
+              <span style="text-decoration: line-through; color: #999; font-size: 0.8em;">{{ prod.preco | currency:'BRL'
+                }}</span>
+              <span style="color: #e74c3c; font-weight: bold;">{{ prod.precoPromocional | currency:'BRL' }}</span>
+            </ng-container>
+            <ng-container *ngIf="!prod.precoPromocional">
+              <span>{{ prod.preco | currency:'BRL' }}</span>
+            </ng-container>
+          </div>
+        </td>
         <td>
           <button (click)="editar(prod)">✏️</button>
           <button (click)="excluir(prod.id)">🗑️</button>
@@ -50,6 +62,14 @@
         <input [(ngModel)]="produtoEmEdicao.preco" (blur)="onPrecoBlur()" type="text" class="form-input"
           placeholder="0,00">
       </div>
+      <div>
+        <label>Preço Promocional (Opcional):</label>
+        <input [(ngModel)]="produtoEmEdicao.precoPromocional" (blur)="onPrecoPromocionalBlur()" type="text"
+          class="form-input" placeholder="0,00">
+      </div>
+    </div>
+
+    <div class="row">
       <div>
         <label>Categoria:</label>
         <select [(ngModel)]="produtoEmEdicao.categoria" (change)="onCategoriaChange()" class="form-input">

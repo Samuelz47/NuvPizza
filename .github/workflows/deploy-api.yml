@@ -68,7 +68,19 @@ jobs:
             -e "ssh -i ~/.ssh/deploy_key" \
             ./publish/ ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/root/nuvpizza
 
-      - name: Reiniciar serviço na VPS
+      - name: Configurar variáveis de ambiente e reiniciar
         run: |
-          ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} \
-            "systemctl restart nuvpizza && systemctl status nuvpizza --no-pager"
+          ssh -i ~/.ssh/deploy_key ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'ENDSSH'
+            # Cria override do systemd com as variáveis de ambiente (secrets)
+            mkdir -p /etc/systemd/system/nuvpizza.service.d
+            cat > /etc/systemd/system/nuvpizza.service.d/env.conf << EOF
+          [Service]
+          Environment="MercadoPago__AccessToken=${{ secrets.MP_ACCESS_TOKEN }}"
+          Environment="MercadoPago__UseSandbox=false"
+          Environment="AdminSettings__Email=${{ secrets.ADMIN_EMAIL }}"
+          Environment="AdminSettings__Password=${{ secrets.ADMIN_PASSWORD }}"
+          Environment="Jwt__Key=${{ secrets.JWT_KEY }}"
+          EOF
+            systemctl daemon-reload
+            systemctl restart nuvpizza && systemctl status nuvpizza --no-pager
+          ENDSSH

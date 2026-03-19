@@ -8,6 +8,7 @@ public class ProdutoDTO
     public string Nome { get; set; }
     public string Descricao { get; set; }
     public decimal Preco { get; set; }
+    public decimal? PrecoPromocional { get; set; }
     public string ImagemUrl { get; set; }
     public int Categoria { get; set; }
     public int Tamanho { get; set; }
