@@ -192,7 +192,7 @@ public class PedidoService : IPedidoService
             pedido.Itens.Add(item);
         }
 
-        if (cupom.FreteGratis) pedido.ValorFrete = 0;
+        if (cupom != null && cupom.FreteGratis) pedido.ValorFrete = 0;
         pedido.ValorTotal = (-((pedido.Itens.Sum(i => i.Total) / 100) * pedido.ValorDesconto) + (pedido.Itens.Sum(i => i.Total))) + pedido.ValorFrete;
         _pedidoRepository.Create(pedido);
         await _uow.CommitAsync();
