@@ -1,6 +1,7 @@
 import { Component, inject, OnInit, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; // Importante para o ngModel
+import { Router } from '@angular/router';
 import { ProdutoService } from '../../../core/services/produto.service';
 import { Produto, CategoriaProduto, TamanhoProduto } from '../../../core/models/produto.model';
 import { environment } from '../../../environments/environment';
@@ -15,6 +16,7 @@ import { environment } from '../../../environments/environment';
 export class GerenciarProdutosComponent implements OnInit {
   private produtoService = inject(ProdutoService);
   private cdr = inject(ChangeDetectorRef);
+  private router = inject(Router);
 
   produtos: Produto[] = [];
 
@@ -58,6 +60,10 @@ export class GerenciarProdutosComponent implements OnInit {
       },
       error: (err) => console.error('Erro ao carregar produtos:', err)
     });
+  }
+
+  navegarParaCupons() {
+    this.router.navigate(['/admin/cupons']);
   }
 
   novoProduto() {

@@ -98,9 +98,16 @@ export class AcompanharPedidoComponent implements OnInit, OnDestroy {
 
   getWhatsAppLink(): string {
     const p = this.pedido();
-    if (!p) return 'https://wa.me/5584991922799';
+    const foneLoja = '5584991922799';
+    if (!p) return `https://wa.me/${foneLoja}`;
+
     const idCurto = p.id.substring(0, 8).toUpperCase();
-    const mensagem = `Olá, preciso de ajuda com meu pedido #${idCurto}`;
-    return `https://wa.me/5584991922799?text=${encodeURIComponent(mensagem)}`;
+    const itensStr = p.itens.map((i: any) => `${i.quantidade}x ${i.nomeProduto}`).join(', ');
+    const totalStr = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(p.valorTotal);
+    const enderecoStr = `${p.logradouro}, ${p.numero} - ${p.bairroNome}`;
+
+    const mensagem = `Quero acompanhar meu pedido\n\n#${idCurto}.\n\nItens: ${itensStr}.\n\nValor Total: ${totalStr}.\n\nEntrega em: ${enderecoStr}`;
+
+    return `https://wa.me/${foneLoja}?text=${encodeURIComponent(mensagem)}`;
   }
 }

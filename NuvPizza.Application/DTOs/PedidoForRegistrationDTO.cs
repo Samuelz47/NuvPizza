@@ -13,4 +13,5 @@ public class PedidoForRegistrationDTO
     public string FormaPagamento { get; set; }
     public List<ItemPedidoForRegistrationDTO> Itens { get; set; }
     public string? Observacao { get; set; }
+    public string? CodigoCupom { get; set; }
 }

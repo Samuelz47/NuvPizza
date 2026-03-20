@@ -144,11 +144,13 @@ export class AdminHomeComponent implements OnInit {
     }
   }
 
-  navegarPara(destino: 'pedidos' | 'produtos') {
+  navegarPara(destino: 'pedidos' | 'produtos' | 'cupons') {
     if (destino === 'pedidos') {
       this.router.navigate(['/admin/painel']);
-    } else {
+    } else if (destino === 'produtos') {
       this.router.navigate(['/admin/produtos']);
+    } else {
+      this.router.navigate(['/admin/cupons']);
     }
   }
 }

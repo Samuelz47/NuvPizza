@@ -33,5 +33,7 @@ namespace NuvPizza.Domain.Entities
         public decimal ValorFrete { get; set; }
         public decimal ValorTotal { get; set; }
         public string? Observacao { get; set; }
+        public int? CupomId { get; set; }
+        public decimal ValorDesconto { get; set; }
     }
 }

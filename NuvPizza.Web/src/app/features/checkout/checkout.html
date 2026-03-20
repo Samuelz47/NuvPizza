@@ -206,9 +206,52 @@
             </div>
 
             <div class="summary-totals">
+              <!-- Cupom Section -->
+              <div class="cupom-section">
+                <div class="cupom-label">🏷️ Cupom de Desconto</div>
+
+                @if (!cupomAplicado()) {
+                <!-- Input de cupom -->
+                <div class="cupom-input-row">
+                  <input type="text" class="form-control cupom-input" placeholder="Digite o código"
+                    [ngModel]="codigoCupomInput()" (ngModelChange)="codigoCupomInput.set($event)"
+                    (keyup.enter)="aplicarCupom()" style="text-transform: uppercase;" />
+                  <button class="btn-cupom" (click)="aplicarCupom()" [disabled]="aplicandoCupom()">
+                    @if (aplicandoCupom()) { <span class="spinner-border spinner-border-sm"></span> }
+                    @else { Aplicar }
+                  </button>
+                </div>
+                @if (cupomErro()) {
+                <div class="cupom-erro">⚠️ {{ cupomErro() }}</div>
+                }
+
+                } @else {
+                <!-- Cupom Aplicado -->
+                <div class="cupom-aplicado">
+                  <div class="cupom-tag">
+                    <span>✅ {{ cupomAplicado()!.codigo }}</span>
+                    <span *ngIf="cupomAplicado()!.descontoPorcentagem > 0" class="cupom-desconto">
+                      -{{ cupomAplicado()!.descontoPorcentagem }}%
+                    </span>
+                    <span *ngIf="cupomAplicado()!.freteGratis" class="cupom-frete">+ Frete Grátis</span>
+                  </div>
+                  <button class="btn-remover-cupom" (click)="removerCupom()">✕ Remover</button>
+                </div>
+                }
+              </div>
+
               <div class="row-line">
                 <span>Subtotal</span>
+                @if (cupomAplicado() && cupomAplicado()!.descontoPorcentagem > 0) {
+                <div style="display:flex; flex-direction:column; align-items:flex-end;">
+                  <span style="text-decoration:line-through; color:#999; font-size:0.8em;">
+                    {{ carrinhoService.valorTotal() | currency:'BRL' }}
+                  </span>
+                  <span style="color:#e74c3c; font-weight:700;">{{ subtotalComDesconto | currency:'BRL' }}</span>
+                </div>
+                } @else {
                 <span>{{ carrinhoService.valorTotal() | currency:'BRL' }}</span>
+                }
               </div>
               <div class="row-line">
                 <span>Entrega</span>
@@ -223,7 +266,7 @@
 
               <div class="total-row">
                 <span>Total</span>
-                <span>{{ carrinhoService.totalComFrete() | currency:'BRL' }}</span>
+                <span>{{ totalFinalComDesconto | currency:'BRL' }}</span>
               </div>
             </div>
 
@@ -252,7 +295,7 @@
               🚫 Loja Fechada
               } @else {
               @if (tipoPagamento() === 'ONLINE') {
-              Pagar {{ carrinhoService.totalComFrete() | currency:'BRL' }}
+              Pagar {{ totalFinalComDesconto | currency:'BRL' }}
               } @else {
               ✅ Finalizar Pedido
               }

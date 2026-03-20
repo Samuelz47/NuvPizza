@@ -26,8 +26,9 @@ public class PedidoService : IPedidoService
     private readonly IEmailService _emailService;
     private readonly IPagamentoService _pagamentoService;
     private readonly INotificacaoService _notificacaoService;
+    private readonly ICupomRepository _cupomRepository;
     
-    public PedidoService(IPedidoRepository pedidoRepository, IProdutoRepository produtoRepository, IMapper mapper, IUnitOfWork uow, IViaCepService viaCepService, IWhatsappService whatsappService, IBairroRepository bairroRepository, IConfiguracaoRepository configuracaoRepository, IEmailService emailService, IPagamentoService pagamentoService, INotificacaoService notificacaoService)
+    public PedidoService(IPedidoRepository pedidoRepository, IProdutoRepository produtoRepository, IMapper mapper, IUnitOfWork uow, IViaCepService viaCepService, IWhatsappService whatsappService, IBairroRepository bairroRepository, IConfiguracaoRepository configuracaoRepository, IEmailService emailService, IPagamentoService pagamentoService, INotificacaoService notificacaoService, ICupomRepository cupomRepository)
     {
         _pedidoRepository = pedidoRepository;
         _produtoRepository = produtoRepository;
@@ -40,6 +41,7 @@ public class PedidoService : IPedidoService
         _emailService = emailService;
         _pagamentoService = pagamentoService;
         _notificacaoService = notificacaoService;
+        _cupomRepository = cupomRepository;
     }
 
     public async Task<Result<PedidoDTO>> CreatePedidoAsync(PedidoForRegistrationDTO pedidoRegister)
@@ -63,6 +65,7 @@ public class PedidoService : IPedidoService
                 return Result<PedidoDTO>.Failure("Forma de pagamento inválida");
         }
         
+        var cupom =  await _cupomRepository.GetAsync(c => c.Codigo == pedidoRegister.CodigoCupom);
         var pedido =  _mapper.Map<Pedido>(pedidoRegister);
         pedido.DataPedido = DateTime.UtcNow.AddHours(-3);
         pedido.Itens = new List<ItemPedido>();
@@ -74,7 +77,13 @@ public class PedidoService : IPedidoService
         pedido.Complemento = pedidoRegister.Complemento;
         pedido.Numero = pedidoRegister.Numero;
         pedido.FormaPagamento = formaPagamentoEnum;
-        
+        pedido.CupomId = null;
+        if (cupom != null)
+        {
+            pedido.CupomId = cupom.Id;
+            pedido.ValorDesconto = cupom.DescontoPorcentagem;
+        }
+
         if (formaPagamentoEnum != FormaPagamento.MercadoPago)
         {
             pedido.StatusPedido = StatusPedido.Confirmado; 
@@ -182,8 +191,9 @@ public class PedidoService : IPedidoService
 
             pedido.Itens.Add(item);
         }
-        
-        pedido.ValorTotal = pedido.Itens.Sum(i => i.Total) + pedido.ValorFrete;
+
+        if (cupom.FreteGratis) pedido.ValorFrete = 0;
+        pedido.ValorTotal = (-((pedido.Itens.Sum(i => i.Total) / 100) * pedido.ValorDesconto) + (pedido.Itens.Sum(i => i.Total))) + pedido.ValorFrete;
         _pedidoRepository.Create(pedido);
         await _uow.CommitAsync();
         

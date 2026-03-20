@@ -1,0 +1,81 @@
+<!-- Toast -->
+<div class="toast" *ngIf="toast().visivel" [ngClass]="toast().tipo">
+    {{ toast().mensagem }}
+</div>
+
+<!-- Header -->
+<div class="admin-container">
+    <div class="header">
+        <h1>🏷️ Gerenciar Cupons</h1>
+        <button (click)="abrirFormulario()" class="btn-primary">+ Novo Cupom</button>
+    </div>
+
+    <!-- Tabela de Cupons -->
+    <table class="tabela-cupons">
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Desconto</th>
+                <th>Frete Grátis</th>
+                <th>Status</th>
+                <th>Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr *ngFor="let cupom of cupons()">
+                <td><strong>{{ cupom.codigo }}</strong></td>
+                <td>
+                    <span *ngIf="cupom.descontoPorcentagem > 0">{{ cupom.descontoPorcentagem }}%</span>
+                    <span *ngIf="cupom.descontoPorcentagem === 0" style="color: #999;">—</span>
+                </td>
+                <td>
+                    <span class="badge" [ngClass]="cupom.freteGratis ? 'badge-sim' : 'badge-nao'">
+                        {{ cupom.freteGratis ? '✓ Sim' : '✗ Não' }}
+                    </span>
+                </td>
+                <td>
+                    <span [style.color]="cupom.ativo ? 'green' : 'red'">
+                        {{ cupom.ativo ? 'Ativo' : 'Inativo' }}
+                    </span>
+                </td>
+                <td>
+                    <button class="btn-remove" (click)="excluir(cupom.id, cupom.codigo)" title="Excluir">🗑️</button>
+                </td>
+            </tr>
+            <tr *ngIf="cupons().length === 0">
+                <td colspan="5" style="text-align: center; color: #888; padding: 2rem;">Nenhum cupom cadastrado.</td>
+            </tr>
+        </tbody>
+    </table>
+</div>
+
+<!-- Modal de Criação -->
+<div class="modal-backdrop" *ngIf="exibindoFormulario">
+    <div class="modal-content">
+        <h2>Novo Cupom</h2>
+
+        <label>Código do Cupom:</label>
+        <input [(ngModel)]="novoCupom.codigo" type="text" class="form-input" placeholder="Ex: BEMVINDO10"
+            style="text-transform: uppercase;" maxlength="30" />
+        <small style="color: #888; display: block; margin-top: -0.75rem; margin-bottom: 1rem;">
+            Sem espaços. Máximo 30 caracteres.
+        </small>
+
+        <label>Desconto (%):</label>
+        <input [(ngModel)]="novoCupom.descontoPorcentagem" type="number" class="form-input" min="0" max="100"
+            placeholder="0 para cupom apenas de frete" />
+
+        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 1.5rem;">
+            <input type="checkbox" [(ngModel)]="novoCupom.freteGratis" style="width: auto; margin: 0;" />
+            Frete Grátis
+        </label>
+
+        <div class="modal-actions">
+            <button (click)="exibindoFormulario = false" [disabled]="isLoading">Cancelar</button>
+            <button (click)="salvar()" class="btn-primary" [disabled]="isLoading">
+                <span *ngIf="isLoading" class="spinner"></span>
+                {{ isLoading ? 'Salvando...' : 'Salvar Cupom' }}
+            </button>
+        </div>
+    </div>
+</div>

@@ -120,6 +120,15 @@ namespace NuvPizza.Infrastructure.Persistence
                     HorarioFechamentoPadrao = new TimeSpan(23, 0, 0) // Sugestão: 23h
                 }
             );
+
+            builder.Entity<Cupom>(e =>
+            {
+                e.HasKey(c => c.Id);
+                e.Property(c => c.Codigo).IsRequired().HasMaxLength(30);
+                e.HasCheckConstraint("CK_Cupom_Codigo_SemEspacos", "\"Codigo\" NOT LIKE '% %'");
+                e.HasIndex(c => c.Codigo).IsUnique();
+                e.Property(c => c.DescontoPorcentagem).HasColumnType("decimal(5,2)");
+            });
         } 
     }
 }

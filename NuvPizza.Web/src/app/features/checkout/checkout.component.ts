@@ -4,9 +4,11 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { PedidoService } from '../../core/services/pedido.service';
+import { CupomService } from '../../core/services/cupom.service';
 import { CarrinhoService } from '../../core/services/carrinho.service';
 import { LojaService } from '../../core/services/loja.service';
 import { environment } from '../../environments/environment';
+import { Cupom } from '../../core/models/cupom.model';
 
 @Component({
   selector: 'app-checkout',
@@ -17,6 +19,7 @@ import { environment } from '../../environments/environment';
 })
 export class CheckoutComponent {
   private pedidoService = inject(PedidoService);
+  private cupomService = inject(CupomService);
   public carrinhoService = inject(CarrinhoService);
   private lojaService = inject(LojaService);
   private router = inject(Router);
@@ -32,6 +35,13 @@ export class CheckoutComponent {
   lojaAberta = signal<boolean>(true);
 
   idPedidoCriado = signal<string | null>(null);
+
+  // Sinais do Cupom
+  codigoCupomInput = signal<string>('');
+  cupomAplicado = signal<Cupom | null>(null);
+  cupomErro = signal<string>('');
+  aplicandoCupom = signal<boolean>(false);
+  freteOriginal = signal<number>(0); // guarda frete antes do cupom
 
   // Controle de UI do Pagamento
   tipoPagamento = signal<'ONLINE' | 'ENTREGA'>('ONLINE');
@@ -60,7 +70,8 @@ export class CheckoutComponent {
     bairro: '',
     observacao: '',
     formaPagamento: 'NaoDefinido',
-    itens: []
+    itens: [],
+    cupom: ''
   };
 
   constructor() {
@@ -126,6 +137,70 @@ export class CheckoutComponent {
         this.errorMessage.set('Erro ao buscar CEP.');
       }
     });
+  }
+
+  // ---- LÓGICA DO CUPOM ----
+
+  aplicarCupom() {
+    const codigo = this.codigoCupomInput().trim().toUpperCase();
+    if (!codigo) return;
+
+    this.aplicandoCupom.set(true);
+    this.cupomErro.set('');
+
+    this.cupomService.getCupomPorCodigo(codigo).subscribe({
+      next: (cupom) => {
+        this.aplicandoCupom.set(false);
+        if (!cupom.ativo) {
+          this.cupomErro.set('Este cupom está inativo.');
+          return;
+        }
+        this.cupomAplicado.set(cupom);
+        this.pedido.cupom = cupom.codigo;
+
+        // Aplica frete grátis visualmente se necessário
+        if (cupom.freteGratis) {
+          this.freteOriginal.set(this.carrinhoService.valorFrete());
+          this.carrinhoService.valorFrete.set(0);
+          this.freteLabel.set('Grátis 🎉 (cupom)');
+        }
+
+        // O desconto em % é calculado no backend e também refletido no totalComFrete
+        // Aqui apenas guardamos o cupom; cálculo visual é feito via getter
+      },
+      error: () => {
+        this.aplicandoCupom.set(false);
+        this.cupomErro.set('Cupom inválido ou não encontrado.');
+      }
+    });
+  }
+
+  removerCupom() {
+    // Restaura frete original se cupom tinha frete grátis
+    const cupom = this.cupomAplicado();
+    if (cupom?.freteGratis) {
+      this.carrinhoService.valorFrete.set(this.freteOriginal());
+      // Restaura label de frete
+      const frete = this.freteOriginal();
+      this.freteLabel.set(frete === 0 ? 'Grátis 🎉' : `R$ ${frete.toFixed(2).replace('.', ',')}`);
+    }
+    this.cupomAplicado.set(null);
+    this.codigoCupomInput.set('');
+    this.cupomErro.set('');
+    this.pedido.cupom = '';
+    this.freteOriginal.set(0);
+  }
+
+  // Subtotal com desconto aplicado (apenas visual; o backend também verifica)
+  get subtotalComDesconto(): number {
+    const subtotal = this.carrinhoService.valorTotal();
+    const cupom = this.cupomAplicado();
+    if (!cupom || cupom.descontoPorcentagem <= 0) return subtotal;
+    return subtotal * (1 - cupom.descontoPorcentagem / 100);
+  }
+
+  get totalFinalComDesconto(): number {
+    return this.subtotalComDesconto + this.carrinhoService.valorFrete();
   }
 
   selecionarTipoPagamento(tipo: 'ONLINE' | 'ENTREGA') {
@@ -194,8 +269,9 @@ export class CheckoutComponent {
       observacao: obsFinal,
       numero: numeroFinal,
       valorFrete: this.carrinhoService.valorFrete(),
-      valorTotal: this.carrinhoService.totalComFrete(),
-      itens: itensReais
+      valorTotal: this.totalFinalComDesconto,
+      itens: itensReais,
+      codigoCupom: this.pedido.cupom || null
     };
 
     console.log('Payload Enviado:', payload);

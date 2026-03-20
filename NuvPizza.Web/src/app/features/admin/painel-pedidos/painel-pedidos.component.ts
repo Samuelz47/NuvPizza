@@ -361,12 +361,12 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
           <title>Comanda ${codigo}</title>
           <style>
             @media print { body { margin: 0; padding: 0; } }
-            body { font-family: 'Courier New', monospace; width: 80mm; font-size: 13px; margin: 0 auto; padding: 10px; }
-            .header { text-align: center; border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 10px; }
-            .bold { font-weight: bold; }
+            body { font-family: 'Courier New', monospace; width: 80mm; font-size: 13px; margin: 0 auto; padding: 10px; font-weight: 900; color: #000; }
+            .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
+            .bold { font-weight: 900; }
             .section { border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px; }
             .row { display: flex; justify-content: space-between; }
-            .total-big { font-size: 18px; font-weight: bold; margin-top: 5px; border-top: 1px solid #000; }
+            .total-big { font-size: 18px; font-weight: 900; margin-top: 5px; border-top: 2px solid #000; }
           </style>
         </head>
         <body>
