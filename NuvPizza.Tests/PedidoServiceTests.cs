@@ -25,6 +25,7 @@ public class PedidoServiceTests
     private readonly Mock<IEmailService> _emailMock;
     private readonly Mock<IPagamentoService> _pagamentoMock;
     private readonly Mock<INotificacaoService> _notificacaoMock;
+    private readonly Mock<ICupomRepository> _cupomRepoMock;
     
     private readonly PedidoService _sut;
     
@@ -41,6 +42,7 @@ public class PedidoServiceTests
         _emailMock = new Mock<IEmailService>();
         _pagamentoMock = new Mock<IPagamentoService>();
         _notificacaoMock = new Mock<INotificacaoService>();
+        _cupomRepoMock = new Mock<ICupomRepository>();
 
         _sut = new PedidoService(
             _pedidoRepoMock.Object,
@@ -53,7 +55,8 @@ public class PedidoServiceTests
             _configRepoMock.Object,
             _emailMock.Object,
             _pagamentoMock.Object,
-            _notificacaoMock.Object
+            _notificacaoMock.Object,
+            _cupomRepoMock.Object
         );
     }
     
