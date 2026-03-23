@@ -17,6 +17,7 @@ export interface ComboItemTemplate {
   quantidade: number;
   categoriaPermitida: CategoriaProduto;
   tamanhoObrigatorio: TamanhoProduto;
+  valorCobertura: number; // Valor máximo coberto pelo combo neste slot
 }
 
 // Tem que bater com o Enum do C# (NuvPizza.Domain/Enums)

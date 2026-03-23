@@ -151,6 +151,11 @@ public class PedidoService : IPedidoService
                     if (produtoEscolhido != null)
                     {
                         var nomeEscolha = produtoEscolhido.Nome;
+                        
+                        // Preço efetivo do produto escolhido (promocional ou normal)
+                        var precoEscolhido = produtoEscolhido.PrecoPromocional.HasValue && produtoEscolhido.PrecoPromocional.Value > 0
+                            ? produtoEscolhido.PrecoPromocional.Value
+                            : produtoEscolhido.Preco;
 
                         // Se a escolha em si for meio a meio
                         if (escolhaDto.ProdutoSecundarioId.HasValue)
@@ -159,6 +164,12 @@ public class PedidoService : IPedidoService
                             if (escolhaSecundaria != null)
                             {
                                 nomeEscolha = $"{produtoEscolhido.Nome} / {escolhaSecundaria.Nome}";
+                                
+                                // Meio a meio: média dos dois sabores
+                                var precoSecundario = escolhaSecundaria.PrecoPromocional.HasValue && escolhaSecundaria.PrecoPromocional.Value > 0
+                                    ? escolhaSecundaria.PrecoPromocional.Value
+                                    : escolhaSecundaria.Preco;
+                                precoEscolhido = (precoEscolhido + precoSecundario) / 2;
                             }
                         }
 
@@ -173,6 +184,20 @@ public class PedidoService : IPedidoService
                                 item.PrecoUnitario += bordaC.Preco;
                             }
                         }
+
+                        // --- LÓGICA DE ALLOWANCE (ValorCobertura) ---
+                        // Busca o template correspondente na lista do produto combo (já carregada via Include)
+                        var template = produto.ComboTemplates?.FirstOrDefault(t => t.Id == escolhaDto.ComboItemTemplateId);
+                        if (template != null && template.ValorCobertura > 0)
+                        {
+                            var valorExtra = Math.Max(0, precoEscolhido - template.ValorCobertura);
+                            if (valorExtra > 0)
+                            {
+                                item.PrecoUnitario += valorExtra;
+                                nomeEscolha += $" [+{valorExtra.ToString("C2", new System.Globalization.CultureInfo("pt-BR"))}]";
+                            }
+                        }
+                        // --- FIM LÓGICA DE ALLOWANCE ---
 
                         // Adiciona a string na descrição do Combo para a nota
                         item.Nome += $" [+ {nomeEscolha}]";

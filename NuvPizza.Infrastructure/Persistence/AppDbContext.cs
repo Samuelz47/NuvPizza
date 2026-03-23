@@ -37,6 +37,7 @@ namespace NuvPizza.Infrastructure.Persistence
             builder.Entity<ComboItemTemplate>(e => 
             {
                 e.HasKey(c => c.Id);
+                e.Property(c => c.ValorCobertura).HasColumnType("decimal(10,2)");
                 e.HasOne(c => c.Produto)
                  .WithMany(p => p.ComboTemplates)
                  .HasForeignKey(c => c.ProdutoId)

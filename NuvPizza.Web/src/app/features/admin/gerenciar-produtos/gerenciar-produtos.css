@@ -69,18 +69,27 @@
   height: 100%;
   background: rgba(0, 0, 0, 0.5);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  /* Altera para flex-start para melhor rolagem se necessário */
   justify-content: center;
   z-index: 1000;
+  overflow-y: auto;
+  /* Permite rolar o backdrop se o modal for muito grande */
+  padding: 2rem 0;
 }
 
 .modal-content {
   background: white;
   padding: 2rem;
   border-radius: 8px;
-  width: 100%;
-  max-width: 500px;
+  width: 95%;
+  /* Ajuste para responsividade */
+  max-width: 600px;
+  /* Aumentado para acomodar melhor os slots do combo */
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  position: relative;
+  max-height: none;
+  /* Deixamos o backdrop controlar a rolagem para evitar scrollbars duplas */
 }
 
 .form-input {

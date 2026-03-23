@@ -126,6 +126,18 @@
             <button (click)="removerItemCombo(i)" class="btn-remove-slot" title="Remover Regra">✖</button>
           </div>
         </div>
+        <div class="row" style="margin-top: 8px; align-items: flex-start;">
+          <div style="flex: 1;">
+            <label>💰 Valor Cobertura (R$):</label>
+            <input type="number" [(ngModel)]="template.valorCobertura" class="form-input" min="0" step="0.01"
+              placeholder="0,00">
+            <small style="color: #666; font-size: 0.77rem; margin-top: 3px; display: block;">
+              Limite coberto pelo combo neste slot. Se o cliente escolher um item mais caro, cobra-se a diferença.<br>
+              Ex: Cobertura R$ 60. Cliente escolhe pizza de R$ 75 → cobrado R$ 15 a mais. <strong>Deixe 0 para cobrir
+                qualquer item sem extra.</strong>
+            </small>
+          </div>
+        </div>
       </div>
 
       <button (click)="adicionarItemCombo()" class="btn-primary"

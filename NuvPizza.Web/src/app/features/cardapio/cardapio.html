@@ -257,7 +257,7 @@
         <select [(ngModel)]="escolhasCombo[i].escolhido" class="form-select">
           <option [ngValue]="null">-- Selecione --</option>
           <option *ngFor="let opt of opcoesCombo[i]" [ngValue]="opt">
-            {{ opt.nome }}
+            {{ opt.nome }} {{ getPrecoExtraFormatado(opt, escolhasCombo[i].template) }}
           </option>
         </select>
 
@@ -277,10 +277,14 @@
               style="font-size: 0.9rem; padding: 6px;">
               <option [ngValue]="null">-- Selecione --</option>
               <option *ngFor="let opt of opcoesCombo[i]" [ngValue]="opt">
-                <span *ngIf="opt.id !== escolhasCombo[i].escolhido.id">{{ opt.nome }}</span>
+                <span *ngIf="opt.id !== escolhasCombo[i].escolhido.id">
+                  {{ opt.nome }} {{ getPrecoExtraFormatado(escolhasCombo[i].escolhido, escolhasCombo[i].template, opt)
+                  }}
+                </span>
               </option>
             </select>
           </div>
+
 
           <div *ngIf="listaBordas.length > 0">
             <label class="label-tag" style="font-size: 0.8rem;">Borda Recheada:</label>

@@ -9,5 +9,6 @@ namespace NuvPizza.Application.DTOs
         public int Quantidade { get; set; }
         public Categoria CategoriaPermitida { get; set; }
         public Tamanho TamanhoObrigatorio { get; set; }
+        public decimal ValorCobertura { get; set; }
     }
 }

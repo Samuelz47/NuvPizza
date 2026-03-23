@@ -412,4 +412,63 @@ public class PedidoServiceTests
             p.Itens.First().EscolhasCombo.Count == 2
         )), Times.Once);
     }
+
+    [Fact]
+    public async Task CreatePedidoAsync_DeveAdicionarValorExtra_QuandoEscolhaExcederValorCobertura()
+    {
+        var comboId = 20; var pizzaId = 21; var templateId = 5;
+        var precoCombo = 100.00m; var precoPizza = 75.00m; var valorCobertura = 60.00m;
+        var valorExtraEsperado = 15.00m; var valorFrete = 10.00m;
+        var totalEsperado = precoCombo + valorExtraEsperado + valorFrete;
+
+        var pedidoDto = new PedidoForRegistrationDTO { Cep = "59000-000", FormaPagamento = "Pix",
+            Itens = new List<ItemPedidoForRegistrationDTO> { new ItemPedidoForRegistrationDTO { ProdutoId = comboId, Quantidade = 1,
+                EscolhasCombo = new List<ItemPedidoComboEscolhaForRegistrationDTO> { new ItemPedidoComboEscolhaForRegistrationDTO { ProdutoEscolhidoId = pizzaId, ComboItemTemplateId = templateId } } } } };
+
+        var comboProduto = new Produto { Id = comboId, Preco = precoCombo, Nome = "Combo Casal", Categoria = Domain.Enums.Categoria.Combo,
+            ComboTemplates = new List<ComboItemTemplate> { new ComboItemTemplate { Id = templateId, ValorCobertura = valorCobertura } } };
+
+        _configRepoMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<Configuracao, bool>>>())).ReturnsAsync(new Configuracao { EstaAberta = true });
+        _viaCepMock.Setup(v => v.CheckAsync(It.IsAny<string>())).ReturnsAsync(new ViaCepResponse { Bairro = "Centro" });
+        _bairroRepoMock.Setup(b => b.GetAsync(It.IsAny<Expression<Func<Bairro, bool>>>())).ReturnsAsync(new Bairro { ValorFrete = valorFrete, Nome = "Centro" });
+        _produtoRepoMock.Setup(p => p.GetAsync(It.Is<Expression<Func<Produto, bool>>>(e => e.Compile()(new Produto { Id = comboId })))).ReturnsAsync(comboProduto);
+        _produtoRepoMock.Setup(p => p.GetAsync(It.Is<Expression<Func<Produto, bool>>>(e => e.Compile()(new Produto { Id = pizzaId })))).ReturnsAsync(new Produto { Id = pizzaId, Preco = precoPizza, Nome = "Pizza Cama\u00e3o" });
+        _mapperMock.Setup(m => m.Map<Pedido>(pedidoDto)).Returns(new Pedido());
+        _mapperMock.Setup(m => m.Map<PedidoDTO>(It.IsAny<Pedido>())).Returns(new PedidoDTO());
+
+        await _sut.CreatePedidoAsync(pedidoDto);
+
+        _pedidoRepoMock.Verify(x => x.Create(It.Is<Pedido>(p =>
+            p.ValorTotal == totalEsperado && p.Itens.First().PrecoUnitario == (precoCombo + valorExtraEsperado)
+        )), Times.Once);
+    }
+
+    [Fact]
+    public async Task CreatePedidoAsync_NaoDeveAdicionarValorExtra_QuandoEscolhaEstiverDentroDoValorCobertura()
+    {
+        var comboId = 30; var pizzaId = 31; var templateId = 6;
+        var precoCombo = 100.00m; var precoPizza = 55.00m; var valorCobertura = 60.00m;
+        var valorFrete = 10.00m; var totalEsperado = precoCombo + valorFrete;
+
+        var pedidoDto = new PedidoForRegistrationDTO { Cep = "59000-000", FormaPagamento = "Pix",
+            Itens = new List<ItemPedidoForRegistrationDTO> { new ItemPedidoForRegistrationDTO { ProdutoId = comboId, Quantidade = 1,
+                EscolhasCombo = new List<ItemPedidoComboEscolhaForRegistrationDTO> { new ItemPedidoComboEscolhaForRegistrationDTO { ProdutoEscolhidoId = pizzaId, ComboItemTemplateId = templateId } } } } };
+
+        var comboProduto = new Produto { Id = comboId, Preco = precoCombo, Nome = "Combo Casal", Categoria = Domain.Enums.Categoria.Combo,
+            ComboTemplates = new List<ComboItemTemplate> { new ComboItemTemplate { Id = templateId, ValorCobertura = valorCobertura } } };
+
+        _configRepoMock.Setup(x => x.GetAsync(It.IsAny<Expression<Func<Configuracao, bool>>>())).ReturnsAsync(new Configuracao { EstaAberta = true });
+        _viaCepMock.Setup(v => v.CheckAsync(It.IsAny<string>())).ReturnsAsync(new ViaCepResponse { Bairro = "Centro" });
+        _bairroRepoMock.Setup(b => b.GetAsync(It.IsAny<Expression<Func<Bairro, bool>>>())).ReturnsAsync(new Bairro { ValorFrete = valorFrete, Nome = "Centro" });
+        _produtoRepoMock.Setup(p => p.GetAsync(It.Is<Expression<Func<Produto, bool>>>(e => e.Compile()(new Produto { Id = comboId })))).ReturnsAsync(comboProduto);
+        _produtoRepoMock.Setup(p => p.GetAsync(It.Is<Expression<Func<Produto, bool>>>(e => e.Compile()(new Produto { Id = pizzaId })))).ReturnsAsync(new Produto { Id = pizzaId, Preco = precoPizza, Nome = "Pizza Calabresa" });
+        _mapperMock.Setup(m => m.Map<Pedido>(pedidoDto)).Returns(new Pedido());
+        _mapperMock.Setup(m => m.Map<PedidoDTO>(It.IsAny<Pedido>())).Returns(new PedidoDTO());
+
+        await _sut.CreatePedidoAsync(pedidoDto);
+
+        _pedidoRepoMock.Verify(x => x.Create(It.Is<Pedido>(p =>
+            p.ValorTotal == totalEsperado && p.Itens.First().PrecoUnitario == precoCombo
+        )), Times.Once);
+    }
 }

@@ -202,6 +202,24 @@ export class CardapioComponent implements OnInit {
     return Math.round(((prod.preco - prod.precoPromocional) / prod.preco) * 100);
   }
 
+  getPrecoExtra(escolhido: Produto | null, template: any, secundario: Produto | null = null): number {
+    if (!escolhido || !template || !template.valorCobertura || template.valorCobertura <= 0) return 0;
+
+    let precoEfetivo = this.getPrecoEfetivo(escolhido);
+    if (secundario) {
+      precoEfetivo = (precoEfetivo + this.getPrecoEfetivo(secundario)) / 2;
+    }
+
+    const extra = Math.max(0, precoEfetivo - template.valorCobertura);
+    return extra;
+  }
+
+  getPrecoExtraFormatado(escolhido: Produto | null, template: any, secundario: Produto | null = null): string {
+    const extra = this.getPrecoExtra(escolhido, template, secundario);
+    if (extra <= 0) return '';
+    return ` (+${extra.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`;
+  }
+
   // Agrupa pizzas ativas por tamanho (ordem crescente de tamanho)
   get pizzasPorTamanho(): { tamanho: number; nome: string; pizzas: Produto[] }[] {
     const pizzasAtivas = this.produtos.filter(
@@ -303,19 +321,25 @@ export class CardapioComponent implements OnInit {
       produtoId: this.comboSelecionado.id,
       nome: this.comboSelecionado.nome,
       precoBase: precoBase,
-      preco: precoBase, // vai acumular bordas
+      preco: precoBase, // vai acumular bordas e extras de allowance
       imagem: this.comboSelecionado.imagemUrl,
       quantidade: 1,
       escolhasCombo: [] as any[]
     };
 
-    // Para cada template adiciona valor extra de borda e adiciona na string de desc
+    // Para cada template adiciona valor extra de borda e allowance, e adiciona na string de desc
     let subDescricoes: string[] = [];
 
     this.escolhasCombo.forEach(e => {
       let strName = e.escolhido.nome;
+
+      // Preço efetivo da escolha (usa preço promocional se tiver)
+      let precoEscolhido = this.getPrecoEfetivo(e.escolhido);
+
       if (e.secundario) {
         strName += ` / ${e.secundario.nome}`;
+        // Meio a meio: média dos dois sabores
+        precoEscolhido = (precoEscolhido + this.getPrecoEfetivo(e.secundario)) / 2;
       }
       if (e.borda) {
         strName += ` (Borda: ${e.borda.nome})`;
@@ -323,6 +347,17 @@ export class CardapioComponent implements OnInit {
         precoBordaTotal += e.borda.preco;
         bordaNomes.push(e.borda.nome);
       }
+
+      // --- LÓGICA DE ALLOWANCE (ValorCobertura) ---
+      const valorCobertura = e.template?.valorCobertura ?? 0;
+      if (valorCobertura > 0) {
+        const valorExtra = Math.max(0, precoEscolhido - valorCobertura);
+        if (valorExtra > 0) {
+          comboItem.preco += valorExtra;
+          strName += ` (+${valorExtra.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`;
+        }
+      }
+      // --- FIM LÓGICA DE ALLOWANCE ---
 
       subDescricoes.push(`+ ${strName}`);
 

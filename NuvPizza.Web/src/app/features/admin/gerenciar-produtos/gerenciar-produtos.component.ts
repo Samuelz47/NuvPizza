@@ -122,7 +122,8 @@ export class GerenciarProdutosComponent implements OnInit {
     this.produtoEmEdicao.comboTemplates.push({
       quantidade: 1,
       categoriaPermitida: 1, // Default para Pizza
-      tamanhoObrigatorio: 3 // Default para Grande em Pizza
+      tamanhoObrigatorio: 3, // Default para Grande em Pizza
+      valorCobertura: 0
     });
   }
 
@@ -199,6 +200,17 @@ export class GerenciarProdutosComponent implements OnInit {
   }
 
   salvar() {
+    // Validações básicas de tela
+    if (!this.produtoEmEdicao.nome || this.produtoEmEdicao.nome.trim() === '') {
+      alert('⚠️ O nome do produto é obrigatório.');
+      return;
+    }
+
+    if (!this.produtoEmEdicao.preco || this.produtoEmEdicao.preco === '' || this.produtoEmEdicao.preco == 0) {
+      alert('⚠️ O preço do produto é obrigatório e deve ser maior que zero.');
+      return;
+    }
+
     this.isLoading = true;
 
     // Converte "1.234,56" para number 1234.56 antes de enviar
@@ -219,10 +231,9 @@ export class GerenciarProdutosComponent implements OnInit {
 
     if (precoPromocional !== null && precoPromocional >= preco) {
       alert('O preço promocional deve ser MENOR que o preço original.');
+      this.isLoading = false;
       return;
     }
-
-    this.isLoading = true;
 
     if (this.produtoEmEdicao.id) {
       // Edição
@@ -234,9 +245,11 @@ export class GerenciarProdutosComponent implements OnInit {
             this.carregar();
             this.isLoading = false;
             this.cdr.detectChanges();
+            this.produtoEmEdicao = {}; // Reset para segurança
           },
           error: (err) => {
             console.error('Erro ao atualizar produto:', err);
+            alert('❌ Erro ao atualizar o produto. Verifique se os dados estão corretos e preenchidos.');
             this.isLoading = false;
             this.cdr.detectChanges();
           }
@@ -251,9 +264,11 @@ export class GerenciarProdutosComponent implements OnInit {
             this.carregar();
             this.isLoading = false;
             this.cdr.detectChanges();
+            this.produtoEmEdicao = {}; // Reset para segurança
           },
           error: (err) => {
             console.error('Erro ao criar produto:', err);
+            alert('❌ Erro ao criar o produto. Preencha os campos obrigatórios e números válidos antes de salvar.');
             this.isLoading = false;
             this.cdr.detectChanges();
           }

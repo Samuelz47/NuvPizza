@@ -360,19 +360,36 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
         <head>
           <title>Comanda ${codigo}</title>
           <style>
-            @media print { body { margin: 0; padding: 0; } }
-            body { font-family: 'Courier New', monospace; width: 80mm; font-size: 13px; margin: 0 auto; padding: 10px; font-weight: 900; color: #000; }
+            @page {
+              margin: 0;
+              size: auto;
+            }
+            @media print {
+              body { margin: 0; padding: 0; }
+              .no-print { display: none; }
+            }
+            body { 
+              font-family: 'Courier New', monospace; 
+              width: 72mm; /* Deixando um pouco menor que 80mm para segurança em diferentes bobinas */
+              font-size: 12px; 
+              margin: 0; 
+              padding: 5mm; 
+              font-weight: 900; 
+              color: #000; 
+              line-height: 1.2;
+            }
             .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
             .bold { font-weight: 900; }
             .section { border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px; }
             .row { display: flex; justify-content: space-between; }
-            .total-big { font-size: 18px; font-weight: 900; margin-top: 5px; border-top: 2px solid #000; }
+            .total-big { font-size: 16px; font-weight: 900; margin-top: 5px; border-top: 2px solid #000; }
+            .footer { text-align: center; margin-top: 15px; font-size: 10px; border-top: 1px solid #000; padding-top: 5px; }
           </style>
         </head>
         <body>
           <div class="header">
-            <div class="bold">NUVPIZZA DELIVERY</div>
-            <div class="bold" style="font-size: 14px; margin-top: 5px;">${codigo}</div>
+            <div class="bold" style="font-size: 16px;">NUVPIZZA DELIVERY</div>
+            <div class="bold" style="font-size: 18px; margin-top: 5px;">${codigo}</div>
             <div style="font-size:11px">${dataHora}</div>
           </div>
           <div class="section">
@@ -409,12 +426,28 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
                 ${this.traduzirPagamento(pedido.formaPagamento)}
             </div>
           </div>
-          <script>window.onload = function() { window.print(); }</script>
+          
+          <div class="footer">
+            Obrigado pela preferência! <br>
+            nuvpizza.com.br
+          </div>
+
+          <script>
+            window.onload = function() { 
+              window.print(); 
+              window.onafterprint = function() { window.close(); };
+              // Fallback para fechar após 1 segundo se o onafterprint não disparar (alguns navegadores)
+              setTimeout(function() { window.close(); }, 1000);
+            }
+          </script>
         </body>
       </html>
     `;
-    const popup = window.open('', '_blank', 'width=380,height=600');
-    if (popup) { popup.document.write(conteudo); popup.document.close(); }
+    const popup = window.open('', '_blank', 'width=400,height=600');
+    if (popup) {
+      popup.document.write(conteudo);
+      popup.document.close();
+    }
   }
 
   mostrarToast(msg: string, tipo: any) {

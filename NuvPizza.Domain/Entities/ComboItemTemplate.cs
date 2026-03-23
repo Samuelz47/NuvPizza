@@ -18,5 +18,9 @@ namespace NuvPizza.Domain.Entities
         // A regra que o cliente precisa seguir para preencher este slot
         public Categoria CategoriaPermitida { get; set; }
         public Tamanho TamanhoObrigatorio { get; set; }
+        
+        // Valor máximo que o combo cobre para este slot.
+        // Se o item escolhido custar mais, o extra é cobrado do cliente.
+        public decimal ValorCobertura { get; set; }
     }
 }
