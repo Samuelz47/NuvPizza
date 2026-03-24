@@ -26,6 +26,7 @@ public class PedidoServiceTests
     private readonly Mock<IPagamentoService> _pagamentoMock;
     private readonly Mock<INotificacaoService> _notificacaoMock;
     private readonly Mock<ICupomRepository> _cupomRepoMock;
+    private readonly Mock<IClienteService> _clienteServiceMock;
     
     private readonly PedidoService _sut;
     
@@ -43,6 +44,7 @@ public class PedidoServiceTests
         _pagamentoMock = new Mock<IPagamentoService>();
         _notificacaoMock = new Mock<INotificacaoService>();
         _cupomRepoMock = new Mock<ICupomRepository>();
+        _clienteServiceMock = new Mock<IClienteService>();
 
         _sut = new PedidoService(
             _pedidoRepoMock.Object,
@@ -56,7 +58,8 @@ public class PedidoServiceTests
             _emailMock.Object,
             _pagamentoMock.Object,
             _notificacaoMock.Object,
-            _cupomRepoMock.Object
+            _cupomRepoMock.Object,
+            _clienteServiceMock.Object
         );
     }
     
@@ -138,7 +141,7 @@ public class PedidoServiceTests
 
         _pedidoRepoMock.Verify(x => x.Create(It.IsAny<Pedido>()), Times.Once);
 
-        _uowMock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Once);
+        _uowMock.Verify(x => x.CommitAsync(It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
     
     [Fact]
