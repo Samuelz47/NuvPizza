@@ -346,14 +346,29 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
     });
   }
 
+  calcularSubtotal(pedido: any): number {
+    if (!pedido || !pedido.itens) return 0;
+    return pedido.itens.reduce((acc: number, item: any) => {
+      const itemTotal = item.total || (item.precoUnitario || item.preco || 0) * (item.quantidade || 1);
+      return acc + itemTotal;
+    }, 0);
+  }
+
   imprimirComanda(pedido: any) {
-    const dataHora = new Date(pedido.dataPedido).toLocaleString('pt-BR');
+    const dataPedido = new Date(pedido.dataPedido);
+    const dataHora = dataPedido.toLocaleString('pt-BR');
+    const dataEntregaPrevista = new Date(dataPedido.getTime() + 30 * 60000);
+    const entregaPrevista = dataEntregaPrevista.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+
     const telefone = pedido.telefoneCliente || pedido.telefone || 'Não informado';
     const codigo = this.getCodigoPedido(pedido);
 
-    const totalItens = pedido.itens.reduce((acc: number, item: any) => acc + (item.total || (item.preco * item.quantidade)), 0);
+    const totalItens = this.calcularSubtotal(pedido);
     const frete = (pedido.valorFrete || 0);
-    const totalGeral = (pedido.valorTotal || (totalItens + frete));
+    const desconto = (pedido.valorDesconto || 0);
+    const totalGeral = (pedido.valorTotal || (totalItens + frete - desconto));
+
+    const isOnline = pedido.formaPagamento === 6 || pedido.formaPagamento === '6' || pedido.formaPagamento === 'MercadoPago';
 
     const conteudo = `
       <html>
@@ -370,7 +385,7 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
             }
             body { 
               font-family: 'Courier New', monospace; 
-              width: 72mm; /* Deixando um pouco menor que 80mm para segurança em diferentes bobinas */
+              width: 72mm; 
               font-size: 12px; 
               margin: 0; 
               padding: 5mm; 
@@ -378,7 +393,7 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
               color: #000; 
               line-height: 1.2;
             }
-            .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px; }
+            .header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 15px; }
             .bold { font-weight: 900; }
             .section { border-bottom: 1px dashed #000; padding-bottom: 5px; margin-bottom: 5px; }
             .row { display: flex; justify-content: space-between; }
@@ -391,7 +406,24 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
             <div class="bold" style="font-size: 16px;">NUVPIZZA DELIVERY</div>
             <div class="bold" style="font-size: 18px; margin-top: 5px;">${codigo}</div>
             <div style="font-size:11px">${dataHora}</div>
+            <div style="font-size:11px">Entrega prevista: ${entregaPrevista}</div>
           </div>
+
+          <!-- 1. ITENS -->
+          <div class="section">
+            <div class="bold mb-1">ITENS:</div>
+            ${pedido.itens.map((item: any) => `
+               <div class="row">
+                  <span style="width:10%">${item.quantidade}x</span>
+                  <span style="width:60%">${item.nomeProduto || item.nome}</span>
+                  <span style="width:30%; text-align:right">
+                    ${(item.total || (item.precoUnitario || item.preco || 0) * (item.quantidade || 1)).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
+                  </span>
+               </div>
+            `).join('')}
+          </div>
+
+          <!-- 2. DADOS DO CLIENTE -->
           <div class="section">
             <div><span class="bold">CLIENTE:</span> ${pedido.nomeCliente}</div>
             ${telefone !== 'Não informado' ? `<div>TEL: ${telefone}</div>` : ''}
@@ -402,31 +434,27 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
             <div>${pedido.bairroNome}</div>
             ${pedido.complemento ? `<div>Comp: ${pedido.complemento}</div>` : ''}
           </div>
-          <div class="section">
-            <div class="bold mb-1">ITENS:</div>
-            ${pedido.itens.map((item: any) => `
-               <div class="row">
-                  <span style="width:10%">${item.quantidade}x</span>
-                  <span style="width:60%">${item.nomeProduto || item.nome}</span>
-                  <span style="width:30%; text-align:right">
-                    ${(item.total || item.preco * item.quantidade).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}
-                  </span>
-               </div>
-            `).join('')}
-          </div>
           ${pedido.observacao ? `<div class="section"><span class="bold">OBS:</span> ${pedido.observacao}</div>` : ''}
-          <div class="section" style="text-align:right">
-            <div>Subtotal: ${totalItens.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
-            <div>Entrega: ${frete.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
-            <div class="total-big">TOTAL: ${totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
-          </div>
-          <div style="text-align:center; margin-top:10px">
+
+          <!-- 3. FORMA DE PAGAMENTO & STATUS -->
+          <div style="text-align:center; margin-top:15px; margin-bottom: 10px;">
             <div>PAGAMENTO:</div>
             <div class="bold" style="font-size:16px">
                 ${this.traduzirPagamento(pedido.formaPagamento)}
             </div>
+            <div class="bold" style="margin-top: 5px; font-size:13px">
+                ${isOnline ? '* Pedido Pago *' : '* Cobrar do cliente *'}
+            </div>
           </div>
           
+          <!-- 4. TOTAL (Por último) -->
+          <div class="section" style="text-align:right; border-top: 1px solid #000; padding-top: 5px;">
+            <div>Subtotal: ${totalItens.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+            ${desconto > 0 ? `<div>Desconto: -${desconto.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>` : ''}
+            <div>Entrega: ${frete.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+            <div class="total-big">TOTAL: ${totalGeral.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })}</div>
+          </div>
+
           <div class="footer">
             Obrigado pela preferência! <br>
             nuvpizza.com.br

@@ -258,3 +258,34 @@
     font-size: 1.2rem;
     margin-right: 8px;
 }
+
+/* ETA Box */
+.previsao-box {
+    background-color: #fffdf5;
+    border: 1.5px solid #ffecb3;
+    border-radius: 12px;
+    padding: 15px 20px;
+    margin: 10px 0 25px 0;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    color: #856404;
+    font-size: 0.95rem;
+    box-shadow: 0 2px 8px rgba(255, 193, 7, 0.15);
+}
+
+.previsao-box i {
+    font-size: 1.8rem;
+    color: #ffc107;
+}
+
+.previsao-box span {
+    line-height: 1.4;
+}
+
+.previsao-box strong {
+    font-size: 1.2rem;
+    color: #333;
+    display: block;
+    margin-top: 2px;
+}

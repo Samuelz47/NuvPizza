@@ -19,6 +19,7 @@ namespace NuvPizza.Infrastructure.Persistence
         public DbSet<Configuracao> Configuracoes { get; set; }
         public DbSet<ComboItemTemplate> ComboTemplates { get; set; }
         public DbSet<ItemPedidoComboEscolha> EscolhasCombo { get; set; }
+        public DbSet<Cliente> Clientes { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -102,6 +103,21 @@ namespace NuvPizza.Infrastructure.Persistence
                     .WithMany()
                     .HasForeignKey(p => p.BairroId)
                     .OnDelete(DeleteBehavior.Restrict);
+
+                e.HasOne(p => p.Cliente)
+                    .WithMany(c => c.Pedidos)
+                    .HasForeignKey(p => p.ClienteId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            builder.Entity<Cliente>(e =>
+            {
+                e.HasKey(c => c.Id);
+                e.Property(c => c.Nome).IsRequired().HasMaxLength(100);
+                e.Property(c => c.Telefone).IsRequired().HasMaxLength(20);
+                e.HasIndex(c => c.Telefone).IsUnique();
+                e.Property(c => c.Email).HasMaxLength(150);
+                e.Property(c => c.ValorTotalGasto).HasColumnType("decimal(10,2)");
             });
 
             builder.Entity<Bairro>().HasData(BairrosSeed.GetBairros());

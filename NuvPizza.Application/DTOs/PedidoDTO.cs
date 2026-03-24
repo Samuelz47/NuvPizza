@@ -22,5 +22,6 @@ public class PedidoDTO
     public decimal ValorTotal { get; set; }
     public List<ItemPedidoDTO> Itens { get; set; }
     public string? Observacao { get; set; }
+    public decimal ValorDesconto { get; set; }
     public string? CodigoCupom { get; set; }
 }

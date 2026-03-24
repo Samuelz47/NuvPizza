@@ -16,6 +16,8 @@ export interface Pedido {
   itens: any[];
   observacao?: string;
   formaPagamento: string;
+  valorFrete: number;
+  valorDesconto: number;
 }
 
 export interface PaginacaoMeta {

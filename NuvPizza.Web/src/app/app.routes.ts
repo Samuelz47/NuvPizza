@@ -14,6 +14,7 @@ import { PainelPedidosComponent } from './features/admin/painel-pedidos/painel-p
 import { AdminHomeComponent } from './features/admin/admin-home/admin-home.component';
 import { GerenciarProdutosComponent } from './features/admin/gerenciar-produtos/gerenciar-produtos.component';
 import { GerenciarCuponsComponent } from './features/admin/gerenciar-cupons/gerenciar-cupons.component';
+import { ClientesRankingComponent } from './features/admin/clientes-ranking/clientes-ranking.component';
 
 import { AuthService } from './core/services/auth.service';
 
@@ -48,6 +49,7 @@ export const routes: Routes = [
       { path: 'painel', component: PainelPedidosComponent },
       { path: 'produtos', component: GerenciarProdutosComponent },
       { path: 'cupons', component: GerenciarCuponsComponent },
+      { path: 'clientes', component: ClientesRankingComponent },
       // Se entrar em /admin sem nada, vai pra home do admin
       { path: '', redirectTo: 'home', pathMatch: 'full' }
     ]

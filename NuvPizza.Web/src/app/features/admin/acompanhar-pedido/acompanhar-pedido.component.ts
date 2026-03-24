@@ -110,4 +110,24 @@ export class AcompanharPedidoComponent implements OnInit, OnDestroy {
 
     return `https://wa.me/${foneLoja}?text=${encodeURIComponent(mensagem)}`;
   }
+
+  getPrevisaoEntrega(): string {
+    const p = this.pedido();
+    if (!p || !p.dataPedido) return '';
+
+    // Parsing the order date correctly to local time
+    const data = new Date(p.dataPedido);
+    if (isNaN(data.getTime())) return '';
+
+    const minTime = new Date(data.getTime() + 30 * 60000);
+    const maxTime = new Date(data.getTime() + 70 * 60000);
+
+    const formatTime = (d: Date) => {
+      const h = d.getHours().toString().padStart(2, '0');
+      const m = d.getMinutes().toString().padStart(2, '0');
+      return `${h}:${m}`;
+    };
+
+    return `${formatTime(minTime)} às ${formatTime(maxTime)}`;
+  }
 }

@@ -248,63 +248,75 @@
 
     <div class="combo-slots-container">
       <div *ngFor="let escolha of escolhasCombo; let i = index" class="combo-slot-box">
-        <h4>{{ getNomeCategoria(escolha.template.categoriaPermitida) }} {{
-          getTamanhoTemplate(escolha.template.tamanhoObrigatorio) }}</h4>
-        <p class="slot-rule">
-          Selecione uma opção para este item do seu combo
-        </p>
+        <div class="slot-header">
+          <h4 style="margin: 0;">{{ getNomeCategoria(escolha.template.categoriaPermitida) }} {{
+            getTamanhoTemplate(escolha.template.tamanhoObrigatorio) }}</h4>
+        </div>
 
-        <select [(ngModel)]="escolhasCombo[i].escolhido" class="form-select">
-          <option [ngValue]="null">-- Selecione --</option>
-          <option *ngFor="let opt of opcoesCombo[i]" [ngValue]="opt">
-            {{ opt.nome }} {{ getPrecoExtraFormatado(opt, escolhasCombo[i].template) }}
-          </option>
-        </select>
+        <!-- Se for Pizza, mostra botões de escolha de formato primeiro -->
+        <div class="format-selection" *ngIf="escolha.isPizza">
+          <button class="choice-btn" [class.active]="!escolhasCombo[i].meioAMeio"
+            (click)="escolhasCombo[i].meioAMeio = false; escolhasCombo[i].secundario = null">
+            <span>🍕</span> Inteira
+          </button>
+          <button class="choice-btn" [class.active]="escolhasCombo[i].meioAMeio"
+            (click)="escolhasCombo[i].meioAMeio = true">
+            <span>🌓</span> Meio a Meio
+          </button>
+        </div>
 
-        <!-- Se a escolha for Pizza, permite meio-a-meio e borda -->
-        <div
-          *ngIf="(escolha.template.categoriaPermitida === 1 || escolha.template.categoriaPermitida === 'Pizza') && escolhasCombo[i].escolhido"
-          style="margin-top: 10px; padding: 10px; background: #fff; border-radius: 4px; border: 1px solid #eee;">
-          <label
-            style="display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 0.9rem; cursor: pointer; margin-bottom: 10px;">
-            <input type="checkbox" [(ngModel)]="escolhasCombo[i].meioAMeio">
-            🍕 Fazer Meio a Meio?
-          </label>
+        <div class="slot-selects">
+          <label class="label-tag" *ngIf="escolha.meioAMeio">1º Sabor:</label>
+          <select [(ngModel)]="escolhasCombo[i].escolhido" class="form-select">
+            <option [ngValue]="null">-- Selecione --</option>
+            <option *ngFor="let opt of opcoesCombo[i]" [ngValue]="opt">
+              {{ opt.nome }} {{ !escolha.meioAMeio ? getPrecoExtraFormatado(opt, escolhasCombo[i].template) : '' }}
+            </option>
+          </select>
 
-          <div *ngIf="escolhasCombo[i].meioAMeio" style="margin-bottom: 10px;">
+          <div *ngIf="escolha.meioAMeio" style="margin-top: 10px;">
             <label class="label-tag" style="font-size: 0.8rem;">2º Sabor:</label>
             <select [(ngModel)]="escolhasCombo[i].secundario" class="form-select"
               style="font-size: 0.9rem; padding: 6px;">
               <option [ngValue]="null">-- Selecione --</option>
               <option *ngFor="let opt of opcoesCombo[i]" [ngValue]="opt">
-                <span *ngIf="opt.id !== escolhasCombo[i].escolhido.id">
-                  {{ opt.nome }} {{ getPrecoExtraFormatado(escolhasCombo[i].escolhido, escolhasCombo[i].template, opt)
-                  }}
-                </span>
-              </option>
-            </select>
-          </div>
-
-
-          <div *ngIf="listaBordas.length > 0">
-            <label class="label-tag" style="font-size: 0.8rem;">Borda Recheada:</label>
-            <select [(ngModel)]="escolhasCombo[i].borda" class="form-select" style="font-size: 0.9rem; padding: 6px;">
-              <option [ngValue]="null">Sem borda (Grátis)</option>
-              <option *ngFor="let b of listaBordas" [ngValue]="b">
-                {{ b.nome }} — +{{ b.preco | currency:'BRL' }}
+                {{ opt.nome }}
               </option>
             </select>
           </div>
         </div>
 
+        <!-- Borda (Sempre visível após escolher o primeiro item se for pizza) -->
+        <div class="borda-selection" *ngIf="escolha.isPizza && escolhasCombo[i].escolhido && listaBordas.length > 0"
+          style="margin-top: 10px;">
+          <label class="label-tag" style="font-size: 0.8rem;">Deseja Borda Recheada?</label>
+          <select [(ngModel)]="escolhasCombo[i].borda" class="form-select" style="font-size: 0.9rem; padding: 6px;">
+            <option [ngValue]="null">Sem borda (Grátis)</option>
+            <option *ngFor="let b of listaBordas" [ngValue]="b">
+              {{ b.nome }} — +{{ b.preco | currency:'BRL' }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Resumo do Adicional do Slot -->
+        <div class="slot-total-extra" *ngIf="escolhasCombo[i].escolhido && getPrecoExtraItemCombo(i) > 0">
+          Adicional deste item: <strong>+ {{ getPrecoExtraItemCombo(i) | currency:'BRL' }}</strong>
+        </div>
       </div>
     </div>
 
-    <div class="modal-actions" style="margin-top: 20px;">
-      <button (click)="modalComboAberto = false" class="btn-cancel">Cancelar</button>
-      <button (click)="confirmarCombo()" class="btn-confirm">
-        🛒 Confirmar Combo
-      </button>
+    <div class="modal-actions" style="margin-top: 20px; flex-direction: column; align-items: stretch; gap: 15px;">
+      <div class="combo-total-summary" *ngIf="comboSelecionado">
+        <span style="color: #666; font-weight: 500;">Total do Combo:</span>
+        <span class="total-value" style="font-size: 1.4rem; color: #198754; font-weight: 800;">{{ getPrecoTotalCombo() |
+          currency:'BRL' }}</span>
+      </div>
+      <div style="display: flex; gap: 10px; width: 100%;">
+        <button (click)="modalComboAberto = false" class="btn-cancel" style="flex: 1;">Cancelar</button>
+        <button (click)="confirmarCombo()" class="btn-confirm" style="flex: 2;">
+          🛒 Adicionar à Sacola
+        </button>
+      </div>
     </div>
   </div>
 </div>

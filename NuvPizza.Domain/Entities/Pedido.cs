@@ -35,5 +35,9 @@ namespace NuvPizza.Domain.Entities
         public string? Observacao { get; set; }
         public int? CupomId { get; set; }
         public decimal ValorDesconto { get; set; }
+        
+        // CRM - Link to Cliente
+        public Guid? ClienteId { get; set; }
+        public Cliente? Cliente { get; set; }
     }
 }

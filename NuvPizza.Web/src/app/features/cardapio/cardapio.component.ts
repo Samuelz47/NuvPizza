@@ -216,8 +216,30 @@ export class CardapioComponent implements OnInit {
 
   getPrecoExtraFormatado(escolhido: Produto | null, template: any, secundario: Produto | null = null): string {
     const extra = this.getPrecoExtra(escolhido, template, secundario);
-    if (extra <= 0) return '';
-    return ` (+${extra.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`;
+    if (extra <= 0) return '(Incluso)';
+    return `(+${extra.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })})`;
+  }
+
+  getPrecoExtraItemCombo(index: number): number {
+    const escolha = this.escolhasCombo[index];
+    if (!escolha || !escolha.escolhido) return 0;
+
+    let extra = this.getPrecoExtra(escolha.escolhido, escolha.template, escolha.meioAMeio ? escolha.secundario : null);
+
+    if (escolha.borda) {
+      extra += escolha.borda.preco;
+    }
+
+    return extra;
+  }
+
+  getPrecoTotalCombo(): number {
+    if (!this.comboSelecionado) return 0;
+    let total = this.getPrecoEfetivo(this.comboSelecionado);
+    for (let i = 0; i < this.escolhasCombo.length; i++) {
+      total += this.getPrecoExtraItemCombo(i);
+    }
+    return total;
   }
 
   // Agrupa pizzas ativas por tamanho (ordem crescente de tamanho)
@@ -285,9 +307,10 @@ export class CardapioComponent implements OnInit {
       this.escolhasCombo.push({
         template: template,
         escolhido: null,
-        meioAMeio: false, // se a categoria for pizza, user pode ligar meio a meio
+        meioAMeio: false,
         secundario: null,
-        borda: null
+        borda: null,
+        isPizza: catId === CategoriaProduto.Pizza || catPermitidaStr === 'Pizza'
       });
     });
 

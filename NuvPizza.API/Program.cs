@@ -215,6 +215,7 @@ builder.Services.AddHttpClient<ViaCepService>(client => { client.Timeout = TimeS
     builder.Services.AddScoped<IBairroRepository, BairroRepository>();
     builder.Services.AddScoped<IConfiguracaoRepository, ConfiguracaoRepository>();
     builder.Services.AddScoped<ICupomRepository, CupomRepository>();
+    builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
 
     builder.Services.AddScoped<IProdutoService, ProdutoService>();
     builder.Services.AddScoped<IPedidoService, PedidoService>();
@@ -227,6 +228,7 @@ builder.Services.AddHttpClient<ViaCepService>(client => { client.Timeout = TimeS
     builder.Services.AddScoped<IFaturamentoService, FaturamentoService>();
     builder.Services.AddScoped<ICacheService, RedisCacheService>();
     builder.Services.AddScoped<ICupomService, CupomService>();
+    builder.Services.AddScoped<IClienteService, ClienteService>();
     builder.Services.AddScoped<TokenService>();
 
     var app = builder.Build();

@@ -1,0 +1,67 @@
+<div class="ranking-container">
+    <div class="ranking-header">
+        <h1>🏆 Ranking de Clientes</h1>
+        <p>Os melhores clientes da sua pizzaria</p>
+    </div>
+
+    <!-- Filtros de Ordenação -->
+    <div class="sort-bar">
+        <span class="sort-label">Ordenar por:</span>
+        <button [class.active]="ordenarPor === 'valor'" (click)="mudarOrdenacao('valor')">
+            💰 Maior Gasto
+        </button>
+        <button [class.active]="ordenarPor === 'pedidos'" (click)="mudarOrdenacao('pedidos')">
+            📦 Mais Pedidos
+        </button>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="carregando" class="loading">
+        <p>Carregando ranking...</p>
+    </div>
+
+    <!-- Tabela -->
+    <div *ngIf="!carregando" class="ranking-table-wrap">
+        <table class="ranking-table">
+            <thead>
+                <tr>
+                    <th class="col-pos">#</th>
+                    <th class="col-nome">Cliente</th>
+                    <th class="col-tel">Telefone</th>
+                    <th class="col-qtd">Pedidos</th>
+                    <th class="col-valor">Total Gasto</th>
+                    <th class="col-data">Último Pedido</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let cli of clientes; let i = index" [class.top3]="(paginaAtual - 1) * 15 + i < 3">
+                    <td class="col-pos medalha">{{ getMedalha(i) }}</td>
+                    <td class="col-nome">
+                        <strong>{{ cli.nome }}</strong>
+                        <span class="email-sub" *ngIf="cli.email">{{ cli.email }}</span>
+                    </td>
+                    <td class="col-tel">{{ cli.telefone }}</td>
+                    <td class="col-qtd">{{ cli.quantidadePedidos }}</td>
+                    <td class="col-valor">{{ cli.valorTotalGasto | currency:'BRL' }}</td>
+                    <td class="col-data">{{ cli.dataUltimoPedido | date:'dd/MM/yyyy' }}</td>
+                </tr>
+                <tr *ngIf="clientes.length === 0">
+                    <td colspan="6" class="vazio">Nenhum cliente encontrado ainda.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Paginação -->
+    <div class="pagination" *ngIf="paginacao && paginacao.totalPages > 1">
+        <button (click)="paginaAnterior()" [disabled]="!paginacao.hasPreviousPage" class="btn-page">
+            ← Anterior
+        </button>
+        <span class="page-info">
+            Página {{ paginacao.pageNumber }} de {{ paginacao.totalPages }}
+        </span>
+        <button (click)="proximaPagina()" [disabled]="!paginacao.hasNextPage" class="btn-page">
+            Próxima →
+        </button>
+    </div>
+</div>

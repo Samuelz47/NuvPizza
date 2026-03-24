@@ -825,15 +825,35 @@
   border: 1px solid #ffeeba;
 }
 
-.total-area {
+.total-area-list {
   margin-top: 25px;
+  border-top: 2px dashed #ccc;
+  padding-top: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.total-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 1.3rem;
+  font-size: 1.1rem;
+  color: #555;
+}
+
+.total-row.discount {
+  color: #dc3545;
+  font-weight: 600;
+}
+
+.total-row.grand-total {
+  margin-top: 10px;
+  font-size: 1.5rem;
   font-weight: 800;
-  border-top: 2px dashed #ccc;
-  padding-top: 15px;
+  color: #333;
+  padding-top: 10px;
+  border-top: 1px solid #eee;
 }
 
 .valor-total {

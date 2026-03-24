@@ -734,3 +734,89 @@
   color: #4B6FA5;
   font-size: 1.05rem;
 }
+
+/* =========================================
+   NEW COMBO SELECTION UI
+   ========================================= */
+.slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.slot-allowance {
+  font-size: 0.75rem;
+  background: #e3f2fd;
+  color: #1976d2;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.format-selection {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.choice-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  border: 2px solid #eee;
+  background: white;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: #666;
+  font-size: 0.95rem;
+}
+
+.choice-btn span {
+  font-size: 1.2rem;
+}
+
+.choice-btn:hover {
+  background: #f8f9fa;
+  border-color: #ddd;
+}
+
+.choice-btn.active {
+  border-color: #ffc107;
+  background: #fffdf5;
+  color: #856404;
+  box-shadow: 0 4px 12px rgba(255, 193, 7, 0.2);
+}
+
+.slot-total-extra {
+  margin-top: 15px;
+  padding: 10px 15px;
+  background: #f1f8e9;
+  border-left: 4px solid #4caf50;
+  color: #2e7d32;
+  font-size: 0.9rem;
+  border-radius: 0 8px 8px 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.slot-total-extra strong {
+  font-size: 1.05rem;
+}
+
+.combo-total-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #eee;
+}

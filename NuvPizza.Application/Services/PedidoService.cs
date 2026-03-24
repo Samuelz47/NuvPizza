@@ -27,8 +27,9 @@ public class PedidoService : IPedidoService
     private readonly IPagamentoService _pagamentoService;
     private readonly INotificacaoService _notificacaoService;
     private readonly ICupomRepository _cupomRepository;
+    private readonly IClienteService _clienteService;
     
-    public PedidoService(IPedidoRepository pedidoRepository, IProdutoRepository produtoRepository, IMapper mapper, IUnitOfWork uow, IViaCepService viaCepService, IWhatsappService whatsappService, IBairroRepository bairroRepository, IConfiguracaoRepository configuracaoRepository, IEmailService emailService, IPagamentoService pagamentoService, INotificacaoService notificacaoService, ICupomRepository cupomRepository)
+    public PedidoService(IPedidoRepository pedidoRepository, IProdutoRepository produtoRepository, IMapper mapper, IUnitOfWork uow, IViaCepService viaCepService, IWhatsappService whatsappService, IBairroRepository bairroRepository, IConfiguracaoRepository configuracaoRepository, IEmailService emailService, IPagamentoService pagamentoService, INotificacaoService notificacaoService, ICupomRepository cupomRepository, IClienteService clienteService)
     {
         _pedidoRepository = pedidoRepository;
         _produtoRepository = produtoRepository;
@@ -42,6 +43,7 @@ public class PedidoService : IPedidoService
         _pagamentoService = pagamentoService;
         _notificacaoService = notificacaoService;
         _cupomRepository = cupomRepository;
+        _clienteService = clienteService;
     }
 
     public async Task<Result<PedidoDTO>> CreatePedidoAsync(PedidoForRegistrationDTO pedidoRegister)
@@ -81,7 +83,6 @@ public class PedidoService : IPedidoService
         if (cupom != null)
         {
             pedido.CupomId = cupom.Id;
-            pedido.ValorDesconto = cupom.DescontoPorcentagem;
         }
 
         if (formaPagamentoEnum != FormaPagamento.MercadoPago)
@@ -217,10 +218,32 @@ public class PedidoService : IPedidoService
             pedido.Itens.Add(item);
         }
 
+        var totalItensBruto = pedido.Itens.Sum(i => i.Total);
+        var valorDescontoPercentual = cupom != null ? cupom.DescontoPorcentagem : 0;
+        
+        // Save the absolute discount value in currency
+        pedido.ValorDesconto = (totalItensBruto / 100M) * valorDescontoPercentual;
+        
         if (cupom != null && cupom.FreteGratis) pedido.ValorFrete = 0;
-        pedido.ValorTotal = (-((pedido.Itens.Sum(i => i.Total) / 100) * pedido.ValorDesconto) + (pedido.Itens.Sum(i => i.Total))) + pedido.ValorFrete;
+        
+        pedido.ValorTotal = totalItensBruto - pedido.ValorDesconto + pedido.ValorFrete;
+        
         _pedidoRepository.Create(pedido);
         await _uow.CommitAsync();
+
+        // CRM: Garante que o cliente exista no banco para associar ao pedido
+        try
+        {
+            var clienteId = await _clienteService.EnsureClienteExistsAsync(
+                pedido.TelefoneCliente, pedido.NomeCliente, pedido.EmailCliente);
+            pedido.ClienteId = clienteId;
+            _pedidoRepository.Update(pedido);
+            await _uow.CommitAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[CRM] Erro ao vincular cliente: {ex.Message}");
+        }
         
         var linkWpp = _whatsappService.GerarLinkPedido(pedido);
         
@@ -283,8 +306,23 @@ public class PedidoService : IPedidoService
         }
         // --- FIM DA CORREÇÃO ---
 
+        bool eraEntregue = pedido.StatusPedido == Domain.Enums.StatusPedido.Entrega;
+
         pedido.StatusPedido = newStatus.StatusDoPedido;
         await _uow.CommitAsync();
+
+        // CRM: Adiciona os pontos/gasto ao cliente apenas quando o pedido é finalizado/entregue
+        if (!eraEntregue && pedido.StatusPedido == Domain.Enums.StatusPedido.Entrega && pedido.ClienteId.HasValue)
+        {
+            try
+            {
+                await _clienteService.AddPedidoToRankingAsync(pedido.ClienteId.Value, pedido.ValorTotal);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[CRM] Erro ao adicionar pontos no ranking: {ex.Message}");
+            }
+        }
         
         // Agora sim o SignalR vai disparar!
         await _notificacaoService.NotificarAtualizacaoStatus(pedido.Id, (int)pedido.StatusPedido);

@@ -204,9 +204,25 @@
         @if (pedidoSelecionado.observacao) {
         <div class="box-observacao"><strong>Obs:</strong> {{ pedidoSelecionado.observacao }}</div>
         }
-        <div class="total-area">
-          <span>Total Geral:</span>
-          <span class="valor-total">{{ (pedidoSelecionado.valorTotal) | currency:'BRL' }}</span>
+        <div class="total-area-list">
+          <div class="total-row">
+            <span>Subtotal:</span>
+            <span>{{ calcularSubtotal(pedidoSelecionado) | currency:'BRL' }}</span>
+          </div>
+          @if (pedidoSelecionado.valorDesconto > 0) {
+          <div class="total-row discount">
+            <span>Desconto:</span>
+            <span>-{{ (pedidoSelecionado.valorDesconto) | currency:'BRL' }}</span>
+          </div>
+          }
+          <div class="total-row">
+            <span>Entrega:</span>
+            <span>{{ (pedidoSelecionado.valorFrete) | currency:'BRL' }}</span>
+          </div>
+          <div class="total-row grand-total">
+            <span>Total Geral:</span>
+            <span class="valor-total">{{ (pedidoSelecionado.valorTotal) | currency:'BRL' }}</span>
+          </div>
         </div>
       </div>
 
