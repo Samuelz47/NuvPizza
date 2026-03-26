@@ -17,6 +17,7 @@
                 <th>Código</th>
                 <th>Desconto</th>
                 <th>Frete Grátis</th>
+                <th>Ped. Mínimo</th>
                 <th>Status</th>
                 <th>Ações</th>
             </tr>
@@ -34,6 +35,10 @@
                     </span>
                 </td>
                 <td>
+                    <span *ngIf="cupom.pedidoMinimo > 0">R$ {{ cupom.pedidoMinimo | number:'1.2-2' }}</span>
+                    <span *ngIf="cupom.pedidoMinimo === 0" style="color: #999;">—</span>
+                </td>
+                <td>
                     <span [style.color]="cupom.ativo ? 'green' : 'red'">
                         {{ cupom.ativo ? 'Ativo' : 'Inativo' }}
                     </span>
@@ -43,7 +48,7 @@
                 </td>
             </tr>
             <tr *ngIf="cupons().length === 0">
-                <td colspan="5" style="text-align: center; color: #888; padding: 2rem;">Nenhum cupom cadastrado.</td>
+                <td colspan="6" style="text-align: center; color: #888; padding: 2rem;">Nenhum cupom cadastrado.</td>
             </tr>
         </tbody>
     </table>
@@ -64,6 +69,9 @@
         <label>Desconto (%):</label>
         <input [(ngModel)]="novoCupom.descontoPorcentagem" type="number" class="form-input" min="0" max="100"
             placeholder="0 para cupom apenas de frete" />
+
+        <label>Pedido Mínimo (R$):</label>
+        <input [(ngModel)]="novoCupom.pedidoMinimo" type="number" class="form-input" min="0" placeholder="Ex: 50.00" />
 
         <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; margin-bottom: 1.5rem;">
             <input type="checkbox" [(ngModel)]="novoCupom.freteGratis" style="width: auto; margin: 0;" />

@@ -13,12 +13,14 @@ public class CupomService : ICupomService
     private readonly ICupomRepository _cupomRepository;
     private readonly IUnitOfWork _uow;
     private readonly IMapper _mapper;
+    private readonly IPedidoRepository _pedidoRepository;
 
-    public CupomService(ICupomRepository cupomRepository, IUnitOfWork uow, IMapper mapper)
+    public CupomService(ICupomRepository cupomRepository, IUnitOfWork uow, IMapper mapper, IPedidoRepository pedidoRepository)
     {
         _cupomRepository = cupomRepository;
         _uow = uow;
         _mapper = mapper;
+        _pedidoRepository = pedidoRepository;
     }
 
     public async Task<IEnumerable<CupomDTO>> GetAllAsync()
@@ -27,12 +29,21 @@ public class CupomService : ICupomService
         return _mapper.Map<IEnumerable<CupomDTO>>(cupons);
     }
 
-    public async Task<Result<CupomDTO>> GetByCodeAsync(string codigo)
+    public async Task<Result<CupomDTO>> GetByCodeAsync(string codigo, string? telefone = null)
     {
         var cupom = await _cupomRepository.GetAsync(c => c.Codigo == codigo);
         
         if (cupom is null) return Result<CupomDTO>.Failure("Cupom inexistente");
         if (cupom.Ativo == false) return Result<CupomDTO>.Failure("Cupom Inativo");
+
+        if (!string.IsNullOrWhiteSpace(telefone))
+        {
+            var jaUtilizou = await _pedidoRepository.VerificarCupomUtilizadoAsync(telefone, cupom.Id);
+            if (jaUtilizou)
+            {
+                return Result<CupomDTO>.Failure("Você já utilizou este cupom anteriormente.");
+            }
+        }
         
         var dto = _mapper.Map<CupomDTO>(cupom);
         return Result<CupomDTO>.Success(dto);
@@ -58,7 +69,11 @@ public class CupomService : ICupomService
         }
         
         var cupom = _mapper.Map<Cupom>(cupomDto);
+        cupom.PedidoMinimo = cupomDto.PedidoMinimo; // Garantindo atribuição
         cupom.Ativo = true;
+        
+        Console.WriteLine($"[DEBUG] Criando Cupom: {cupom.Codigo}, Valor Minimo: {cupom.PedidoMinimo}");
+        
         _cupomRepository.Create(cupom);
         await _uow.CommitAsync();
         var dto = _mapper.Map<CupomDTO>(cupom);

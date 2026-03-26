@@ -1,4 +1,57 @@
 <div class="checkout-bg">
+
+  <!-- POPUP INICIAL DE TELEFONE (REDESIGNED) -->
+  <div *ngIf="mostrarPopupTelefone()" class="telefone-overlay">
+    <div class="telefone-modal-container">
+      <div class="card-custom shadow-lg border-0">
+        <div class="card-header-custom d-flex justify-content-between align-items-center"
+          style="display: flex; justify-content: space-between; align-items: center; flex-wrap: nowrap;">
+          <h2 class="m-0" style="display: flex; align-items: center; gap: 8px; font-size: 1.15rem;">
+            <i class="bi bi-telephone-fill" style="color: #4B6FA5;"></i> Já pediu conosco?
+          </h2>
+          <button type="button" class="btn-close-custom" (click)="fecharPopupTelefone()" style="flex-shrink: 0;"
+            title="Fechar">
+            <span style="font-size: 1.5rem; line-height: 1; font-weight: 400;">&times;</span>
+          </button>
+        </div>
+
+        <div class="card-body-custom text-center py-4">
+          <div class="mb-4">
+            <div class="icon-circle-bg" style="font-size: 2.2rem;">
+              🍕
+            </div>
+          </div>
+
+          <p class="text-muted mb-4 px-2" style="line-height: 1.6;">
+            Informe seu WhatsApp para preenchermos seus dados automaticamente e agilizar seu pedido.
+          </p>
+
+          <div class="px-2 mb-4">
+            <div class="form-group text-start">
+              <label class="form-label">WhatsApp / Telefone</label>
+              <div class="input-group-custom">
+                <span class="input-prefix"><i class="bi bi-telephone-fill" style="color: #4B6FA5;"></i></span>
+                <input type="text" class="form-control-custom" [(ngModel)]="telefonePopup"
+                  (input)="formatarTelefone($event, true)" (keyup.enter)="confirmarTelefonePopup()"
+                  placeholder="(84) 99999-9999" maxlength="15">
+              </div>
+            </div>
+          </div>
+
+          <div class="d-grid gap-3 px-2">
+            <button class="btn-pagar m-0 py-3" (click)="confirmarTelefonePopup()" [disabled]="buscandoTelefonePopup()">
+              <span *ngIf="!buscandoTelefonePopup()">BUSCAR MEUS DADOS</span>
+              <div *ngIf="buscandoTelefonePopup()" class="spinner-border spinner-border-sm" role="status"></div>
+            </button>
+            <button class="btn-pular" (click)="fecharPopupTelefone()">
+              Pular e preencher manualmente
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="checkout-container">
 
     <!-- Header -->
@@ -34,53 +87,87 @@
 
               <div class="col-md-6">
                 <label class="form-label">WhatsApp / Telefone *</label>
-                <input type="text" [(ngModel)]="pedido.telefoneCliente" class="form-control"
-                  placeholder="(00) 00000-0000">
+                <div class="position-relative">
+                  <input type="text" [(ngModel)]="pedido.telefoneCliente"
+                    (input)="formatarTelefone($event); onTelefoneInput()" class="form-control"
+                    placeholder="(84) 99999-9999" maxlength="15">
+                  <div *ngIf="buscandoTelefone()" class="spinner-border spinner-border-sm position-absolute"
+                    style="right: 10px; top: 12px; color: var(--accent-color);" role="status">
+                  </div>
+                </div>
               </div>
             </div>
 
             <!-- 2. Entrega -->
             <div class="section-title">Entrega</div>
 
-            <div class="row g-3 mb-2">
-              <div class="col-md-4">
-                <label class="form-label">CEP *</label>
-                <div class="input-icon-group">
-                  <input type="text" [(ngModel)]="pedido.cep" (blur)="buscarCep()" (input)="buscarCep()"
-                    class="form-control" placeholder="00000-000" maxlength="9" [disabled]="buscandoCep()">
-                  <div class="input-icon-right">
-                    @if (buscandoCep()) {
-                    <div class="spinner-border spinner-border-sm" style="color:#4B6FA5;" role="status"></div>
-                    } @else if (pedido.logradouro) {
-                    <i class="bi bi-check-circle-fill" style="color:#43a047;"></i>
-                    }
+            <div class="row g-3">
+              <!-- Novo: Escolha entre Entrega ou Retirada -->
+              <div class="col-12 mb-3">
+                <div class="payment-options-grid">
+                  <div class="payment-option" [class.selected]="!isRetirada()"
+                    (click)="selecionarTipoEntrega('ENTREGA')">
+                    <span class="pay-icon">🛵</span>
+                    <span class="pay-title">ENTREGA</span>
+                    <span class="pay-sub">Receba em casa</span>
+                  </div>
+                  <div class="payment-option" [class.selected]="isRetirada()"
+                    (click)="selecionarTipoEntrega('RETIRADA')">
+                    <span class="pay-icon">🏪</span>
+                    <span class="pay-title">RETIRADA</span>
+                    <span class="pay-sub">Busque na loja</span>
                   </div>
                 </div>
               </div>
 
-              <div class="col-md-8">
-                <label class="form-label">Rua / Logradouro</label>
-                <input type="text" [(ngModel)]="pedido.logradouro" class="form-control input-readonly" readonly
-                  tabindex="-1">
+              @if (isRetirada()) {
+              <div class="col-12">
+                <div class="alert alert-info border-0 shadow-sm d-flex align-items-center">
+                  <div class="fs-4 me-3">📍</div>
+                  <div>
+                    <small class="text-muted d-block">Endereço para retirada:</small>
+                    <strong>Delivery integrado à Maria Maria Confeitaria - R. Maristela Alves, 100 - Felipe Camarão,
+                      Natal - RN, 59074-340</strong>
+                  </div>
+                </div>
+              </div>
+              } @else {
+              <div class="col-md-6">
+                <label class="form-label">Bairro *</label>
+                <select [(ngModel)]="pedido.bairroNome" (change)="onBairroChange()" class="form-select">
+                  <option value="" disabled selected>Selecione seu bairro</option>
+                  @for (b of bairros(); track b.id) {
+                  <option [value]="b.nome">{{ b.nome }}</option>
+                  }
+                </select>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label">Rua / Logradouro *</label>
+                <input type="text" [(ngModel)]="pedido.logradouro" class="form-control" placeholder="Nome da rua">
               </div>
 
               <div class="col-md-4">
                 <label class="form-label">Número *</label>
                 <input type="text" id="numeroInput" [(ngModel)]="pedido.numero" class="form-control" placeholder="Nº">
               </div>
-              <div class="col-md-4">
-                <label class="form-label">Bairro</label>
-                <input type="text" [(ngModel)]="pedido.bairro" class="form-control input-readonly" readonly
-                  tabindex="-1">
-              </div>
-              <div class="col-md-4">
+
+              <div class="col-md-8">
                 <label class="form-label">Complemento</label>
-                <input type="text" [(ngModel)]="pedido.complemento" class="form-control" placeholder="Apt, Bloco...">
+                <input type="text" [(ngModel)]="pedido.complemento" class="form-control"
+                  placeholder="Apto, Sala, Bloco...">
               </div>
+
+              <div class="col-12">
+                <label class="form-label">Ponto de Referência</label>
+                <input type="text" [(ngModel)]="pedido.pontoReferencia" class="form-control"
+                  placeholder="Ex: Próximo à padaria, em frente ao colégio...">
+              </div>
+              }
             </div>
 
             <!-- Aviso de frete -->
-            @if (bairroEncontrado()) {
+            @if (bairroEncontrado() && !isRetirada()) {
             <div class="frete-info-callout mt-3">
               <i class="bi bi-bicycle"></i>
               Taxa de entrega para o seu bairro: <strong>{{ freteLabel() }}</strong>
@@ -112,7 +199,7 @@
                 (click)="selecionarTipoPagamento('ENTREGA')">
                 <span class="pay-icon">🚴</span>
                 <span class="pay-title">Na Entrega</span>
-                <span class="pay-sub">Maquineta ou Dinheiro</span>
+                <span class="pay-sub">Maquineta, Pix ou Dinheiro</span>
               </div>
             </div>
 
@@ -138,9 +225,17 @@
 
               <div class="option-item">
                 <div class="form-check">
+                  <input class="form-check-input" type="radio" name="pgEntrega" id="pgPix"
+                    (change)="selecionarOpcaoEntrega('Pix')">
+                  <label class="form-check-label" for="pgPix">💠 Pix na entrega</label>
+                </div>
+              </div>
+
+              <div class="option-item">
+                <div class="form-check">
                   <input class="form-check-input" type="radio" name="pgEntrega" id="pgDinheiro"
                     (change)="selecionarOpcaoEntrega('Dinheiro')">
-                  <label class="form-check-label" for="pgDinheiro">💵 Dinheiro</label>
+                  <label class="form-check-label" for="pgDinheiro">💵 Dinheiro (Troco se necessário)</label>
                 </div>
 
                 @if (opcaoEntregaSelecionada() === 'Dinheiro') {

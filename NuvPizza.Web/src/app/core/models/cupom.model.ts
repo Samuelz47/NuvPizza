@@ -5,6 +5,7 @@ export interface Cupom {
     descontoPorcentagem: number;
     freteGratis: boolean;
     ativo: boolean;
+    pedidoMinimo: number;
 }
 
 // Bate com o CupomForRegistrationDTO do backend
@@ -12,4 +13,5 @@ export interface CupomForRegistration {
     codigo: string;
     descontoPorcentagem: number;
     freteGratis: boolean;
+    pedidoMinimo: number;
 }

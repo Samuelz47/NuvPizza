@@ -83,23 +83,23 @@ public class PedidoServiceTests
     }
     
     [Fact]
-    public async Task CreatePedidoAsync_DeveRetornarFalha_QuandoCepForInvalido()
+    public async Task CreatePedidoAsync_DeveRetornarFalha_QuandoBairroForInvalido()
     {
         // Arrange
-        var pedidoDto = new PedidoForRegistrationDTO { Cep = "00000-000", FormaPagamento = "Pix" };
+        var pedidoDto = new PedidoForRegistrationDTO { BairroNome = "Teste", Logradouro = "Rua Teste", FormaPagamento = "Pix" };
 
         _configRepoMock.Setup(x => x.GetAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Configuracao, bool>>>()))
             .ReturnsAsync(new Configuracao { EstaAberta = true });
 
-        _viaCepMock.Setup(x => x.CheckAsync(pedidoDto.Cep))
-            .ReturnsAsync((ViaCepResponse?)null);
+        _bairroRepoMock.Setup(b => b.GetAsync(It.IsAny<Expression<Func<Bairro, bool>>>()))
+            .ReturnsAsync((Bairro?)null);
 
         // Act
         var result = await _sut.CreatePedidoAsync(pedidoDto);
 
         // Assert
         result.IsSuccess.Should().BeFalse();
-        result.Message.Should().Contain("CEP Inválido");
+        result.Message.Should().Contain("não entregamos nesse bairro");
     }
     
     [Fact]
@@ -109,6 +109,8 @@ public class PedidoServiceTests
         var pedidoDto = new PedidoForRegistrationDTO 
         { 
             Cep = "59000-000",
+            Logradouro = "Rua Teste",
+            BairroNome = "Centro",
             FormaPagamento = "Pix",
             Itens = new List<ItemPedidoForRegistrationDTO> 
             { 
@@ -118,9 +120,6 @@ public class PedidoServiceTests
 
         _configRepoMock.Setup(c => c.GetAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Configuracao, bool>>>()))
             .ReturnsAsync(new Configuracao { EstaAberta = true });
-
-        var viaCepResponse = new ViaCepResponse { Bairro = "Centro", Logradouro = "Rua Teste", Cep = "59000-000" };
-        _viaCepMock.Setup(v => v.CheckAsync(pedidoDto.Cep)).ReturnsAsync(viaCepResponse);
 
         var bairro = new Bairro { Id = 1, Nome = "Centro", ValorFrete = 10.0m };
         _bairroRepoMock.Setup(b => b.GetAsync(It.IsAny<System.Linq.Expressions.Expression<Func<Bairro, bool>>>()))
@@ -148,13 +147,10 @@ public class PedidoServiceTests
     public async Task CreatePedidoAsync_DeveFalhar_QuandoBairroNaoForAtendido()
     {
         // Arrange
-        var pedidoDto = new PedidoForRegistrationDTO { Cep = "59000-000", FormaPagamento = "Pix" };
+        var pedidoDto = new PedidoForRegistrationDTO { BairroNome = "Alecrim", Logradouro = "Rua X", FormaPagamento = "Pix" };
         
         _configRepoMock.Setup(c => c.GetAsync(It.IsAny<Expression<Func<Configuracao, bool>>>()))
             .ReturnsAsync(new Configuracao { EstaAberta = true });
-        
-        _viaCepMock.Setup(v => v.CheckAsync(It.IsAny<string>()))
-            .ReturnsAsync(new ViaCepResponse { Bairro = "Alecrim", Logradouro = "Rua X" });
 
         _bairroRepoMock.Setup(b => b.GetAsync(It.IsAny<Expression<Func<Bairro, bool>>>()))
             .ReturnsAsync((Bairro?)null);

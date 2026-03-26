@@ -387,6 +387,14 @@
   font-size: 0.95rem;
 }
 
+.address-mini {
+  font-size: 0.82rem !important;
+  color: #666 !important;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
 .itens-lista {
   margin-top: 15px;
   background: rgba(255, 255, 255, 0.6);

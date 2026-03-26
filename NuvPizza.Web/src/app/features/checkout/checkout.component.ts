@@ -7,6 +7,7 @@ import { PedidoService } from '../../core/services/pedido.service';
 import { CupomService } from '../../core/services/cupom.service';
 import { CarrinhoService } from '../../core/services/carrinho.service';
 import { LojaService } from '../../core/services/loja.service';
+import { BairroService, Bairro } from '../../core/services/bairro.service';
 import { environment } from '../../environments/environment';
 import { Cupom } from '../../core/models/cupom.model';
 
@@ -22,17 +23,25 @@ export class CheckoutComponent {
   private cupomService = inject(CupomService);
   public carrinhoService = inject(CarrinhoService);
   private lojaService = inject(LojaService);
+  private bairroService = inject(BairroService);
   private router = inject(Router);
   private http = inject(HttpClient);
 
   // Sinais de Estado
   loading = signal<boolean>(false);
   errorMessage = signal<string>('');
+  buscandoTelefone = signal<boolean>(false);
   buscandoCep = signal<boolean>(false);
   bairroNaoAtendido = signal<boolean>(false);
   bairroEncontrado = signal<boolean>(false);
   freteLabel = signal<string>('---');
   lojaAberta = signal<boolean>(true);
+  bairros = signal<Bairro[]>([]);
+
+  // Popup Telefone Inicial
+  mostrarPopupTelefone = signal<boolean>(true);
+  telefonePopup = signal<string>('');
+  buscandoTelefonePopup = signal<boolean>(false);
 
   idPedidoCriado = signal<string | null>(null);
 
@@ -42,6 +51,7 @@ export class CheckoutComponent {
   cupomErro = signal<string>('');
   aplicandoCupom = signal<boolean>(false);
   freteOriginal = signal<number>(0); // guarda frete antes do cupom
+  isRetirada = signal<boolean>(false);
 
   // Controle de UI do Pagamento
   tipoPagamento = signal<'ONLINE' | 'ENTREGA'>('ONLINE');
@@ -67,7 +77,9 @@ export class CheckoutComponent {
     logradouro: '',
     numero: '',
     complemento: '',
-    bairro: '',
+    bairroNome: '',
+    pontoReferencia: '',
+    isRetirada: false,
     observacao: '',
     formaPagamento: 'NaoDefinido',
     itens: [],
@@ -82,6 +94,12 @@ export class CheckoutComponent {
     this.lojaService.getStatus().subscribe({
       next: (status) => {
         this.lojaAberta.set(status.estaAberta);
+      }
+    });
+
+    this.bairroService.getBairros().subscribe({
+      next: (data) => {
+        this.bairros.set(data);
       }
     });
   }
@@ -101,31 +119,9 @@ export class CheckoutComponent {
         this.buscandoCep.set(false);
         if (!dados.erro) {
           this.pedido.logradouro = dados.logradouro;
-          this.pedido.bairro = dados.bairro;
+          this.pedido.bairroNome = dados.bairro;
 
-          // Tenta encontrar o bairro na lista da API local para pegar o frete
-          this.http.get<any[]>(`${environment.apiUrl}/bairros`).subscribe({
-            next: (bairros) => {
-              const bairroNome = (dados.bairro || '').toLowerCase().trim();
-              const encontrado = bairros.find(
-                b => b.nome.toLowerCase().trim() === bairroNome
-              );
-              if (encontrado) {
-                this.carrinhoService.valorFrete.set(encontrado.valorFrete);
-                this.bairroEncontrado.set(true);
-                this.bairroNaoAtendido.set(false);
-                if (encontrado.valorFrete === 0) {
-                  this.freteLabel.set('Grátis 🎉');
-                } else {
-                  this.freteLabel.set(`R$ ${encontrado.valorFrete.toFixed(2).replace('.', ',')}`);
-                }
-              } else {
-                this.bairroEncontrado.set(false);
-                this.bairroNaoAtendido.set(true);
-                this.freteLabel.set('Não atendemos');
-              }
-            }
-          });
+          this.onBairroChange(); // Reaproveita lógica de validação/frete
 
           setTimeout(() => document.getElementById('numeroInput')?.focus(), 100);
         } else {
@@ -139,6 +135,155 @@ export class CheckoutComponent {
     });
   }
 
+  formatarTelefone(event: Event, isPopup: boolean = false) {
+    const input = event.target as HTMLInputElement;
+    let digits = input.value.replace(/\D/g, '').substring(0, 11);
+    let formatted = '';
+
+    if (digits.length > 0) formatted = '(' + digits.substring(0, 2);
+    if (digits.length >= 2) formatted += ') ';
+    if (digits.length >= 3) {
+      if (digits.length <= 6) {
+        formatted += digits.substring(2);
+      } else if (digits.length <= 10) {
+        formatted += digits.substring(2, 6) + '-' + digits.substring(6);
+      } else {
+        formatted += digits.substring(2, 7) + '-' + digits.substring(7);
+      }
+    }
+
+    input.value = formatted;
+    if (isPopup) {
+      this.telefonePopup.set(formatted);
+    } else {
+      this.pedido.telefoneCliente = formatted;
+    }
+  }
+
+  fecharPopupTelefone() {
+    this.mostrarPopupTelefone.set(false);
+  }
+
+  confirmarTelefonePopup() {
+    const apenasNumeros = this.telefonePopup().replace(/\D/g, '');
+
+    if (apenasNumeros.length >= 10) {
+      this.buscandoTelefonePopup.set(true);
+
+      this.pedidoService.getUltimoEnderecoPorTelefone(apenasNumeros).subscribe({
+        next: (dados) => {
+          this.buscandoTelefonePopup.set(false);
+          this.mostrarPopupTelefone.set(false);
+
+          if (dados) {
+            this.pedido.telefoneCliente = this.telefonePopup(); // Mantém a digitação original
+            if (!this.pedido.nomeCliente) this.pedido.nomeCliente = dados.nomeCliente;
+            if (!this.pedido.emailCliente) this.pedido.emailCliente = dados.emailCliente;
+            if (!this.pedido.logradouro) this.pedido.logradouro = dados.logradouro;
+            if (!this.pedido.numero) this.pedido.numero = dados.numero;
+            if (!this.pedido.bairroNome) this.pedido.bairroNome = dados.bairroNome;
+            if (!this.pedido.pontoReferencia) this.pedido.pontoReferencia = dados.pontoReferencia;
+            if (!this.pedido.cep) this.pedido.cep = dados.cep;
+
+            if (this.pedido.bairroNome) {
+              this.onBairroChange();
+            }
+          } else {
+            this.pedido.telefoneCliente = this.telefonePopup();
+          }
+        },
+        error: () => {
+          this.buscandoTelefonePopup.set(false);
+          this.mostrarPopupTelefone.set(false);
+          this.pedido.telefoneCliente = this.telefonePopup();
+        }
+      });
+    } else {
+      this.pedido.telefoneCliente = this.telefonePopup();
+      this.mostrarPopupTelefone.set(false);
+    }
+  }
+
+  onTelefoneInput() {
+    const telefoneBruto = this.pedido.telefoneCliente || '';
+    const apenasNumeros = telefoneBruto.replace(/\D/g, '');
+
+    if (apenasNumeros.length === 11) {
+      this.buscandoTelefone.set(true);
+      this.pedidoService.getUltimoEnderecoPorTelefone(apenasNumeros).subscribe({
+        next: (dados) => {
+          this.buscandoTelefone.set(false);
+          if (dados) {
+            // Só preenche se os campos estiverem vazios (para não sobrescrever se o cliente já começou a digitar)
+            if (!this.pedido.nomeCliente) this.pedido.nomeCliente = dados.nomeCliente;
+            if (!this.pedido.emailCliente) this.pedido.emailCliente = dados.emailCliente;
+            if (!this.pedido.logradouro) this.pedido.logradouro = dados.logradouro;
+            if (!this.pedido.numero) this.pedido.numero = dados.numero;
+            if (!this.pedido.bairroNome) this.pedido.bairroNome = dados.bairroNome;
+            if (!this.pedido.pontoReferencia) this.pedido.pontoReferencia = dados.pontoReferencia;
+            if (!this.pedido.cep) this.pedido.cep = dados.cep;
+
+            // Dispara validação de bairro para calcular frete
+            if (this.pedido.bairroNome) {
+              this.onBairroChange();
+            }
+          }
+        },
+        error: () => {
+          this.buscandoTelefone.set(false);
+          // Não mostramos erro se não encontrar, pois pode ser um cliente novo
+        }
+      });
+    }
+  }
+
+  onBairroChange() {
+    if (this.isRetirada()) {
+      this.carrinhoService.valorFrete.set(0);
+      this.bairroEncontrado.set(true);
+      this.bairroNaoAtendido.set(false);
+      this.freteLabel.set('Grátis (Retirada)');
+      return;
+    }
+
+    const bairroNome = (this.pedido.bairroNome || '').toLowerCase().trim();
+    const encontrado = this.bairros().find(
+      b => b.nome.toLowerCase().trim() === bairroNome
+    );
+
+    if (encontrado) {
+      this.carrinhoService.valorFrete.set(encontrado.valorFrete);
+      this.bairroEncontrado.set(true);
+      this.bairroNaoAtendido.set(false);
+      if (encontrado.valorFrete === 0) {
+        this.freteLabel.set('Grátis 🎉');
+      } else {
+        this.freteLabel.set(`R$ ${encontrado.valorFrete.toFixed(2).replace('.', ',')}`);
+      }
+    } else {
+      this.bairroEncontrado.set(false);
+      this.bairroNaoAtendido.set(true);
+      this.freteLabel.set('Não atendemos');
+      this.carrinhoService.valorFrete.set(0);
+    }
+  }
+
+  selecionarTipoEntrega(tipo: 'ENTREGA' | 'RETIRADA') {
+    const isRetirada = tipo === 'RETIRADA';
+    this.isRetirada.set(isRetirada);
+    this.pedido.isRetirada = isRetirada;
+
+    if (isRetirada) {
+      this.pedido.bairroNome = '';
+      this.pedido.logradouro = '';
+      this.pedido.numero = '';
+      this.pedido.pontoReferencia = '';
+      this.onBairroChange();
+    } else {
+      this.freteLabel.set('---');
+    }
+  }
+
   // ---- LÓGICA DO CUPOM ----
 
   aplicarCupom() {
@@ -148,13 +293,23 @@ export class CheckoutComponent {
     this.aplicandoCupom.set(true);
     this.cupomErro.set('');
 
-    this.cupomService.getCupomPorCodigo(codigo).subscribe({
+    const telefone = this.pedido.telefoneCliente?.replace(/\D/g, '') || '';
+    this.cupomService.getCupomPorCodigo(codigo, telefone).subscribe({
       next: (cupom) => {
+        console.log('[DEBUG] Cupom recebido:', cupom);
         this.aplicandoCupom.set(false);
         if (!cupom.ativo) {
           this.cupomErro.set('Este cupom está inativo.');
           return;
         }
+
+        // Validação de Pedido Mínimo do Cupom
+        const subtotal = this.carrinhoService.valorTotal();
+        if (cupom.pedidoMinimo > 0 && subtotal < cupom.pedidoMinimo) {
+          this.cupomErro.set(`Este cupom exige um pedido mínimo de R$ ${cupom.pedidoMinimo.toFixed(2).replace('.', ',')}`);
+          return;
+        }
+
         this.cupomAplicado.set(cupom);
         this.pedido.cupom = cupom.codigo;
 
@@ -229,6 +384,9 @@ export class CheckoutComponent {
         break;
       case 'Cartão de Débito':
         this.pedido.formaPagamento = this.PAGAMENTO_ENUM.CartaoDebito;
+        break;
+      case 'Pix':
+        this.pedido.formaPagamento = this.PAGAMENTO_ENUM.Pix;
         break;
       case 'Dinheiro':
         this.pedido.formaPagamento = this.PAGAMENTO_ENUM.Dinheiro;
@@ -321,10 +479,16 @@ export class CheckoutComponent {
   }
 
   validar(): boolean {
-    if (!this.pedido.nomeCliente || !this.pedido.telefoneCliente ||
-      !this.pedido.cep || !this.pedido.numero || !this.pedido.logradouro) {
-      this.errorMessage.set('Por favor, preencha todos os campos obrigatórios (*).');
+    if (!this.pedido.nomeCliente || !this.pedido.telefoneCliente) {
+      this.errorMessage.set('Nome e telefone são obrigatórios.');
       return false;
+    }
+
+    if (!this.isRetirada()) {
+      if (!this.pedido.bairroNome || !this.pedido.logradouro || !this.pedido.numero) {
+        this.errorMessage.set('Para entrega, informe bairro, rua e número.');
+        return false;
+      }
     }
 
     if (!this.pedido.formaPagamento || this.pedido.formaPagamento === 'NaoDefinido') {
@@ -333,6 +497,11 @@ export class CheckoutComponent {
       } else {
         this.errorMessage.set('Forma de pagamento inválida.');
       }
+      return false;
+    }
+
+    if (this.carrinhoService.valorTotal() < 20) {
+      this.errorMessage.set('O valor mínimo para pedidos é de R$ 20,00 (subtotal).');
       return false;
     }
 

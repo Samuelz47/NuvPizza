@@ -90,9 +90,11 @@ namespace NuvPizza.Infrastructure.Persistence
             {
                 e.HasKey(p => p.Id);
                 e.Property(p => p.NomeCliente).IsRequired().HasMaxLength(100);
-                e.Property(p => p.Cep).IsRequired().HasMaxLength(10);
-                e.Property(p => p.Logradouro).IsRequired().HasMaxLength(150);
-                e.Property(p => p.Numero).IsRequired().HasMaxLength(20);
+                e.Property(p => p.Cep).IsRequired(false).HasMaxLength(15);
+                e.Property(p => p.Logradouro).IsRequired(false).HasMaxLength(180);
+                e.Property(p => p.PontoReferencia).IsRequired(false).HasMaxLength(150);
+                e.Property(p => p.IsRetirada).IsRequired().HasDefaultValue(false);
+                e.Property(p => p.Numero).HasMaxLength(30);
                 e.Property(p => p.ValorTotal).HasColumnType("decimal(10,2)");
                 e.Property(p => p.ValorFrete).HasColumnType("decimal(10,2)");
                 e.Property(p => p.Complemento).IsRequired(false).HasMaxLength(100);
@@ -102,6 +104,7 @@ namespace NuvPizza.Infrastructure.Persistence
                 e.HasOne<Bairro>() 
                     .WithMany()
                     .HasForeignKey(p => p.BairroId)
+                    .IsRequired(false)
                     .OnDelete(DeleteBehavior.Restrict);
 
                 e.HasOne(p => p.Cliente)
@@ -145,6 +148,7 @@ namespace NuvPizza.Infrastructure.Persistence
                 e.HasCheckConstraint("CK_Cupom_Codigo_SemEspacos", "\"Codigo\" NOT LIKE '% %'");
                 e.HasIndex(c => c.Codigo).IsUnique();
                 e.Property(c => c.DescontoPorcentagem).HasColumnType("decimal(5,2)");
+                e.Property(c => c.PedidoMinimo).HasColumnType("decimal(10,2)").HasDefaultValue(0);
             });
         } 
     }

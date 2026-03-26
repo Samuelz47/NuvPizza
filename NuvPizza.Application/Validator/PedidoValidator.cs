@@ -19,6 +19,17 @@ public class PedidoValidator : AbstractValidator<PedidoForRegistrationDTO>
             .NotEmpty().WithMessage("O telefone é obrigatório.")
             .Matches(@"^[1-9]{2}9?[0-9]{8}$")
             .WithMessage("O telefone deve estar no formato DDD + Número (ex: 11999998888), apenas números.");
+
+        When(x => !x.IsRetirada, () => {
+            RuleFor(x => x.Logradouro)
+                .NotEmpty().WithMessage("O logradouro é obrigatório para entrega.");
+
+            RuleFor(x => x.BairroNome)
+                .NotEmpty().WithMessage("O bairro é obrigatório para entrega.");
+            
+            RuleFor(x => x.Numero)
+                .GreaterThan(0).WithMessage("O número da residência é obrigatório para entrega.");
+        });
         
         RuleFor(x => x.Itens)
             .NotEmpty().WithMessage("O pedido não pode estar vazio.")

@@ -429,10 +429,15 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
             ${telefone !== 'Não informado' ? `<div>TEL: ${telefone}</div>` : ''}
           </div>
           <div class="section">
-            <div class="bold">ENTREGA:</div>
-            <div>${pedido.logradouro}, ${pedido.numero}</div>
-            <div>${pedido.bairroNome}</div>
-            ${pedido.complemento ? `<div>Comp: ${pedido.complemento}</div>` : ''}
+            <div class="bold">ENTREGA/RETIRADA:</div>
+            ${pedido.isRetirada ? `
+              <div class="bold" style="font-size:14px; background:#000; color:#fff; text-align:center; padding:2px;">RETIRADA NA LOJA</div>
+            ` : `
+              <div>${pedido.logradouro}, ${pedido.numero}</div>
+              <div>${pedido.bairroNome}</div>
+              ${pedido.complemento ? `<div>Comp: ${pedido.complemento}</div>` : ''}
+              ${pedido.pontoReferencia ? `<div>Ref: ${pedido.pontoReferencia}</div>` : ''}
+            `}
           </div>
           ${pedido.observacao ? `<div class="section"><span class="bold">OBS:</span> ${pedido.observacao}</div>` : ''}
 
@@ -544,6 +549,7 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
     if (forma === 'MercadoPago') return 'Online (MP)';
     if (forma === 'CartaoCredito') return 'Crédito (Entrega)';
     if (forma === 'CartaoDebito') return 'Débito (Entrega)';
+    if (forma === 'Pix') return 'Pix (na entrega)';
 
     return forma || 'A Definir';
   }

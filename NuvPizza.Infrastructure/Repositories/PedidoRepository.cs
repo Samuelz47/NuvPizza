@@ -79,4 +79,45 @@ public class PedidoRepository : Repository<Pedido>, IPedidoRepository
         
         return (totalFaturamento, frete, quantidadePedidos);
     }
+
+    public async Task<Pedido?> GetUltimoPedidoPorTelefoneAsync(string telefone)
+    {
+        // Cria versão formatada (00) 00000-0000 ou (00) 0000-0000 se vier apenas números
+        string telefoneFormatado = telefone;
+        if (telefone.Length == 11 && telefone.All(char.IsDigit))
+        {
+            telefoneFormatado = $"({telefone.Substring(0, 2)}) {telefone.Substring(2, 5)}-{telefone.Substring(7, 4)}";
+        }
+        else if (telefone.Length == 10 && telefone.All(char.IsDigit))
+        {
+            telefoneFormatado = $"({telefone.Substring(0, 2)}) {telefone.Substring(2, 4)}-{telefone.Substring(6, 4)}";
+        }
+
+        return await _context.Pedidos
+            .Where(p => 
+                (p.TelefoneCliente == telefone || p.TelefoneCliente == telefoneFormatado) && 
+                p.StatusPedido != StatusPedido.Cancelado &&
+                p.IsRetirada == false)
+            .OrderByDescending(p => p.DataPedido)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<bool> VerificarCupomUtilizadoAsync(string telefone, int cupomId)
+    {
+        string telefoneFormatado = telefone;
+        if (telefone.Length == 11 && telefone.All(char.IsDigit))
+        {
+            telefoneFormatado = $"({telefone.Substring(0, 2)}) {telefone.Substring(2, 5)}-{telefone.Substring(7, 4)}";
+        }
+        else if (telefone.Length == 10 && telefone.All(char.IsDigit))
+        {
+            telefoneFormatado = $"({telefone.Substring(0, 2)}) {telefone.Substring(2, 4)}-{telefone.Substring(6, 4)}";
+        }
+
+        return await _context.Pedidos
+            .AnyAsync(p => 
+                (p.TelefoneCliente == telefone || p.TelefoneCliente == telefoneFormatado) && 
+                p.CupomId == cupomId &&
+                p.StatusPedido != StatusPedido.Cancelado);
+    }
 }

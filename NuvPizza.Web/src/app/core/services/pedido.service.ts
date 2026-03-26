@@ -18,6 +18,8 @@ export interface Pedido {
   formaPagamento: string;
   valorFrete: number;
   valorDesconto: number;
+  pontoReferencia?: string;
+  isRetirada: boolean;
 }
 
 export interface PaginacaoMeta {
@@ -27,6 +29,17 @@ export interface PaginacaoMeta {
   pageNumber: number;
   hasNextPage: boolean;
   hasPreviousPage: boolean;
+}
+
+export interface UltimoEnderecoDTO {
+  nomeCliente: string;
+  telefoneCliente: string;
+  emailCliente?: string;
+  logradouro?: string;
+  numero?: number;
+  bairroNome?: string;
+  pontoReferencia?: string;
+  cep?: string;
 }
 
 @Injectable({
@@ -83,5 +96,9 @@ export class PedidoService {
   // 3. Atualizar Status (Usado no Botão do Painel)
   atualizarStatus(id: string, novoStatus: number): Observable<any> {
     return this.http.patch(`${this.apiUrl}/${id}/status`, { statusDoPedido: novoStatus });
+  }
+
+  getUltimoEnderecoPorTelefone(telefone: string): Observable<UltimoEnderecoDTO> {
+    return this.http.get<UltimoEnderecoDTO>(`${this.apiUrl}/ultimo-endereco/${telefone}`);
   }
 }

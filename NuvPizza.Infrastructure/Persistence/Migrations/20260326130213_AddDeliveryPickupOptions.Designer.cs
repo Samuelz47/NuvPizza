@@ -2,17 +2,20 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NuvPizza.Infrastructure.Persistence;
 
 #nullable disable
 
-namespace NuvPizza.Infrastructure.Migrations
+namespace NuvPizza.Infrastructure.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260326130213_AddDeliveryPickupOptions")]
+    partial class AddDeliveryPickupOptions
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.0");
@@ -414,11 +417,6 @@ namespace NuvPizza.Infrastructure.Migrations
                     b.Property<bool>("FreteGratis")
                         .HasColumnType("INTEGER");
 
-                    b.Property<decimal>("PedidoMinimo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("decimal(10,2)")
-                        .HasDefaultValue(0m);
-
                     b.HasKey("Id");
 
                     b.HasIndex("Codigo")
@@ -502,7 +500,7 @@ namespace NuvPizza.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("BairroId")
+                    b.Property<int>("BairroId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("BairroNome")
@@ -804,7 +802,8 @@ namespace NuvPizza.Infrastructure.Migrations
                     b.HasOne("NuvPizza.Domain.Entities.Bairro", null)
                         .WithMany()
                         .HasForeignKey("BairroId")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("NuvPizza.Domain.Entities.Cliente", "Cliente")
                         .WithMany("Pedidos")

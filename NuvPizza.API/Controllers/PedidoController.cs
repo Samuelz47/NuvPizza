@@ -103,4 +103,14 @@ public class PedidoController : Controller
 
         return Ok(result.Data);
     }
+
+    [HttpGet("ultimo-endereco/{telefone}")]
+    public async Task<IActionResult> GetUltimoEndereco(string telefone)
+    {
+        var result = await _pedidoService.GetUltimoEnderecoPorTelefoneAsync(telefone);
+
+        if (!result.IsSuccess) return NotFound(new { error = result.Message });
+
+        return Ok(result.Data);
+    }
 }

@@ -21,7 +21,7 @@ public class PedidoDTO
     public decimal ValorFrete { get; set; }
     public decimal ValorTotal { get; set; }
     public List<ItemPedidoDTO> Itens { get; set; }
-    public string? Observacao { get; set; }
-    public decimal ValorDesconto { get; set; }
+    public string? PontoReferencia { get; set; }
+    public bool IsRetirada { get; set; }
     public string? CodigoCupom { get; set; }
 }

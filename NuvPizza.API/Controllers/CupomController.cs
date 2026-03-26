@@ -32,9 +32,9 @@ public class CupomController : ControllerBase
     }
 
     [HttpGet("{codigo}")]
-    public async Task<IActionResult> GetAsync([FromRoute] string codigo)
+    public async Task<IActionResult> GetAsync([FromRoute] string codigo, [FromQuery] string? telefone)
     {
-        var cupom = await _cupomService.GetByCodeAsync(codigo);
+        var cupom = await _cupomService.GetByCodeAsync(codigo, telefone);
         
         if (!cupom.IsSuccess) return BadRequest(new { error = cupom.Message });
         

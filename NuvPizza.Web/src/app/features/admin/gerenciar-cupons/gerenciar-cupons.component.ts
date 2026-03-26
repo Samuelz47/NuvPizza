@@ -21,7 +21,8 @@ export class GerenciarCuponsComponent implements OnInit {
     novoCupom: CupomForRegistration = {
         codigo: '',
         descontoPorcentagem: 0,
-        freteGratis: false
+        freteGratis: false,
+        pedidoMinimo: 0
     };
 
     toast = signal<{ mensagem: string; tipo: 'sucesso' | 'erro'; visivel: boolean }>({
@@ -36,7 +37,10 @@ export class GerenciarCuponsComponent implements OnInit {
 
     carregar() {
         this.cupomService.getCupons().subscribe({
-            next: (dados) => this.cupons.set(dados),
+            next: (dados) => {
+                console.log('[DEBUG] Lista de cupons carregada:', dados);
+                this.cupons.set(dados);
+            },
             error: (err) => {
                 console.error('Erro ao carregar cupons', err);
                 this.mostrarToast('Erro ao carregar cupons.', 'erro');
@@ -45,7 +49,7 @@ export class GerenciarCuponsComponent implements OnInit {
     }
 
     abrirFormulario() {
-        this.novoCupom = { codigo: '', descontoPorcentagem: 0, freteGratis: false };
+        this.novoCupom = { codigo: '', descontoPorcentagem: 0, freteGratis: false, pedidoMinimo: 0 };
         this.exibindoFormulario = true;
     }
 

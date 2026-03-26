@@ -24,7 +24,7 @@ namespace NuvPizza.Domain.Entities
         public int Numero { get; set; }
         public string Complemento { get; set; } = string.Empty;
         public string BairroNome { get; set; } = string.Empty;
-        public int BairroId { get; set; }
+        public int? BairroId { get; set; }
         public string Logradouro { get; set; } = string.Empty;
         public StatusPedido StatusPedido { get; set; }
         public FormaPagamento FormaPagamento { get; set; }
@@ -35,6 +35,9 @@ namespace NuvPizza.Domain.Entities
         public string? Observacao { get; set; }
         public int? CupomId { get; set; }
         public decimal ValorDesconto { get; set; }
+        
+        public string? PontoReferencia { get; set; }
+        public bool IsRetirada { get; set; }
         
         // CRM - Link to Cliente
         public Guid? ClienteId { get; set; }

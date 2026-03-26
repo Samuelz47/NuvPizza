@@ -12,4 +12,5 @@ public interface IPedidoService
     Task<PagedResult<PedidoDTO>> GetAllPedidosAsync(PedidoParameters pedidoParameters);
     Task<Result<PedidoDTO>> GetPedidoByIdAsync(Guid pedidoId);
     Task<Result<PedidoDTO>> ConfirmarPagamentoAsync(Guid pedidoId, FormaPagamento formaPagamento);
+    Task<Result<UltimoEnderecoDTO>> GetUltimoEnderecoPorTelefoneAsync(string telefone);
 }

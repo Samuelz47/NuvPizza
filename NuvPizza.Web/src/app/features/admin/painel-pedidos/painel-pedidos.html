@@ -95,6 +95,14 @@
             {{ traduzirPagamento(pedido.formaPagamento) }}
           </p>
 
+          <p class="mb-2 address-mini">
+            @if (pedido.isRetirada) {
+            <span class="badge bg-info text-dark"><i class="bi bi-shop"></i> RETIRADA</span>
+            } @else {
+            <i class="bi bi-geo-alt"></i> {{ pedido.logradouro }}, {{ pedido.numero }} - {{ pedido.bairroNome }}
+            }
+          </p>
+
           <div class="itens-lista">
             @for (item of pedido.itens; track $index) {
             <div class="item-row">
@@ -239,9 +247,16 @@
         </div>
 
         <div class="endereco-box">
+          @if (pedidoSelecionado.isRetirada) {
+          <p class="text-info fw-bold"><i class="bi bi-shop"></i> ESTE PEDIDO É PARA RETIRADA</p>
+          <p><small class="text-muted">O cliente virá buscar na loja.</small></p>
+          } @else {
           <p><strong>{{ pedidoSelecionado.logradouro }}, {{ pedidoSelecionado.numero }}</strong></p>
           <p>{{ pedidoSelecionado.bairroNome }}</p>
-          @if (pedidoSelecionado.complemento) { <small>Comp: {{ pedidoSelecionado.complemento }}</small> }
+          @if (pedidoSelecionado.complemento) { <p><small>Comp: {{ pedidoSelecionado.complemento }}</small></p> }
+          @if (pedidoSelecionado.pontoReferencia) { <p class="mt-1"><small class="text-primary"><i
+                class="bi bi-pin-map"></i> Ref: {{ pedidoSelecionado.pontoReferencia }}</small></p> }
+          }
         </div>
 
         <div class="pagamento-box">

@@ -7,7 +7,6 @@ using NuvPizza.Domain.Interfaces;
 using NuvPizza.Domain.Entities;
 using NuvPizza.Domain.Repositories;
 using NuvPizza.Infrastructure.Services;
-using Microsoft.Extensions.Configuration;
 using NuvPizza.Domain.Enums;
 using NuvPizza.Domain.Pagination;
 
@@ -73,15 +72,20 @@ public class PedidoService : IPedidoService
         pedido.Itens = new List<ItemPedido>();
         pedido.ValorFrete = bairro.ValorFrete;
         pedido.BairroId = bairro.Id;
-        pedido.BairroNome = bairro.Nome;
-        pedido.Cep = enderecoViaCep.Cep;
-        pedido.Logradouro = enderecoViaCep.Logradouro;
+        pedido.BairroNome = !string.IsNullOrWhiteSpace(pedidoRegister.BairroNome) ? pedidoRegister.BairroNome : bairro.Nome;
+        pedido.Cep = !string.IsNullOrWhiteSpace(pedidoRegister.Cep) ? pedidoRegister.Cep : enderecoViaCep.Cep;
+        pedido.Logradouro = !string.IsNullOrWhiteSpace(pedidoRegister.Logradouro) ? pedidoRegister.Logradouro : enderecoViaCep.Logradouro;
         pedido.Complemento = pedidoRegister.Complemento;
         pedido.Numero = pedidoRegister.Numero;
         pedido.FormaPagamento = formaPagamentoEnum;
         pedido.CupomId = null;
         if (cupom != null)
         {
+            var jaUtilizou = await _pedidoRepository.VerificarCupomUtilizadoAsync(pedidoRegister.TelefoneCliente, cupom.Id);
+            if (jaUtilizou)
+            {
+                return Result<PedidoDTO>.Failure("Você já utilizou este cupom em outro pedido.");
+            }
             pedido.CupomId = cupom.Id;
         }
 
@@ -219,6 +223,19 @@ public class PedidoService : IPedidoService
         }
 
         var totalItensBruto = pedido.Itens.Sum(i => i.Total);
+
+        // 1. Validação do Pedido Mínimo Global (R$20)
+        if (totalItensBruto < 20)
+        {
+            return Result<PedidoDTO>.Failure("O valor mínimo para pedidos é de R$ 20,00 (subtotal).");
+        }
+
+        // 2. Validação do Pedido Mínimo por Cupom
+        if (cupom != null && cupom.PedidoMinimo > 0 && totalItensBruto < cupom.PedidoMinimo)
+        {
+            return Result<PedidoDTO>.Failure($"Este cupom exige um pedido mínimo de {cupom.PedidoMinimo:C2}.");
+        }
+
         var valorDescontoPercentual = cupom != null ? cupom.DescontoPorcentagem : 0;
         
         // Save the absolute discount value in currency
@@ -254,7 +271,7 @@ public class PedidoService : IPedidoService
         {
             await _notificacaoService.NotificarNovoPedido(pedidoDto);
 
-            // Dispara o e-mail em background (Fire-and-Forget) para não travar a tela de Checkout do cliente
+            // Dispara the email in background (Fire-and-Forget) para não travar a tela de Checkout do cliente
             if (!string.IsNullOrEmpty(pedido.EmailCliente))
             {
                 _ = Task.Run(async () =>
@@ -373,7 +390,7 @@ public class PedidoService : IPedidoService
             // Dispara para o painel como um NOVO pedido apenas agora que foi pago
             await _notificacaoService.NotificarNovoPedido(pedidoDto);
             
-            // Dispara o e-mail de confirmação ao cliente
+            // Dispara the email de confirmação ao cliente
             if (!string.IsNullOrEmpty(pedido.EmailCliente))
             {
                 _ = Task.Run(async () =>
@@ -395,6 +412,28 @@ public class PedidoService : IPedidoService
         {
             return Result<PedidoDTO>.Failure($"Erro ao salvar pagamento: {ex.Message}");
         }
+    }
+
+    public async Task<Result<UltimoEnderecoDTO>> GetUltimoEnderecoPorTelefoneAsync(string telefone)
+    {
+        var ultimoPedido = await _pedidoRepository.GetUltimoPedidoPorTelefoneAsync(telefone);
+
+        if (ultimoPedido == null)
+            return Result<UltimoEnderecoDTO>.Failure("Nenhum pedido anterior encontrado para este número.");
+
+        var dto = new UltimoEnderecoDTO
+        {
+            NomeCliente = ultimoPedido.NomeCliente,
+            TelefoneCliente = ultimoPedido.TelefoneCliente,
+            EmailCliente = ultimoPedido.EmailCliente,
+            Logradouro = ultimoPedido.Logradouro,
+            Numero = ultimoPedido.Numero,
+            BairroNome = ultimoPedido.BairroNome,
+            PontoReferencia = ultimoPedido.PontoReferencia,
+            Cep = ultimoPedido.Cep
+        };
+
+        return Result<UltimoEnderecoDTO>.Success(dto);
     }
 
     private async Task<bool> LojaEstaAberta()

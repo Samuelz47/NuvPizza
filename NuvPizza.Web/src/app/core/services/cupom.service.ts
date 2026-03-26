@@ -17,8 +17,12 @@ export class CupomService {
     }
 
     // Usado no Checkout — busca um cupom pelo código digitado pelo cliente
-    getCupomPorCodigo(codigo: string): Observable<Cupom> {
-        return this.http.get<Cupom>(`${this.apiUrl}/${codigo}`);
+    getCupomPorCodigo(codigo: string, telefone?: string): Observable<Cupom> {
+        let url = `${this.apiUrl}/${codigo}`;
+        if (telefone) {
+            url += `?telefone=${telefone}`;
+        }
+        return this.http.get<Cupom>(url);
     }
 
     // Usado no Painel Admin — cria um novo cupom
