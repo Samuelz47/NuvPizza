@@ -24,4 +24,6 @@ public class PedidoDTO
     public string? PontoReferencia { get; set; }
     public bool IsRetirada { get; set; }
     public string? CodigoCupom { get; set; }
+    public Guid? MotoboyId { get; set; }
+    public string? NomeMotoboy { get; set; }
 }

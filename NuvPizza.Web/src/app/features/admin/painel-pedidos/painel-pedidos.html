@@ -315,3 +315,35 @@
   </div>
 </div>
 }
+
+<!-- MODAL DE SELEÇÃO DE MOTOBOY -->
+@if (mostrarModalDespacho()) {
+<div class="modal-overlay" (click)="fecharModalDespacho()">
+  <div class="modal-content-small" (click)="$event.stopPropagation()">
+    <div class="modal-custom-header status-preparo">
+      <h5><i class="bi bi-bicycle"></i> Selecionar Motoboy</h5>
+      <button class="btn-close-custom" (click)="fecharModalDespacho()">✖</button>
+    </div>
+
+    <div class="modal-custom-body-p">
+      <p class="text-center mb-3">Escolha quem levará o pedido <strong>#{{
+          pedidoParaDespacho()?.id.substring(0,8).toUpperCase() }}</strong></p>
+
+      <div class="form-grupo-modal">
+        <label>Motoboy:</label>
+        <select [(ngModel)]="motoboySelecionadoId" class="input-modal-loja" autofocus>
+          <option value="" disabled selected>Selecione um entregador...</option>
+          <option *ngFor="let m of motoboysAtivos()" [value]="m.id">{{ m.nome }}</option>
+        </select>
+      </div>
+
+      <div class="modal-acoes-loja">
+        <button class="btn-cancelar-modal" (click)="fecharModalDespacho()">Cancelar</button>
+        <button class="btn-confirmar-modal" (click)="confirmarDespacho()" [disabled]="!motoboySelecionadoId()">
+          Confirmar Despacho
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}

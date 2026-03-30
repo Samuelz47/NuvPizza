@@ -16,6 +16,7 @@ public class PedidoMappingProfile : Profile
                     : Enum.Parse<FormaPagamento>(src.FormaPagamento, true)
              ));
         
-        CreateMap<Pedido, PedidoDTO>();
+        CreateMap<Pedido, PedidoDTO>()
+            .ForMember(dest => dest.NomeMotoboy, opt => opt.MapFrom(src => src.Motoboy != null ? src.Motoboy.Nome : null));
     }
 }

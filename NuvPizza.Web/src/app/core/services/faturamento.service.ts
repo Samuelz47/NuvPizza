@@ -8,6 +8,11 @@ export interface FaturamentoDTO {
     quantidadePedidos: number;
     frete: number;
     ticketMedio: number;
+    fretesPorMotoboy?: {
+        nomeMotoboy: string;
+        totalFrete: number;
+        quantidadePedidos: number;
+    }[];
 }
 
 @Injectable({

@@ -1,0 +1,63 @@
+<div class="admin-container">
+    <div class="header-section">
+        <h1>Gerenciar Motoboys</h1>
+        <button class="btn-novo" (click)="abrirModal()">+ Novo Motoboy</button>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <th>Telefone</th>
+                    <th>Status</th>
+                    <th>Cadastro</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let motoboy of motoboys">
+                    <td>{{ motoboy.nome }}</td>
+                    <td>{{ motoboy.telefone }}</td>
+                    <td>
+                        <span [class]="motoboy.ativo ? 'status-ativo' : 'status-inativo'">
+                            {{ motoboy.ativo ? 'Ativo' : 'Inativo' }}
+                        </span>
+                    </td>
+                    <td>{{ motoboy.dataCadastro | date:'dd/MM/yyyy' }}</td>
+                    <td>
+                        <button class="btn-edit" (click)="editarMotoboy(motoboy)">Editar</button>
+                        <button class="btn-delete" (click)="deletarMotoboy(motoboy.id)">Excluir</button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Modal Simplificado -->
+<div class="modal" *ngIf="exibirModal">
+    <div class="modal-content">
+        <h3>{{ editando ? 'Editar' : 'Novo' }} Motoboy</h3>
+        <form (ngSubmit)="salvarMotoboy()">
+            <div class="form-group">
+                <label>Nome</label>
+                <input type="text" [(ngModel)]="motoboyForm.nome" name="nome" required>
+            </div>
+            <div class="form-group">
+                <label>Telefone</label>
+                <input type="text" [(ngModel)]="motoboyForm.telefone" name="telefone" required>
+            </div>
+            <div class="form-group" *ngIf="editando">
+                <label>
+                    <input type="checkbox" [(ngModel)]="motoboyForm.ativo" name="ativo"> Ativo
+                </label>
+            </div>
+            <div class="modal-actions">
+                <button type="button" (click)="fecharModal()">Cancelar</button>
+                <button type="submit" class="btn-save" [disabled]="salvando">{{ salvando ? 'Salvando...' : 'Salvar'
+                    }}</button>
+            </div>
+        </form>
+    </div>
+</div>

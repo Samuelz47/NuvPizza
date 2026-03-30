@@ -15,6 +15,7 @@ import { AdminHomeComponent } from './features/admin/admin-home/admin-home.compo
 import { GerenciarProdutosComponent } from './features/admin/gerenciar-produtos/gerenciar-produtos.component';
 import { GerenciarCuponsComponent } from './features/admin/gerenciar-cupons/gerenciar-cupons.component';
 import { ClientesRankingComponent } from './features/admin/clientes-ranking/clientes-ranking.component';
+import { GerenciarMotoboysComponent } from './features/admin/gerenciar-motoboys/gerenciar-motoboys.component';
 
 import { AuthService } from './core/services/auth.service';
 
@@ -50,6 +51,7 @@ export const routes: Routes = [
       { path: 'produtos', component: GerenciarProdutosComponent },
       { path: 'cupons', component: GerenciarCuponsComponent },
       { path: 'clientes', component: ClientesRankingComponent },
+      { path: 'motoboys', component: GerenciarMotoboysComponent },
       // Se entrar em /admin sem nada, vai pra home do admin
       { path: '', redirectTo: 'home', pathMatch: 'full' }
     ]

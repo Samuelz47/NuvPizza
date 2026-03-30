@@ -20,6 +20,7 @@ namespace NuvPizza.Infrastructure.Persistence
         public DbSet<ComboItemTemplate> ComboTemplates { get; set; }
         public DbSet<ItemPedidoComboEscolha> EscolhasCombo { get; set; }
         public DbSet<Cliente> Clientes { get; set; }
+        public DbSet<Motoboy> Motoboys { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -111,6 +112,18 @@ namespace NuvPizza.Infrastructure.Persistence
                     .WithMany(c => c.Pedidos)
                     .HasForeignKey(p => p.ClienteId)
                     .OnDelete(DeleteBehavior.SetNull);
+
+                e.HasOne(p => p.Motoboy)
+                    .WithMany()
+                    .HasForeignKey(p => p.MotoboyId)
+                    .OnDelete(DeleteBehavior.SetNull);
+            });
+
+            builder.Entity<Motoboy>(e =>
+            {
+                e.HasKey(m => m.Id);
+                e.Property(m => m.Nome).IsRequired().HasMaxLength(100);
+                e.Property(m => m.Telefone).HasMaxLength(20);
             });
 
             builder.Entity<Cliente>(e =>

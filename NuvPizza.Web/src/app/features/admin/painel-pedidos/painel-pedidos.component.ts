@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { PedidoService, PaginacaoMeta } from '../../../core/services/pedido.service';
 import { NotificacaoService } from '../../../core/services/notificacao.service';
 import { LojaService } from '../../../core/services/loja.service';
+import { MotoboyService } from '../../../core/services/motoboy.service';
 
 @Component({
   selector: 'app-painel-pedidos',
@@ -16,8 +17,15 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
   private pedidoService = inject(PedidoService);
   private notificacaoService = inject(NotificacaoService);
   private lojaService = inject(LojaService);
+  private motoboyService = inject(MotoboyService);
 
   pedidos = signal<any[]>([]);
+  motoboysAtivos = signal<any[]>([]);
+
+  // Modais de Despacho
+  mostrarModalDespacho = signal(false);
+  pedidoParaDespacho = signal<any>(null);
+  motoboySelecionadoId = signal<string>('');
 
   // Paginação
   paginaAtual = signal(1);
@@ -96,6 +104,13 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
     this.carregarPedidos();
     this.ouvirNovosPedidos();
     this.carregarStatusLoja();
+    this.carregarMotoboysAtivos();
+  }
+
+  carregarMotoboysAtivos() {
+    this.motoboyService.obterAtivos().subscribe(data => {
+      this.motoboysAtivos.set(data);
+    });
   }
 
   ngOnDestroy() {
@@ -283,24 +298,57 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
   avancarStatus(pedido: any) {
     if (pedido.statusPedido >= 5) return;
     const novoStatus = pedido.statusPedido + 1;
-    const codigo = this.getCodigoPedido(pedido);
 
-    this.pedidoService.atualizarStatus(pedido.id, novoStatus).subscribe({
+    // Se for despachar (3 -> 4) e NÃO for retirada, abre o modal de seleção de motoboy
+    if (novoStatus === 4 && !pedido.isRetirada) {
+      this.pedidoParaDespacho.set(pedido);
+      this.motoboySelecionadoId.set('');
+      this.mostrarModalDespacho.set(true);
+      return;
+    }
+
+    this.processarAtualizacaoStatus(pedido.id, novoStatus);
+  }
+
+  confirmarDespacho() {
+    const pedido = this.pedidoParaDespacho();
+    const motoboyId = this.motoboySelecionadoId();
+
+    if (!motoboyId) {
+      this.mostrarToast('Por favor, selecione um motoboy.', 'erro');
+      return;
+    }
+
+    this.processarAtualizacaoStatus(pedido.id, 4, motoboyId);
+    this.mostrarModalDespacho.set(false);
+  }
+
+  fecharModalDespacho() {
+    this.mostrarModalDespacho.set(false);
+    this.pedidoParaDespacho.set(null);
+  }
+
+  private processarAtualizacaoStatus(pedidoId: string, novoStatus: number, motoboyId?: string) {
+    const codigo = `#${pedidoId.substring(0, 8).toUpperCase()}`;
+
+    this.pedidoService.atualizarStatus(pedidoId, novoStatus, motoboyId).subscribe({
       next: () => {
         if (novoStatus === 5) this.mostrarToast(`Pedido ${codigo} Concluído! 🎉`, 'sucesso');
         else if (novoStatus === 4) this.mostrarToast(`Pedido ${codigo} saiu para entrega! 🛵`, 'info');
         else this.mostrarToast(`Status do pedido ${codigo} atualizado!`, 'info');
 
         this.pedidos.update(lista =>
-          lista.map(p => p.id === pedido.id ? { ...p, statusPedido: novoStatus } : p)
+          lista.map(p => p.id === pedidoId ? { ...p, statusPedido: novoStatus, motoboyId: motoboyId } : p)
         );
         this.ordenarLista(this.pedidos());
 
-        if (this.pedidoSelecionado && this.pedidoSelecionado.id === pedido.id) {
+        if (this.pedidoSelecionado && this.pedidoSelecionado.id === pedidoId) {
           this.pedidoSelecionado.statusPedido = novoStatus;
         }
       },
-      error: () => this.mostrarToast('Erro ao atualizar status.', 'erro')
+      error: (err) => {
+        this.mostrarToast(err?.error || 'Erro ao atualizar status.', 'erro');
+      }
     });
   }
 
@@ -520,6 +568,7 @@ export class PainelPedidosComponent implements OnInit, OnDestroy {
 
   ouvirNovosPedidos() {
     this.notificacaoService.ouvirAtualizacaoStatus().subscribe(() => this.carregarPedidos());
+    this.notificacaoService.ouvirNovoPedido().subscribe(() => this.carregarPedidos());
   }
 
   converterStatusParaNumero(status: any) {

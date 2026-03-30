@@ -424,6 +424,7 @@ export class CheckoutComponent {
 
     const payload = {
       ...this.pedido,
+      telefoneCliente: this.pedido.telefoneCliente?.replace(/\D/g, ''),
       observacao: obsFinal,
       numero: numeroFinal,
       valorFrete: this.carrinhoService.valorFrete(),

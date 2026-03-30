@@ -5,4 +5,5 @@ namespace NuvPizza.Application.DTOs;
 public class StatusPedidoForUpdateDTO
 {
     public StatusPedido StatusDoPedido { get; set; }
+    public Guid? MotoboyId { get; set; }
 }

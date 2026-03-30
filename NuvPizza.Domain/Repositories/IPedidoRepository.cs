@@ -10,4 +10,5 @@ public interface IPedidoRepository : IRepository<Pedido>
     Task<(decimal Total, decimal Frete, int Quantidade)>GetFaturamentoAsync(DateTime dataInicio, DateTime dataFim);
     Task<Pedido?> GetUltimoPedidoPorTelefoneAsync(string telefone);
     Task<bool> VerificarCupomUtilizadoAsync(string telefone, int cupomId);
+    Task<IEnumerable<Pedido>> GetPedidosNoPeriodoAsync(DateTime dataInicio, DateTime dataFim);
 }

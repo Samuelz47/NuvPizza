@@ -144,13 +144,15 @@ export class AdminHomeComponent implements OnInit {
     }
   }
 
-  navegarPara(destino: 'pedidos' | 'produtos' | 'cupons' | 'clientes') {
+  navegarPara(destino: 'pedidos' | 'produtos' | 'cupons' | 'clientes' | 'motoboys') {
     if (destino === 'pedidos') {
       this.router.navigate(['/admin/painel']);
     } else if (destino === 'produtos') {
       this.router.navigate(['/admin/produtos']);
     } else if (destino === 'clientes') {
       this.router.navigate(['/admin/clientes']);
+    } else if (destino === 'motoboys') {
+      this.router.navigate(['/admin/motoboys']);
     } else {
       this.router.navigate(['/admin/cupons']);
     }

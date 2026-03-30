@@ -180,6 +180,17 @@ try
                     QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
                     QueueLimit = 0
                 }));
+
+        rateLimitOptions.AddPolicy("AddressLookupLimit", httpContext =>
+            RateLimitPartition.GetFixedWindowLimiter(
+                partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                factory: _ => new FixedWindowRateLimiterOptions
+                {
+                    PermitLimit = 5,
+                    Window = TimeSpan.FromHours(1),
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    QueueLimit = 0
+                }));
         
         rateLimitOptions.OnRejected = async (context, token) =>
         {
@@ -189,6 +200,10 @@ try
             if (caminhoRequisicao.Contains("/login") || caminhoRequisicao.Contains("auth"))
             {
                 await context.HttpContext.Response.WriteAsync("Muitas tentativas de login. Aguarde 5 minutos.");
+            }
+            else if (caminhoRequisicao.Contains("ultimo-endereco"))
+            {
+                await context.HttpContext.Response.WriteAsync("Limite de consultas de endereço excedido. Aguarde 1 hora.");
             }
             else if (caminhoRequisicao.Contains("/pedido"))
             {
@@ -216,6 +231,7 @@ builder.Services.AddHttpClient<ViaCepService>(client => { client.Timeout = TimeS
     builder.Services.AddScoped<IConfiguracaoRepository, ConfiguracaoRepository>();
     builder.Services.AddScoped<ICupomRepository, CupomRepository>();
     builder.Services.AddScoped<IClienteRepository, ClienteRepository>();
+    builder.Services.AddScoped<IMotoboyRepository, MotoboyRepository>();
 
     builder.Services.AddScoped<IProdutoService, ProdutoService>();
     builder.Services.AddScoped<IPedidoService, PedidoService>();
@@ -229,6 +245,7 @@ builder.Services.AddHttpClient<ViaCepService>(client => { client.Timeout = TimeS
     builder.Services.AddScoped<ICacheService, RedisCacheService>();
     builder.Services.AddScoped<ICupomService, CupomService>();
     builder.Services.AddScoped<IClienteService, ClienteService>();
+    builder.Services.AddScoped<IMotoboyService, MotoboyService>();
     builder.Services.AddScoped<TokenService>();
 
     var app = builder.Build();
@@ -240,6 +257,8 @@ builder.Services.AddHttpClient<ViaCepService>(client => { client.Timeout = TimeS
         context.Response.Headers.Append("X-XSS-Protection", "1; mode=block");
         context.Response.Headers.Append("X-Content-Type-Options", "nosniff");
         context.Response.Headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
+        context.Response.Headers.Append("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=(self)");
+        context.Response.Headers.Append("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net; font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net; img-src 'self' data: blob: https:; connect-src 'self' https://api.mercadopago.com https://viacep.com.br wss: ws:; frame-src 'self' https://www.mercadopago.com.br; media-src 'self' https:");
         
         // HSTS somente em Produção (HTTPs)
         if (!app.Environment.IsDevelopment())

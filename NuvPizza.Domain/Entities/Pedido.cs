@@ -42,5 +42,9 @@ namespace NuvPizza.Domain.Entities
         // CRM - Link to Cliente
         public Guid? ClienteId { get; set; }
         public Cliente? Cliente { get; set; }
+
+        // Motoboy - Link to Motoboy
+        public Guid? MotoboyId { get; set; }
+        public Motoboy? Motoboy { get; set; }
     }
 }

@@ -64,6 +64,29 @@
         </div>
       </div>
     </div>
+
+    <!-- TABELA DE FRETE POR MOTOBOY -->
+    <div *ngIf="!carregando() && dadosFaturamento()?.fretesPorMotoboy?.length" class="motoboy-faturamento-section">
+      <h3>Detalhamento por Entregador (Fretes)</h3>
+      <div class="table-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Entregador</th>
+              <th>Entregas Realizadas</th>
+              <th>Total em Frete</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let m of dadosFaturamento()?.fretesPorMotoboy">
+              <td class="nome-m">{{ m.nomeMotoboy }}</td>
+              <td>{{ m.quantidadePedidos }}</td>
+              <td class="valor-m">{{ m.totalFrete | currency:'BRL' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
   </section>
 
   <!-- SEÇÃO: CONFIGURAÇÕES DA LOJA -->
@@ -113,6 +136,12 @@
         <i class="pi pi-users"></i>
         <h3>Ranking de Clientes</h3>
         <p>Veja seus melhores clientes e o CRM.</p>
+      </div>
+
+      <div class="card-action" (click)="navegarPara('motoboys')">
+        <i class="pi pi-car"></i>
+        <h3>Gerenciar Motoboys</h3>
+        <p>Cadastre e acompanhe seus entregadores.</p>
       </div>
     </div>
   </section>

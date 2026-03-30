@@ -105,6 +105,7 @@ public class PedidoController : Controller
     }
 
     [HttpGet("ultimo-endereco/{telefone}")]
+    [EnableRateLimiting("AddressLookupLimit")]
     public async Task<IActionResult> GetUltimoEndereco(string telefone)
     {
         var result = await _pedidoService.GetUltimoEnderecoPorTelefoneAsync(telefone);

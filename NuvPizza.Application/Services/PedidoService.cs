@@ -52,8 +52,22 @@ public class PedidoService : IPedidoService
         var enderecoViaCep = await _viaCepService.CheckAsync(pedidoRegister.Cep);
         if (enderecoViaCep is null) return Result<PedidoDTO>.Failure("CEP Inválido ou não encontrado");
 
-        var nomeBairroViaCep = enderecoViaCep.Bairro.Trim().ToLower();
-        var bairro = await _bairroRepository.GetAsync(b => b.Nome.ToLower() == nomeBairroViaCep);
+        // Prioridade: usar o bairro que o USUÁRIO selecionou no checkout (é o que determinou o frete)
+        // Fallback: se o nome do usuário não bater, tenta pelo bairro retornado pelo ViaCep
+        Bairro? bairro = null;
+        
+        if (!string.IsNullOrWhiteSpace(pedidoRegister.BairroNome))
+        {
+            var nomeBairroUsuario = pedidoRegister.BairroNome.Trim().ToLower();
+            bairro = await _bairroRepository.GetAsync(b => b.Nome.ToLower() == nomeBairroUsuario);
+        }
+        
+        if (bairro is null)
+        {
+            var nomeBairroViaCep = enderecoViaCep.Bairro.Trim().ToLower();
+            bairro = await _bairroRepository.GetAsync(b => b.Nome.ToLower() == nomeBairroViaCep);
+        }
+        
         if (bairro is null) return Result<PedidoDTO>.Failure("Desculpe não entregamos nesse bairro");
 
         if (!Enum.TryParse<FormaPagamento>(pedidoRegister.FormaPagamento, true, out var formaPagamentoEnum))
@@ -66,7 +80,11 @@ public class PedidoService : IPedidoService
                 return Result<PedidoDTO>.Failure("Forma de pagamento inválida");
         }
         
-        var cupom =  await _cupomRepository.GetAsync(c => c.Codigo == pedidoRegister.CodigoCupom);
+        Cupom? cupom = null;
+        if (!string.IsNullOrWhiteSpace(pedidoRegister.CodigoCupom))
+        {
+            cupom = await _cupomRepository.GetAsync(c => c.Codigo == pedidoRegister.CodigoCupom);
+        }
         var pedido =  _mapper.Map<Pedido>(pedidoRegister);
         pedido.DataPedido = DateTime.UtcNow.AddHours(-3);
         pedido.Itens = new List<ItemPedido>();
@@ -322,6 +340,18 @@ public class PedidoService : IPedidoService
             }
         }
         // --- FIM DA CORREÇÃO ---
+
+        if (newStatus.StatusDoPedido == StatusPedido.SaiuParaEntrega)
+        {
+            if (newStatus.MotoboyId.HasValue)
+            {
+                pedido.MotoboyId = newStatus.MotoboyId;
+            }
+            else if (!pedido.IsRetirada)
+            {
+                return Result<PedidoDTO>.Failure("É necessário selecionar um motoboy para despachar o pedido.");
+            }
+        }
 
         bool eraEntregue = pedido.StatusPedido == Domain.Enums.StatusPedido.Entrega;
 

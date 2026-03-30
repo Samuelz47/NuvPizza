@@ -120,4 +120,15 @@ public class PedidoRepository : Repository<Pedido>, IPedidoRepository
                 p.CupomId == cupomId &&
                 p.StatusPedido != StatusPedido.Cancelado);
     }
+
+    public async Task<IEnumerable<Pedido>> GetPedidosNoPeriodoAsync(DateTime dataInicio, DateTime dataFim)
+    {
+        var inicio = dataInicio.Date;
+        var final = dataFim.Date.AddDays(1).AddTicks(-1);
+
+        return await _context.Pedidos
+            .Where(p => p.DataPedido >= inicio && p.DataPedido <= final)
+            .Include(p => p.Motoboy)
+            .ToListAsync();
+    }
 }

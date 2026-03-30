@@ -94,8 +94,8 @@ export class PedidoService {
   }
 
   // 3. Atualizar Status (Usado no Botão do Painel)
-  atualizarStatus(id: string, novoStatus: number): Observable<any> {
-    return this.http.patch(`${this.apiUrl}/${id}/status`, { statusDoPedido: novoStatus });
+  atualizarStatus(id: string, novoStatus: number, motoboyId?: string): Observable<any> {
+    return this.http.patch(`${this.apiUrl}/${id}/status`, { statusDoPedido: novoStatus, motoboyId });
   }
 
   getUltimoEnderecoPorTelefone(telefone: string): Observable<UltimoEnderecoDTO> {
